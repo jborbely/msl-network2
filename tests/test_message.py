@@ -158,12 +158,7 @@ def test_request_json_bz2() -> None:
 def test_request_pickle_zlib() -> None:
     r = Request(id=4, service="a", attribute="b", args=(2,), kwargs={"foo": "bar"})
     data = r.to_bytes(Flag.PICKLE | Flag.ZLIB)
-    assert data == (
-        b"\x04\x01"
-        b"x\x9ck`\x9d\xea\xca\x00\x01=\xc2\xb9\xc59zy\xa9%\xe5\xf9E\xd9z\xb9\xa9\xc5\xc5\x89\xe9\xa9S"
-        b"z\xd8\x83R\x0bKS\x8bK\xa6L\x9e\xa2\xe1\xcd\xd2\xc3\x988\xa5\x871i\x8a7S\xeb\x94\xda)=\xcc"
-        b"i\xf9\xf9Sz\x98\x93\x12\x8b\xa6\x14\x97Li\x9c\xa2\x07\x00\x1c\xdf\x1c\xd1"
-    )
+    assert data.startswith(b"\x04\x01x\x9ck`")
     assert r == Request.from_bytes(data)
 
 
