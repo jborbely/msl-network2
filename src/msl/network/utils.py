@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__package__)
 
+BROKER_PORT = 1875
+
 
 def run_event_loop(main: Coroutine[Any, Any, None]) -> None:
     """Execute the coroutine and return the result."""

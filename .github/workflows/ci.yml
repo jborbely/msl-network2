@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  PY_COLORS: 1
+  COLUMNS: 110
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows, macos]
+        python-version: ["3.8", "3.14"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: false
+      - name: Run tests
+        run: uv run --with pytest-rerunfailures --python ${{ matrix.python-version }} --no-dev --group test -- pytest --reruns 5

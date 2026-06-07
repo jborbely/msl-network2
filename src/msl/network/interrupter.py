@@ -1,7 +1,8 @@
-"""Interrupter to handle Ctrl+C on Windows."""
+"""Interrupter to signal a `Ctrl+C` event on Windows."""
 
 from __future__ import annotations
 
+import os
 import time
 
 import zmq
@@ -10,34 +11,30 @@ from .utils import logger
 
 
 class Interrupter:
-    """Handles Ctrl+C on Windows."""
+    """Handle `Ctrl+C` on Windows by creating an interrupt event for the Poller.
 
-    def __init__(self, name: str) -> None:
-        """Handles Ctrl+C on Windows.
+    Creates an exclusive `PAIR` of sockets to handle a `Ctrl+C` event.
+    """
 
-        Args:
-            name: The name to use for the *inproc* PUB-SUB pattern.
-        """
-        self.name: str = name
+    def __init__(self) -> None:
+        """Handle `Ctrl+C` on Windows by creating an interrupt event for the Poller."""
+        self.name: str = f"Interrupter[{os.urandom(8).hex()}]"
         self.context: zmq.Context[zmq.SyncSocket] = zmq.Context()
-
-        self.publisher: zmq.SyncSocket = self.context.socket(zmq.PUB)
-        _ = self.publisher.bind(f"inproc://{name}")
-
-        self.subscriber: zmq.SyncSocket = self.context.socket(zmq.SUB)
-        self.subscriber.setsockopt(zmq.SUBSCRIBE, b"")
-        _ = self.subscriber.connect(f"inproc://{name}")
-
-        logger.debug(f"Interrupter created for {name}")
+        self.sender: zmq.SyncSocket = self.context.socket(zmq.PAIR)
+        self.receiver: zmq.SyncSocket = self.context.socket(zmq.PAIR)
+        _ = self.sender.bind(f"inproc://{self.name}")
+        _ = self.receiver.connect(f"inproc://{self.name}")
+        logger.debug("%s created", self.name)
 
     def __call__(self) -> None:
-        """Publishes the notification."""
-        self.publisher.send(b"")
+        """Trigger `Ctrl+C` event."""
+        logger.debug("%s triggered", self.name)
+        self.sender.send(b"")
         time.sleep(0.01)  # avoids occasional asyncio.InvalidStateError from the Poller when shutting down on Windows
 
-    def shutdown(self) -> None:
+    def close(self) -> None:
         """Close the sockets and destroy the context."""
-        self.publisher.close(linger=0)
-        self.subscriber.close(linger=0)
+        self.sender.close(linger=0)
+        self.receiver.close(linger=0)
         self.context.destroy()
-        logger.debug(f"Interrupter destroyed for {self.name}")
+        logger.debug("%s destroyed", self.name)

@@ -23,6 +23,8 @@
         "CHANGELOG.md"
     ],
     "words": [
+        "caplog",
+        "capsys",
         "EHOSTUNREACH",
         "inproc",
         "msecs",

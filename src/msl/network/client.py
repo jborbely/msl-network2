@@ -13,7 +13,7 @@ from zmq.asyncio import Context, Poller, Socket
 
 from .interrupter import Interrupter
 from .message import Flag, Request, Response
-from .utils import logger, run_event_loop
+from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
     import sys
@@ -32,16 +32,16 @@ if TYPE_CHECKING:
 class Client:
     """A Client."""
 
-    def __init__(self, *, host: str = "127.0.0.1", port: int = 1875, flags: Flag = Flag.PICKLE) -> None:
+    def __init__(self, *, host: str = "127.0.0.1", port: int = BROKER_PORT, flag: Flag = Flag.PICKLE) -> None:
         """A Client.
 
         Args:
             host: The hostname (or IP address) that the broker is running on.
             port: The network port that the broker is running on.
-            flags: The serialization and compression algorithms to apply to a
+            flag: The serialization and compression algorithms to apply to a
                 request before sending the byte stream.
         """
-        self.flags: Flag = flags
+        self.flag: Flag = flag
         """The serialization and compression algorithms to apply to a request before sending the byte stream."""
 
         self._id: str = hex(id(self))
@@ -52,11 +52,11 @@ class Client:
         self._queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]] = asyncio.Queue()
 
         # For Ctrl+C to work on Windows
-        self._interrupter: Interrupter = Interrupter(f"Client[{self._id}]")
+        self._interrupter: Interrupter = Interrupter()
 
         # For sending/receiving messages to/from the Broker
         self._socket: Socket = self._context.socket(zmq.DEALER)
-        self._socket.setsockopt(zmq.IDENTITY, b"client" + os.urandom(8))
+        self._socket.setsockopt(zmq.IDENTITY, f"Client[{os.urandom(8).hex()}]".encode())
         _ = self._socket.connect(f"tcp://{host}:{port}")
 
         # For waking up the Poller to send another request
@@ -68,7 +68,7 @@ class Client:
         # Polls for events on the asyncio event loop
         self._poller: Poller = Poller()
         self._poller.register(self._socket, zmq.POLLIN)
-        self._poller.register(self._interrupter.subscriber, zmq.POLLIN)
+        self._poller.register(self._interrupter.receiver, zmq.POLLIN)
         self._poller.register(self._wakeup_receiver, zmq.POLLIN)
 
         # Must run the asyncio event loop in a separate thread
@@ -110,7 +110,7 @@ class Client:
             attribute=attr,
             args=args,
             kwargs=kwargs,
-        ).to_bytes(self.flags)
+        ).to_bytes(self.flag)
 
         _ = self._loop.call_soon_threadsafe(self._queue.put_nowait, (worker_name.encode(), request))
         return future
@@ -157,9 +157,9 @@ class Client:
             return
 
         self._interrupter()
-        self._interrupter.shutdown()
+        self._interrupter.close()
         self._poller.unregister(self._socket)
-        self._poller.unregister(self._interrupter.subscriber)
+        self._poller.unregister(self._interrupter.receiver)
         self._poller.unregister(self._wakeup_receiver)
         self._socket.close(linger=0)
         self._wakeup_receiver.close(linger=0)

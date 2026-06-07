@@ -11,10 +11,10 @@ from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
 from .message import Flag, Request, Response
-from .utils import logger, run_event_loop
+from .utils import BROKER_PORT, logger, run_event_loop
 
 
-async def run(port: int = 1875) -> None:
+async def run(port: int = BROKER_PORT) -> None:
     """Run the broker.
 
     Args:
@@ -46,11 +46,11 @@ async def run(port: int = 1875) -> None:
         address = router.getsockopt_string(zmq.LAST_ENDPOINT)
         logger.info("Server running on %s", address)
 
-        interrupter = Interrupter(f"Broker[{address[6:]}]")
+        interrupter = Interrupter()
 
         poller = Poller()
         poller.register(router, zmq.POLLIN)
-        poller.register(interrupter.subscriber, zmq.POLLIN)
+        poller.register(interrupter.receiver, zmq.POLLIN)
 
         worker_names: set[bytes] = set()
 
@@ -78,11 +78,11 @@ async def run(port: int = 1875) -> None:
                     await send(destination, source, message)
 
         poller.unregister(router)
-        poller.unregister(interrupter.subscriber)
-        interrupter.shutdown()
+        poller.unregister(interrupter.receiver)
+        interrupter.close()
 
 
-def main(port: int = 1875, level: int = logging.DEBUG) -> None:
+def main(port: int = BROKER_PORT, level: int = logging.DEBUG) -> None:
     """Run the asyncio event loop."""
     logging.basicConfig(
         level=level,
