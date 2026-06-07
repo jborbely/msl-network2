@@ -106,6 +106,7 @@ branch = true
 data_file = ".cache/coverage/.coverage"
 omit = [
     "src/msl/examples/*",
+    "src/msl/network/typing.py",
 ]
 
 [tool.coverage.report]

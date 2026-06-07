@@ -11,6 +11,8 @@ from enum import IntFlag
 from struct import pack, unpack
 from typing import TYPE_CHECKING, NamedTuple
 
+from .utils import logger
+
 try:
     from compression import zstd
 except ModuleNotFoundError:
@@ -18,7 +20,9 @@ except ModuleNotFoundError:
 else:
     has_zstd = True
 
+
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Any, Callable
 
 
@@ -29,31 +33,40 @@ class Request(NamedTuple):
     """The message ID.
 
     Used by a client to keep track of which response corresponds to which
-    request when sending asynchronous requests to multiple workers.
+    request when sending asynchronous requests to multiple Workers.
     """
 
-    worker: str
-    """The name of the worker to send the request to."""
+    service: str
+    """The name of the service to send the request to."""
 
     attribute: str
-    """The name of the attribute (method) on the worker to call."""
+    """The name of the attribute (method) on the Worker to call."""
 
-    args: tuple[Any, ...]
-    """The arguments that the worker's method requires."""
+    args: Sequence[Any]
+    """The arguments that the Worker's method requires."""
 
     kwargs: dict[str, Any]
-    """The keyword arguments that the worker's method requires."""
+    """The keyword arguments that the Worker's method requires."""
 
     def to_bytes(self, flag: Flag) -> bytes:
-        """Convert the request to bytes."""
-        return flag.to_bytes(2, "little") + compress[flag & Flag.COMPRESS](serialize[flag & Flag.SERIALIZE](self))
+        """Convert the request to bytes.
+
+        !!! note
+            It does not make sense to use Flag.NONE for a request since serialization must occur.
+            Neither int, str, tuple, nor dict can be converted to a memoryview, which would then be converted to bytes.
+        """
+        logger.debug("Converting request to bytes using %r", flag)
+        return flag.to_bytes(2, "little") + compress[flag & COMPRESS](serialize[flag & SERIALIZE](self))
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Request:
         """Create a request from bytes."""
         (flag,) = unpack("<H", data[:2])
-        data = decompress[flag & Flag.DECOMPRESS](data[2:])
-        return Request(*deserialize[flag & Flag.DESERIALIZE](data))
+        data = decompress[flag & DECOMPRESS](data[2:])
+        request = deserialize[flag & DESERIALIZE](data)
+        if isinstance(request, Request):  # could have been pickled, no need to recreate
+            return request
+        return Request(*request)
 
 
 class Response(NamedTuple):
@@ -63,30 +76,62 @@ class Response(NamedTuple):
     """The message ID from the client (return unaltered)."""
 
     ok: bool
-    """Whether the result of a worker processing the request was successful.
+    """Whether the result of a Worker processing the request was successful.
 
-    If `False`, the `result` is the exception traceback (as [bytes][]) otherwise the result.
+    If `False`, the `result` is the exception traceback (as bytes).
     """
 
     result: Any
     """The result of the request."""
 
     def to_bytes(self, flag: Flag) -> bytes:
-        """Convert the response to bytes."""
-        return pack("<Q?H", self.id, self.ok, flag) + compress[flag & Flag.COMPRESS](
-            serialize[flag & Flag.SERIALIZE](self.result)
+        """Convert the response to bytes.
+
+        Only the `result` is used during serialization and compression. The packed
+        size of (id, ok) is only 9 bytes anyway, and flag cannot be compressed
+        (otherwise we would not know how to decompress the bytes).
+        """
+        logger.debug("Converting response to bytes using %r", flag)
+        return pack("<HQ?", flag, self.id, self.ok) + compress[flag & COMPRESS](
+            serialize[flag & SERIALIZE](self.result)
         )
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Response:
         """Create a response from bytes."""
-        _id, ok, flag = unpack("<Q?H", data[:11])
-        data = decompress[flag & Flag.DECOMPRESS](data[11:])
-        return Response(id=_id, ok=ok, result=deserialize[flag & Flag.DESERIALIZE](data))
+        flag, _id, ok = unpack("<HQ?", data[:11])
+        data = decompress[flag & DECOMPRESS](data[11:])
+        return Response(id=_id, ok=ok, result=deserialize[flag & DESERIALIZE](data))
 
 
 class Flag(IntFlag):
-    """Message flags for compression and serialization."""
+    """Message flags for compression and serialisation.
+
+    You may use a single flag or take a bitwise union of one (de)serialisation
+    flag with one (de)compression flag, e.g.,
+
+    * `Flag.JSON` &mdash; JSON (de)serialisation, no (de)compression
+    * `Flag.ZLIB` &mdash; No (de)serialisation, ZLIB (de)compression
+    * `Flag.PICKLE | Flag.ZSTD` &mdash; Pickle (de)serialisation, ZSTD (de)compression
+
+    A [KeyError][] will be raised when you use a flag that is a union of more than
+    one serialisation flag or more than one compression flag when a *request* or a
+    *response* is sent.
+
+    Attributes:
+        NONE (int): Do not apply (de)serialisation nor (de)compression, `0`.
+            This flag is only useful if a method of a [Worker][msl.network.worker.Worker]
+            returns an object that supports the [buffer protocol][buffer-protocol].
+            As such, this flag is only applicable to a *response* and cannot be
+            used for a *request*.
+        BZ2 (int): bz2 (de)compression using the [bz2][module-bz2] module, `1`
+        LZMA (int): lzma (de)compression using the [lzma][module-lzma] module, `2`
+        ZLIB (int): zlib (de)compression using the [zlib][module-zlib] module, `4`
+        ZSTD (int): zstd (de)compression using the [zstd][module-compression.zstd] module, `8`
+        PICKLE (int): (De)serialisation using the [pickle][] module, `256`
+        JSON (int): (De)serialisation using the builtin [json][] module, `512`
+        ORJSON (int): (De)serialisation using the [orjson][https://pypi.org/project/orjson/] package, `1024`
+    """
 
     NONE = 0
 
@@ -95,17 +140,37 @@ class Flag(IntFlag):
     LZMA = 1 << 1
     ZLIB = 1 << 2
     ZSTD = 1 << 3
-    COMPRESS = BZ2 | LZMA | ZLIB | ZSTD
-    DECOMPRESS = COMPRESS
 
     # Serialize and deserialize (reserve space for a few more compression options)
     PICKLE = 1 << 8
     JSON = 1 << 9
-    SERIALIZE = PICKLE | JSON
-    DESERIALIZE = SERIALIZE
+    ORJSON = 1 << 10
+
+
+COMPRESS = Flag.BZ2 | Flag.LZMA | Flag.ZLIB | Flag.ZSTD
+DECOMPRESS = COMPRESS
+SERIALIZE = Flag.PICKLE | Flag.JSON | Flag.ORJSON
+DESERIALIZE = SERIALIZE
+
+
+def _default(obj: Any) -> Any:
+    """Used as the callable function in json.dumps()."""
+    try:
+        return obj.to_json()
+    except AttributeError:
+        pass
+
+    name = obj.__class__.__name__
+    msg = (
+        f"Object of type {name} is not JSON serializable. "
+        f"You can implement a {name}.to_json() method that returns an object that is JSON serializable"
+    )
+    raise TypeError(msg)
 
 
 def _memoryview_to_bytes(obj: Any) -> bytes:
+    if isinstance(obj, bytes):
+        return obj
     return memoryview(obj).tobytes()
 
 
@@ -114,7 +179,7 @@ def _pickle_dumps(obj: Any) -> bytes:
 
 
 def _json_dumps(obj: Any) -> bytes:
-    return json.dumps(obj, separators=(",", ":")).encode()
+    return json.dumps(obj, separators=(",", ":"), ensure_ascii=False, default=_default).encode()
 
 
 def _noop(obj: bytes) -> bytes:

@@ -95,7 +95,7 @@ class Client:
         """Returns the class name and the network address of the Client."""
         return f"{self.__class__.__name__}[{self._id}]"
 
-    def _create_future(self, worker_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
+    def _create_future(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
         if self._loop is None:
             msg = "Event loop not running, cannot send request"
             raise RuntimeError(msg)
@@ -106,23 +106,23 @@ class Client:
 
         request = Request(
             id=self._transaction,
-            worker=worker_name,
+            service=service_name,
             attribute=attr,
             args=args,
             kwargs=kwargs,
         ).to_bytes(self.flag)
 
-        _ = self._loop.call_soon_threadsafe(self._queue.put_nowait, (worker_name.encode(), request))
+        _ = self._loop.call_soon_threadsafe(self._queue.put_nowait, (service_name.encode(), request))
         return future
 
     async def _wakeup_event(self) -> None:
         while True:
-            worker, request = await self._queue.get()
+            worker_id, request = await self._queue.get()
             if request is None:
                 self._queue.task_done()
                 break
 
-            _ = await self._wakeup_sender.send_multipart((worker, request))  # pyright: ignore[reportUnknownMemberType]
+            _ = await self._wakeup_sender.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
 
     async def _handle_messages(self) -> None:
         poller = self._poller
@@ -134,12 +134,12 @@ class Client:
             event = dict(await poller.poll())
 
             if event.get(wakeup):  # Send request
-                worker, request = await wakeup.recv_multipart()
-                logger.debug("%s sent request to %r", self, worker)
-                _ = await socket.send_multipart((worker, request))  # pyright: ignore[reportUnknownMemberType]
+                worker_id, request = await wakeup.recv_multipart()
+                logger.debug("%s sent request to %r", self, worker_id)
+                _ = await socket.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
             elif event.get(socket):  # Handle reply
-                worker, response = await socket.recv_multipart()
-                logger.debug("%s received response from %r", self, worker)
+                worker_id, response = await socket.recv_multipart()
+                logger.debug("%s received response from %r", self, worker_id)
                 r = Response.from_bytes(response)
                 future = self._futures.pop(r.id)
                 if r.ok:
@@ -168,24 +168,22 @@ class Client:
         self._loop = None
         logger.debug("%s disconnected", self)
 
-    def link(self, worker_name: str) -> Link:
-        """Link with a worker.
+    def link(self, service_name: str) -> Link:
+        """Link with a service.
 
         Args:
-            worker_name: The name of a [Worker][msl.network.worker.Worker] to create a link with.
+            service_name: The name of a service to create a [Link][msl.network.client.Link] with.
         """
-        return Link(self._create_future, worker_name)
+        return Link(self._create_future, service_name)
 
-    def workers(self, timeout: float | None = None) -> list[str]:
-        """Request the names of the [Worker][msl.network.worker.Worker]s that are available.
+    def services(self, timeout: float | None = None) -> list[str]:
+        """Request the names of the services that are available.
 
         Args:
-            timeout: The number of seconds to wait for the result if the future
-                isn't done. If None, then there is no limit on the wait time.
+            timeout: The maximum number of seconds to wait for the result. If `None`, wait forever.
 
         Returns:
-            The names of the [Worker][msl.network.worker.Worker]s that are available
-                to be [Link][msl.network.client.Link]ed with.
+            The names of the services that are available to be [Link][msl.network.client.Link]ed with.
         """
         return sorted(self._create_future("broker", "").result(timeout))
 
@@ -193,19 +191,19 @@ class Client:
 class Link:
     """A link with a Worker."""
 
-    def __init__(self, create_future: Callable[..., Future[Any]], worker_name: str) -> None:
+    def __init__(self, create_future: Callable[..., Future[Any]], service_name: str) -> None:
         """A link with a Worker."""
-        self._worker_name: str = worker_name
+        self._service_name: str = service_name
         self._create_future: Callable[..., Future[Any]] = create_future
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns a string representation of the Worker that the Client is linked with."""
-        return f"{self.__class__.__name__}(worker={self._worker_name})"
+        return f"{self.__class__.__name__}(service={self._service_name})"
 
     def __getattr__(self, attr: str) -> Callable[..., Future[Any]]:
         """Send a request to the linked Worker."""
 
         def wrapper(*args: Any, **kwargs: Any) -> Future[Any]:
-            return self._create_future(self._worker_name, attr, *args, **kwargs)
+            return self._create_future(self._service_name, attr, *args, **kwargs)
 
         return wrapper
