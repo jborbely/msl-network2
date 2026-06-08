@@ -53,7 +53,7 @@ def test_flags_at() -> None:
     assert w.flag == Flag.NONE  # type: ignore[unreachable]
 
 
-def test_session() -> None:
+def test_session() -> None:  # noqa: PLR0915
     context = zmq.Context()
     broker = context.socket(zmq.ROUTER)
     broker.setsockopt(zmq.IDENTITY, b"Broker")
