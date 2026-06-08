@@ -185,7 +185,7 @@ class Client:
         Returns:
             The names of the services that are available to be [Link][msl.network.client.Link]ed with.
         """
-        return sorted(self._create_future("broker", "").result(timeout))
+        return sorted(self._create_future("Broker", "").result(timeout))
 
 
 class Link:

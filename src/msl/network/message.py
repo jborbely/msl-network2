@@ -11,8 +11,6 @@ from enum import IntFlag
 from struct import pack, unpack
 from typing import TYPE_CHECKING, NamedTuple
 
-from .utils import logger
-
 try:
     from compression import zstd
 except ModuleNotFoundError:
@@ -55,7 +53,6 @@ class Request(NamedTuple):
             It does not make sense to use Flag.NONE for a request since serialization must occur.
             Neither int, str, tuple, nor dict can be converted to a memoryview, which would then be converted to bytes.
         """
-        logger.debug("Converting request to bytes using %r", flag)
         return flag.to_bytes(2, "little") + compress[flag & COMPRESS](serialize[flag & SERIALIZE](self))
 
     @classmethod
@@ -91,7 +88,6 @@ class Response(NamedTuple):
         size of (id, ok) is only 9 bytes anyway, and flag cannot be compressed
         (otherwise we would not know how to decompress the bytes).
         """
-        logger.debug("Converting response to bytes using %r", flag)
         return pack("<HQ?", flag, self.id, self.ok) + compress[flag & COMPRESS](
             serialize[flag & SERIALIZE](self.result)
         )

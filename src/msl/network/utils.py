@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__package__)
 
+logging.getLogger("asyncio").setLevel(logging.WARNING)
+
 BROKER_PORT = 1875
 
 

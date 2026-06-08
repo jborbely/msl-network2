@@ -56,9 +56,10 @@ class Worker:
         """Connect (or reconnect) to the [Broker][]."""
         try:
             run_event_loop(self._handle_requests())
-        except KeyboardInterrupt:
+        except KeyboardInterrupt:  # pragma: no cover
             pass
         finally:
+            run_event_loop(self._handle_disconnect())
             self.disconnect()
             logger.debug("%s event loop closed", self._service_name)
 
@@ -93,6 +94,15 @@ class Worker:
         finally:
             self.flag = original
 
+    async def _handle_disconnect(self) -> None:
+        """Notify the Broker that this Worker is disconnecting."""
+        if self._socket is None:
+            return
+
+        r = Request(id=0, service=self._service_name, attribute="DISCONNECT", args=[], kwargs={})
+        _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+        logger.debug("%s unregistered", self._service_name)
+
     async def _handle_requests(self) -> None:
         self._interrupter = Interrupter()
         self._socket = self._context.socket(zmq.DEALER)
@@ -108,7 +118,8 @@ class Worker:
         # service-name registration now or when the Broker runs later. Sending
         # this message now does not wait for the Broker to be ready to receive
         # it and is non-blocking.
-        _ = await self._socket.send_multipart([b"broker", self._service_name.encode()])  # pyright: ignore[reportUnknownMemberType]
+        r = Request(id=0, service=self._service_name, attribute="READY", args=[], kwargs={})
+        _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s registered", self._service_name)
 
         with allow_interrupt(self._interrupter):

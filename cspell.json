@@ -23,6 +23,7 @@
         "CHANGELOG.md"
     ],
     "words": [
+        "appendleft",
         "caplog",
         "capsys",
         "EHOSTUNREACH",
