@@ -202,7 +202,7 @@ def test_request_pickle_zlib() -> None:
     data = r.to_bytes(Flag.PICKLE | Flag.ZLIB)
 
     import pickle
-    serialised = pickle.dumps((4, "a", "b", (2,), {"foo": "bar"}))
+    serialised = pickle.dumps((4, "a", "b", (2,), {"foo": "bar"}), protocol=5)
     assert serialised == b"\x80\x05\x95!\x00\x00\x00\x00\x00\x00\x00(K\x04\x8c\x01a\x94\x8c\x01b\x94K\x02\x85\x94}\x94\x8c\x03foo\x94\x8c\x03bar\x94st\x94."
 
     import zlib
