@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from array import array
-from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 BAD_FLAGS = [
     Flag.JSON | Flag.PICKLE,
+    Flag.JSON | Flag.ORJSON,
+    Flag.PICKLE | Flag.ORJSON,
     Flag.BZ2 | Flag.LZMA,
     Flag.BZ2 | Flag.ZLIB,
     Flag.BZ2 | Flag.ZSTD,
@@ -33,6 +35,16 @@ def temporarily_force_zstd_missing() -> Iterator[None]:
     message.has_zstd = False
     yield
     message.has_zstd = original
+
+
+@pytest.fixture
+def temporarily_force_orjson_missing() -> Iterator[None]:
+    from msl.network import message  # noqa: PLC0415
+
+    original = message.has_orjson
+    message.has_orjson = False
+    yield
+    message.has_orjson = original
 
 
 def test_request_raw() -> None:
@@ -61,6 +73,27 @@ def test_request_json() -> None:
     serialised = r.to_bytes(Flag.JSON)
     assert serialised == b"\x00\x02" + b'[1,"a","b",[1,2.3,null,true,"foo"],{"a":0,"b":true}]'
     assert r == Request.from_bytes(serialised)
+
+
+def test_request_orjson() -> None:
+    r = Request(
+        id=1,
+        service="a",
+        attribute="b",
+        args=(1, 2.3, None, True, "foo", datetime(2020, 10, 25)),  # noqa: DTZ001
+        kwargs={"a": 0, "b": True, "nd": np.array([[1.1, 2.2], [3.3, 4.4]])},
+    )
+
+    serialised = r.to_bytes(Flag.ORJSON)
+    assert serialised == (
+        b'\x00\x04[1,"a","b",[1,2.3,null,true,"foo","2020-10-25T00:00:00"],{"a":0,"b":true,"nd":[[1.1,2.2],[3.3,4.4]]}]'
+    )
+    r2 = Request.from_bytes(serialised)
+    assert r2.id == r.id
+    assert r2.service == r.service
+    assert r2.attribute == r.attribute
+    assert r2.args == [1, 2.3, None, True, "foo", "2020-10-25T00:00:00"]
+    assert r2.kwargs == {"a": 0, "b": True, "nd": [[1.1, 2.2], [3.3, 4.4]]}
 
 
 def test_request_pickle() -> None:
@@ -102,6 +135,15 @@ def test_response_json() -> None:
     serialised = r.to_bytes(Flag.JSON)
     assert serialised == (
         b"\x00\x02" + b"\x09\x00\x00\x00\x00\x00\x00\x00" + b"\x01" + b'[1,2.3,null,true,"foo",[-1,0,1]]'
+    )
+    assert r == Response.from_bytes(serialised)
+
+
+def test_response_orjson() -> None:
+    r = Response(id=9, ok=True, result=[1, 2.3, None, True, "foo", [-1, 0, 1]])
+    serialised = r.to_bytes(Flag.ORJSON)
+    assert serialised == (
+        b"\x00\x04" + b"\x09\x00\x00\x00\x00\x00\x00\x00" + b"\x01" + b'[1,2.3,null,true,"foo",[-1,0,1]]'
     )
     assert r == Response.from_bytes(serialised)
 
@@ -158,7 +200,10 @@ def test_request_json_bz2() -> None:
 def test_request_pickle_zlib() -> None:
     r = Request(id=4, service="a", attribute="b", args=(2,), kwargs={"foo": "bar"})
     data = r.to_bytes(Flag.PICKLE | Flag.ZLIB)
-    assert data.startswith(b"\x04\x01x\x9ck`")
+    assert data == (
+        b"\x04\x01"
+        b"x\x9ck`\x9d\xaa\xc8\x00\x01\x1a\xde,=\x8c\x89Sz\x18\x93\xa6x3\xb5N\xa9\x9d\xd2\xc3\x9c\x96\x9f?\xa5\x879)\xb1hJq\xc9\x14=\x00\xf6\xf2\r\x97"
+    )
     assert r == Request.from_bytes(data)
 
 
@@ -184,12 +229,11 @@ def test_zstd() -> None:
 
 def test_zstd_missing(temporarily_force_zstd_missing: None) -> None:
     assert temporarily_force_zstd_missing is None
-    r = Response(id=10, ok=True, result=b"hi")
     with pytest.raises(ModuleNotFoundError):
-        _ = r.to_bytes(Flag.ZSTD)
+        _ = Response(id=10, ok=True, result=b"hi").to_bytes(Flag.ZSTD)
 
     with pytest.raises(ModuleNotFoundError):
-        _ = Request.from_bytes(b"\x08\x00whatever")
+        _ = Request.from_bytes(Flag.ZSTD.to_bytes(2, "little") + b"foo")
 
 
 def test_noop() -> None:
@@ -218,24 +262,59 @@ def test_request_invalid_bitwise_flags(flag: Flag) -> None:
         _ = request.to_bytes(flag)
 
 
-def test_to_json() -> None:
-    @dataclass
+@pytest.mark.parametrize("flag", [Flag.JSON, Flag.ORJSON])
+def test_json_orjson_default(flag: Flag) -> None:
+
     class Nope:
-        a: int = 1
-        b: bool = True
+        def __init__(self) -> None:
+            self.a: int = 1
+            self.b: bool = True
 
     request = Request(1, "a", "b", (Nope(),), {})
-    with pytest.raises(TypeError, match=r"implement a Nope.to_json\(\) method"):
-        _ = request.to_bytes(Flag.JSON)
+    with pytest.raises(TypeError, match=r"not JSON serializable"):
+        _ = request.to_bytes(flag)
 
-    @dataclass
     class JSONable:
-        a: int = 1
-        b: bool = True
+        def __init__(self) -> None:
+            self.a: int = 1
+            self.b: bool = True
 
         def to_json(self) -> dict[str, int | bool]:
             return {"a": self.a, "b": self.b}
 
     request = Request(1, "a", "b", (JSONable(),), {})
-    serialised = request.to_bytes(Flag.JSON)
-    assert serialised == b"\x00\x02" + b'[1,"a","b",[{"a":1,"b":true}],{}]'
+    serialised = request.to_bytes(flag)
+    assert serialised == flag.to_bytes(2, "little") + b'[1,"a","b",[{"a":1,"b":true}],{}]'
+
+
+def test_tuple_is_named_tuple() -> None:
+    # Verifies that tuple(NamedTuple) does not copy data
+
+    r = Request(
+        id=1,
+        service="hello",
+        attribute="world",
+        args=(1, 2.3, None, True, "foo", b"bar", [9, 8, 7], {1, 2, 3}),
+        kwargs={"a": array("b", b"A"), "b": np.arange(1000, dtype=float)},
+    )
+
+    tr = tuple(r)
+    assert tr[0] is r.id
+    assert tr[0] is r[0]
+    assert tr[1] is r.service
+    assert tr[1] is r[1]
+    assert tr[2] is r.attribute
+    assert tr[2] is r[2]
+    assert tr[3] is r.args
+    assert tr[3] is r[3]
+    assert tr[4] is r.kwargs
+    assert tr[4] is r[4]
+
+
+def test_orjson_missing(temporarily_force_orjson_missing: None) -> None:
+    assert temporarily_force_orjson_missing is None
+    with pytest.raises(ModuleNotFoundError):
+        _ = Response(id=10, ok=True, result=b"hi").to_bytes(Flag.ORJSON)
+
+    with pytest.raises(ModuleNotFoundError):
+        _ = Request.from_bytes(Flag.ORJSON.to_bytes(2, "little") + b"foo")

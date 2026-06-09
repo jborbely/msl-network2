@@ -68,6 +68,7 @@ dev = [
     {include-group = "lint"},
     {include-group = "test"},
     {include-group = "type"},
+    "orjson>=3.10.15",
 ]
 
 [build-system]

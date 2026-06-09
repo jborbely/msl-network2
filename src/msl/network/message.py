@@ -18,6 +18,12 @@ except ModuleNotFoundError:
 else:
     has_zstd = True
 
+try:
+    import orjson
+except ModuleNotFoundError:
+    has_orjson = False
+else:
+    has_orjson = True
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -53,17 +59,14 @@ class Request(NamedTuple):
             It does not make sense to use Flag.NONE for a request since serialization must occur.
             Neither int, str, tuple, nor dict can be converted to a memoryview, which would then be converted to bytes.
         """
-        return flag.to_bytes(2, "little") + compress[flag & COMPRESS](serialize[flag & SERIALIZE](self))
+        return flag.to_bytes(2, "little") + compress[flag & COMPRESS](serialize[flag & SERIALIZE](tuple(self)))
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Request:
         """Create a request from bytes."""
         (flag,) = unpack("<H", data[:2])
         data = decompress[flag & DECOMPRESS](data[2:])
-        request = deserialize[flag & DESERIALIZE](data)
-        if isinstance(request, Request):  # could have been pickled, no need to recreate
-            return request
-        return Request(*request)
+        return Request(*deserialize[flag & DESERIALIZE](data))
 
 
 class Response(NamedTuple):
@@ -115,18 +118,19 @@ class Flag(IntFlag):
     *response* is sent.
 
     Attributes:
-        NONE (int): Do not apply (de)serialisation nor (de)compression, `0`.
-            This flag is only useful if a method of a [Worker][msl.network.worker.Worker]
+        NONE (int): Do not apply (de)serialisation nor (de)compression. This flag
+            is only useful if a method of a [Worker][msl.network.worker.Worker]
             returns an object that supports the [buffer protocol][buffer-protocol].
-            As such, this flag is only applicable to a *response* and cannot be
+            As such, this flag is only applicable for a *response* and cannot be
             used for a *request*.
-        BZ2 (int): bz2 (de)compression using the [bz2][module-bz2] module, `1`
-        LZMA (int): lzma (de)compression using the [lzma][module-lzma] module, `2`
-        ZLIB (int): zlib (de)compression using the [zlib][module-zlib] module, `4`
-        ZSTD (int): zstd (de)compression using the [zstd][module-compression.zstd] module, `8`
-        PICKLE (int): (De)serialisation using the [pickle][] module, `256`
-        JSON (int): (De)serialisation using the builtin [json][] module, `512`
-        ORJSON (int): (De)serialisation using the [orjson][https://pypi.org/project/orjson/] package, `1024`
+        BZ2 (int): bz2 (de)compression using the [bz2][module-bz2] module.
+        LZMA (int): lzma (de)compression using the [lzma][module-lzma] module.
+        ZLIB (int): zlib (de)compression using the [zlib][module-zlib] module.
+        ZSTD (int): zstd (de)compression using the [zstd][module-compression.zstd] module.
+        PICKLE (int): (De)serialisation using the [pickle][] module.
+        JSON (int): (De)serialisation using the builtin [json][] module.
+        ORJSON (int): (De)serialisation using the [orjson][https://pypi.org/project/orjson/]
+            package. Includes the option `OPT_SERIALIZE_NUMPY` when serialising.
     """
 
     NONE = 0
@@ -178,16 +182,24 @@ def _json_dumps(obj: Any) -> bytes:
     return json.dumps(obj, separators=(",", ":"), ensure_ascii=False, default=_default).encode()
 
 
+def _orjson_dumps(obj: Any) -> bytes:
+    if has_orjson:
+        return orjson.dumps(obj, option=orjson.OPT_SERIALIZE_NUMPY, default=_default)  # pyright: ignore[reportPossiblyUnboundVariable]
+
+    msg = "The orjson package is not installed"
+    raise ModuleNotFoundError(msg)
+
+
 def _noop(obj: bytes) -> bytes:
     return obj
 
 
-def _pickle_loads(obj: bytes) -> Any:
-    return pickle.loads(obj)  # noqa: S301
+def _orjson_loads(obj: bytes) -> Any:
+    if has_orjson:
+        return orjson.loads(obj)  # pyright: ignore[reportPossiblyUnboundVariable]
 
-
-def _json_loads(obj: bytes) -> Any:
-    return json.loads(obj)
+    msg = "The orjson package is not installed"
+    raise ModuleNotFoundError(msg)
 
 
 def _zstd_compress(obj: bytes) -> bytes:
@@ -210,12 +222,14 @@ serialize: dict[Flag, Callable[[Any], bytes]] = {
     Flag.NONE: _memoryview_to_bytes,
     Flag.PICKLE: _pickle_dumps,
     Flag.JSON: _json_dumps,
+    Flag.ORJSON: _orjson_dumps,
 }
 
 deserialize: dict[Flag, Callable[[bytes], Any]] = {
     Flag.NONE: _noop,
-    Flag.PICKLE: _pickle_loads,
-    Flag.JSON: _json_loads,
+    Flag.PICKLE: pickle.loads,
+    Flag.JSON: json.loads,
+    Flag.ORJSON: _orjson_loads,
 }
 
 compress: dict[Flag, Callable[[bytes], bytes]] = {
