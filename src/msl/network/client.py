@@ -6,6 +6,7 @@ import asyncio
 import os
 import threading
 from concurrent.futures import Future
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import zmq
@@ -17,6 +18,7 @@ from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
     import sys
+    from collections.abc import Generator
     from typing import Any, Callable
 
     # the Self type was added in Python 3.11 (PEP 673)
@@ -93,7 +95,7 @@ class Client:
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns the class name and the network address of the Client."""
-        return f"{self.__class__.__name__}[{self._id}]"
+        return f"{self.__class__.__name__}(host={self})"
 
     def _create_future(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
         if self._loop is None:
@@ -168,6 +170,39 @@ class Client:
         self._loop = None
         logger.debug("%s disconnected", self)
 
+    @contextmanager
+    def flag_at(self, flag: Flag) -> Generator[None, None, None]:
+        """Use as a context manager to temporarily change the [flag][..flag] value.
+
+        !!! example
+            ```python
+            from msl.network import Client, Flag
+
+            client = Client(flag=Flag.PICKLE)
+            link = client.link("Something")
+
+            # uses PICKLE to serialise the request
+            link.do_something()
+
+            with client.flag_at(Flag.JSON):
+                # uses JSON to serialise the request
+                link.do_something_else()
+
+            # uses PICKLE to serialise the request
+            link.do_something()
+        ```
+
+        Args:
+            flag: The temporary flag to use while within the context. Once the
+                context exits, the value is set to the original value.
+        """
+        original = self.flag
+        self.flag = flag
+        try:
+            yield
+        finally:
+            self.flag = original
+
     def link(self, service_name: str) -> Link:
         """Link with a service.
 
@@ -198,7 +233,7 @@ class Link:
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns a string representation of the Worker that the Client is linked with."""
-        return f"{self.__class__.__name__}(service={self._service_name})"
+        return f"Link(service={self._service_name!r})"
 
     def __getattr__(self, attr: str) -> Callable[..., Future[Any]]:
         """Send a request to the linked Worker."""

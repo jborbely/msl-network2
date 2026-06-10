@@ -83,6 +83,33 @@ class Worker:
     def flag_at(self, flag: Flag) -> Generator[None, None, None]:
         """Use as a context manager to temporarily change the [flag][..flag] value.
 
+        !!! example
+            ```python
+            from msl.network import Flag, Worker
+
+            class Camera(Worker):
+
+                def __init__(self) -> None:
+                    \"\"\"By default, use JSON to serialise all responses (no compression).\"\"\"
+                    super().__init__(flag=Flag.JSON)
+
+                def resolution(self) -> tuple[int, int]:
+                    \"\"\"Returns the (width, height) of a captured image.
+
+                    The response is serialised using JSON without compression.
+                    \"\"\"
+                    return 1600, 1200
+
+                def capture(self) -> bytes:
+                    \"\"\"Capture an image and return the image bytes.
+
+                    In this method, compressed bytes without serialisation is returned.
+                    \"\"\"
+                    image = ...  # capture an image from the camera
+                    with self.flag_at(Flag.ZLIB):
+                        return image
+            ```
+
         Args:
             flag: The temporary flag to use while within the context. Once the
                 context exits, the value is set to the original value.
