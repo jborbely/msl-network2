@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import threading
 from concurrent import futures
 
 import pytest
 
 from msl.network import Client, Flag
+from msl.network.broker import Broker
+from msl.network.utils import run_event_loop
 
 
 @pytest.mark.filterwarnings("error")
@@ -73,3 +76,21 @@ def test_string_representation() -> None:
     expect = f"Custom(host='127.0.0.1', port=1875, id='{c._id}')"  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert str(c) == expect
     assert repr(c) == expect
+
+
+def test_result_ok_and_error() -> None:
+    broker = Broker()
+    thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
+    thread.start()
+
+    _, port = broker.address.rsplit(":", 1)
+    client = Client(port=int(port))
+    assert client.services() == []
+
+    foo = client.link("Foo")
+    with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
+        _ = foo.bar().result()
+
+    client.disconnect()
+    broker.interrupter()
+    thread.join()

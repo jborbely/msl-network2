@@ -98,7 +98,7 @@ class Client:
         self.disconnect()
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
-        """Returns the class name and the network address of the Client."""
+        """Returns the string representation."""
         host, port = self._host_port
         return f"{self.__class__.__name__}(host={host!r}, port={port}, id={self._id!r})"
 
