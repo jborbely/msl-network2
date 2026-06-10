@@ -46,26 +46,26 @@ class Client:
         self.flag: Flag = flag
         """The serialization and compression algorithms to apply to a request before sending the byte stream."""
 
-        self._id: str = hex(id(self))
+        self._id: str = os.urandom(8).hex()
         self._transaction: int = 0
         self._futures: dict[int, Future[Any]] = {}
         self._context: Context = Context()
         self._loop: asyncio.AbstractEventLoop | None = None
-        self._queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]] = asyncio.Queue()
+        self._host_port: tuple[str, int] = (host, port)
 
         # For Ctrl+C to work on Windows
         self._interrupter: Interrupter = Interrupter()
 
         # For sending/receiving messages to/from the Broker
         self._socket: Socket = self._context.socket(zmq.DEALER)
-        self._socket.setsockopt(zmq.IDENTITY, f"Client[{os.urandom(8).hex()}]".encode())
+        self._socket.setsockopt(zmq.IDENTITY, f"Client[{self._id}]".encode())
         _ = self._socket.connect(f"tcp://{host}:{port}")
 
         # For waking up the Poller to send another request
         self._wakeup_sender: Socket = self._context.socket(zmq.PAIR)
         self._wakeup_receiver: Socket = self._context.socket(zmq.PAIR)
-        _ = self._wakeup_sender.connect(f"inproc://wakeup[{self._id}]")
-        _ = self._wakeup_receiver.bind(f"inproc://wakeup[{self._id}]")
+        _ = self._wakeup_sender.connect(f"inproc://wakeup-{self._id}")
+        _ = self._wakeup_receiver.bind(f"inproc://wakeup-{self._id}")
 
         # Polls for events on the asyncio event loop
         self._poller: Poller = Poller()
@@ -73,8 +73,12 @@ class Client:
         self._poller.register(self._interrupter.receiver, zmq.POLLIN)
         self._poller.register(self._wakeup_receiver, zmq.POLLIN)
 
+        # The Queue must be created in the Thread that runs the event loop, just specify the type here
+        self._queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]]
+
         # Must run the asyncio event loop in a separate thread
         async def tasks() -> None:
+            self._queue = asyncio.Queue()
             _ = await asyncio.gather(self._handle_messages(), self._wakeup_event())
 
         threading.Thread(target=run_event_loop, daemon=True, args=(tasks(),)).start()
@@ -95,7 +99,8 @@ class Client:
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns the class name and the network address of the Client."""
-        return f"{self.__class__.__name__}(host={self})"
+        host, port = self._host_port
+        return f"{self.__class__.__name__}(host={host!r}, port={port}, id={self._id!r})"
 
     def _create_future(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
         if self._loop is None:
@@ -148,7 +153,6 @@ class Client:
                     future.set_result(r.result)
                 else:
                     future.set_exception(RuntimeError(r.result))
-
             else:  # Shutdown
                 _ = self._loop.call_soon_threadsafe(self._queue.put_nowait, (None, None))
                 break

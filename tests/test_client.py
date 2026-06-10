@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from concurrent import futures
+
 import pytest
 
 from msl.network import Client, Flag
@@ -41,7 +43,7 @@ def test_link_string_representation() -> None:
 
 def test_services_timeout() -> None:
     c = Client()
-    with pytest.raises(TimeoutError):
+    with pytest.raises((TimeoutError, futures.TimeoutError)):
         _ = c.services(timeout=0.05)
 
 
@@ -56,15 +58,18 @@ def test_flags_at() -> None:
     _ = link.do_something()
 
 
-def test_request_after_disconnect()-> None:
+def test_request_after_disconnect() -> None:
     c = Client()
     c.disconnect()
     with pytest.raises(RuntimeError, match=r"Event loop not running, cannot send request"):
         _ = c.services()
 
-# def test_string_representation()-> None:
-#     class Custom(Client):
-#         pass
 
-#     c = Custom()
-#     assert str(c) == "Custom"
+def test_string_representation() -> None:
+    class Custom(Client):
+        pass
+
+    c = Custom()
+    expect = f"Custom(host='127.0.0.1', port=1875, id='{c._id}')"  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert str(c) == expect
+    assert repr(c) == expect
