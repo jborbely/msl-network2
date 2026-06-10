@@ -201,18 +201,9 @@ def test_request_pickle_zlib() -> None:
     r = Request(id=4, service="a", attribute="b", args=(2,), kwargs={"foo": "bar"})
     data = r.to_bytes(Flag.PICKLE | Flag.ZLIB)
 
-    import pickle
-    serialised = pickle.dumps((4, "a", "b", (2,), {"foo": "bar"}), protocol=5)
-    assert serialised == b"\x80\x05\x95!\x00\x00\x00\x00\x00\x00\x00(K\x04\x8c\x01a\x94\x8c\x01b\x94K\x02\x85\x94}\x94\x8c\x03foo\x94\x8c\x03bar\x94st\x94."
-
-    import zlib
-    compressed = zlib.compress(serialised)
-    assert compressed == b"x\x9ck`\x9d\xaa\xc8\x00\x01\x1a\xde,=\x8c\x89Sz\x18\x93\xa6x3\xb5N\xa9\x9d\xd2\xc3\x9c\x96\x9f?\xa5\x879)\xb1hJq\xc9\x14=\x00\xf6\xf2\r\x97"
-
-    assert data == (
-        b"\x04\x01"
-        b"x\x9ck`\x9d\xaa\xc8\x00\x01\x1a\xde,=\x8c\x89Sz\x18\x93\xa6x3\xb5N\xa9\x9d\xd2\xc3\x9c\x96\x9f?\xa5\x879)\xb1hJq\xc9\x14=\x00\xf6\xf2\r\x97"
-    )
+    # ZLIB compression output can very depending on the default settings of the zlib version
+    # bundled with the Python version, so just check some of the beginning bytes
+    assert data.startswith(b"\x04\x01" + b"x\x9ck`\x9d\xaa\xc8\x00\x01\x1a\xde")
     assert r == Request.from_bytes(data)
 
 
