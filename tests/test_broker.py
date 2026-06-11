@@ -14,38 +14,38 @@ from msl.network.broker import Broker
 from msl.network.utils import run_event_loop
 
 
-# def test_session() -> None:
-#     broker = Broker()
-#     broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
-#     broker_thread.start()
+def test_session() -> None:
+    broker = Broker()
+    broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
+    broker_thread.start()
 
-#     port = int(broker.address.rsplit(":", 1)[1])
+    port = int(broker.address.rsplit(":", 1)[1])
 
-#     class Foo(Worker):
-#         def __init__(self) -> None:
-#             super().__init__(port=port)
-#             self.num_requests: int = 0
+    class Foo(Worker):
+        def __init__(self) -> None:
+            super().__init__(port=port)
+            self.num_requests: int = 0
 
-#         def add(self, x: float, y: float) -> float:
-#             self.num_requests += 1
-#             return x + y
+        def add(self, x: float, y: float) -> float:
+            self.num_requests += 1
+            return x + y
 
-#         def divide(self, x: float, y: float) -> float:
-#             self.num_requests += 1
-#             return x / y
+        def divide(self, x: float, y: float) -> float:
+            self.num_requests += 1
+            return x / y
 
-#         def sleep(self, duration: float) -> None:
-#             time.sleep(duration)
+        def sleep(self, duration: float) -> None:
+            time.sleep(duration)
 
-#     service1 = Foo()
-#     service1_thread = threading.Thread(target=service1.connect, daemon=True)
-#     service1_thread.start()
+    service1 = Foo()
+    service1_thread = threading.Thread(target=service1.connect, daemon=True)
+    service1_thread.start()
 
-#     service2 = Foo()
-#     service2_thread = threading.Thread(target=service2.connect, daemon=True)
-#     service2_thread.start()
+    service2 = Foo()
+    service2_thread = threading.Thread(target=service2.connect, daemon=True)
+    service2_thread.start()
 
-#     time.sleep(0.1)
+    time.sleep(0.1)
 
 #     client = Client(port=port)
 #     assert client.services() == ["Foo"]
@@ -73,22 +73,22 @@ from msl.network.utils import run_event_loop
 #     assert future2.result() is None
 #     assert time.perf_counter() - t0 < 1.5
 
-#     interrupter1 = service1._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-#     interrupter2 = service2._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-#     assert interrupter1 is not None
-#     assert interrupter2 is not None
-#     interrupter1()
-#     interrupter2()
-#     service1_thread.join()
-#     service2_thread.join()
+    interrupter1 = service1._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    interrupter2 = service2._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert interrupter1 is not None
+    assert interrupter2 is not None
+    interrupter1()
+    interrupter2()
+    service1_thread.join()
+    service2_thread.join()
 
 #     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
 #         _ = link.add(1, 2)
 
 #     client.disconnect()
 
-#     broker.interrupter()
-#     broker_thread.join()
+    broker.interrupter()
+    broker_thread.join()
 
 
 def test_main(capfd: pytest.CaptureFixture[str]) -> None:
