@@ -40,8 +40,8 @@ Homepage = "https://mslnz.github.io/msl-network/latest/"
 Source = "https://github.com/MSLNZ/msl-network"
 Tracker = "https://github.com/MSLNZ/msl-network/issues"
 
-# [project.scripts]
-# msl-network = "msl.network.cli:main"
+[project.scripts]
+msl-network = "msl.network.broker:main"
 
 [dependency-groups]
 doc = [

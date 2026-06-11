@@ -144,11 +144,11 @@ class Client:
 
             if event.get(wakeup):  # Send request
                 worker_id, request = await wakeup.recv_multipart()
-                logger.debug("%s sent request to %r", self, worker_id)
+                logger.debug("Client[%s] sent request to %r", self._id, worker_id)
                 _ = await socket.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
             elif event.get(socket):  # Handle reply
                 worker_id, response = await socket.recv_multipart()
-                logger.debug("%s received response from %r", self, worker_id)
+                logger.debug("Client[%s] received response from %r", self._id, worker_id)
                 r = Response.from_bytes(response)
                 future = self._futures.pop(r.id)
                 if r.ok:

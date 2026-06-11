@@ -15,7 +15,7 @@ from msl.network.message import Request, Response
 @pytest.mark.filterwarnings("error")
 def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
     # If Worker.__del__ issues a pytest.PytestUnraisableExceptionWarning, this test fails
-    _ = Worker()
+    _ = Worker(port=0)
     assert not caplog.records
     out, err = capsys.readouterr()
     assert not out
@@ -25,8 +25,10 @@ def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCapt
 def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level("DEBUG")
 
-    w = Worker()
-    threading.Thread(target=w.connect, daemon=True).start()
+    w = Worker(port=0)
+    thread = threading.Thread(target=w.connect, daemon=True)
+    thread.start()
+
     time.sleep(0.1)
     interrupter = w._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert interrupter is not None
@@ -44,9 +46,11 @@ def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
     assert r[7].message == "Worker disconnected"
     assert r[8].message == "Worker event loop closed"
 
+    thread.join()
+
 
 def test_flags_at() -> None:
-    w = Worker(flag=Flag.NONE)
+    w = Worker(flag=Flag.NONE, port=0)
     assert w.flag == Flag.NONE
     with w.flag_at(Flag.JSON):
         assert w.flag == Flag.JSON  # type: ignore[comparison-overlap]
