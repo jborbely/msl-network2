@@ -76,8 +76,7 @@ def test_string_representation() -> None:
 
 def test_result_ok_and_error() -> None:
     broker = Broker()
-    thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
-    thread.start()
+    threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),)).start()
 
     _, port = broker.address.rsplit(":", 1)
     client = Client(port=int(port))
@@ -89,4 +88,3 @@ def test_result_ok_and_error() -> None:
 
     client.disconnect()
     broker.interrupter()
-    thread.join()
