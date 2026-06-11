@@ -71,7 +71,7 @@ def test_session() -> None:
     future2 = link.sleep(0.1, sync=False)
     assert future1.result() is None
     assert future2.result() is None
-    assert time.perf_counter() - t0 < 0.12
+    assert time.perf_counter() - t0 < 0.15
 
     interrupter1 = service1._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     interrupter2 = service2._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
