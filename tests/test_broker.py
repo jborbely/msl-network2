@@ -47,12 +47,12 @@ def test_session() -> None:
 
     time.sleep(0.1)
 
-#     client = Client(port=port)
-#     assert client.services() == ["Foo"]
+    client = Client(port=port)
+    assert client.services() == ["Foo"]
 
-#     link = client.link("Foo")
-#     assert link.add(1, 2) == 3  # Balancer calls service1
-#     assert link.add(-1, 1, sync=False).result() == 0  # Balancer calls service2
+    link = client.link("Foo")
+    assert link.add(1, 2) == 3  # Balancer calls service1
+    assert link.add(-1, 1, sync=False).result() == 0  # Balancer calls service2
 
 #     future_issue = link.divide(1, 0, sync=False)  # Balancer calls service1
 #     with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
@@ -85,7 +85,7 @@ def test_session() -> None:
 #     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
 #         _ = link.add(1, 2)
 
-#     client.disconnect()
+    client.disconnect()
 
     broker.interrupter()
     broker_thread.join()
