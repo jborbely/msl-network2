@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from concurrent import futures
 
 import pytest
@@ -11,7 +12,6 @@ import pytest
 from msl.network import Client, Flag
 from msl.network.broker import Broker
 from msl.network.utils import run_event_loop
-
 
 # @pytest.mark.filterwarnings("error")
 # def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
@@ -30,6 +30,7 @@ from msl.network.utils import run_event_loop
 def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level("DEBUG")
     c = Client(port=0)
+    time.sleep(0.1)
     for _ in range(5):
         c.disconnect()
 
