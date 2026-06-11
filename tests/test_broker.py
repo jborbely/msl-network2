@@ -1,7 +1,6 @@
 # cSpell: ignore creationflags capfd
 from __future__ import annotations
 
-import os
 import signal
 import subprocess
 import sys
@@ -18,7 +17,7 @@ from msl.network.utils import run_event_loop
 python_3_13 = sys.version_info[:2] == (3, 13)
 
 
-def test_session() -> None:
+def test_session() -> None:  # noqa: PLR0915
     broker = Broker()
     broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
     broker_thread.start()
@@ -58,7 +57,7 @@ def test_session() -> None:
     assert link.add(1, 2) == 3  # Balancer calls service1
     assert link.add(-1, 1, sync=False).result() == 0  # Balancer calls service2
 
-    future1= link.add(10, 1, sync=False)  # Balancer calls service1
+    future1 = link.add(10, 1, sync=False)  # Balancer calls service1
     future2 = link.add(99, 1, sync=False)  # Balancer calls service2
     assert future2.result() == 100
     assert future1.result() == 11
