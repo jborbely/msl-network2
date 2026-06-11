@@ -82,8 +82,8 @@ def test_session() -> None:
     service1_thread.join()
     service2_thread.join()
 
-    # with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
-    #     _ = link.add(1, 2)
+    with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
+        _ = link.add(1, 2)
 
     client.disconnect()
 
