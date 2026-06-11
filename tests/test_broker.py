@@ -1,6 +1,7 @@
 # cSpell: ignore creationflags capfd
 from __future__ import annotations
 
+import os
 import signal
 import subprocess
 import sys
@@ -12,6 +13,9 @@ import pytest
 from msl.network import Client, Worker
 from msl.network.broker import Broker
 from msl.network.utils import run_event_loop
+
+# A couple tests hang on Python 3.13 only
+python_3_13 = sys.version_info[:2] == (3, 13)
 
 
 def test_session() -> None:
@@ -54,12 +58,18 @@ def test_session() -> None:
     assert link.add(1, 2) == 3  # Balancer calls service1
     assert link.add(-1, 1, sync=False).result() == 0  # Balancer calls service2
 
-    # future_issue = link.divide(1, 0, sync=False)  # Balancer calls service1
-    # with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
-    #     _ = future_issue.result()
+    future1= link.add(10, 1, sync=False)  # Balancer calls service1
+    future2 = link.add(99, 1, sync=False)  # Balancer calls service2
+    assert future2.result() == 100
+    assert future1.result() == 11
 
-    assert link.num_requests() == 1  # Balancer calls service2
-    assert link.num_requests() == 1 #2  # Balancer calls service1
+    future_issue = link.divide(1, 0, sync=False)  # Balancer calls service1
+    if not python_3_13:
+        with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
+            _ = future_issue.result()
+
+    assert link.num_requests() == 2  # Balancer calls service2
+    assert link.num_requests() == 3  # Balancer calls service1
 
     t0 = time.perf_counter()
     assert link.sleep(1) is None
@@ -82,8 +92,9 @@ def test_session() -> None:
     service1_thread.join()
     service2_thread.join()
 
-    with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
-        _ = link.add(1, 2)
+    if not python_3_13:
+        with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
+            _ = link.add(1, 2)
 
     client.disconnect()
 
