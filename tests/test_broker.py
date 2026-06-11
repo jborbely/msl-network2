@@ -62,16 +62,16 @@ def test_session() -> None:
     assert link.num_requests() == 2  # Balancer calls service1
 
     t0 = time.perf_counter()
-    assert link.sleep(0.1) is None
-    assert link.sleep(0.1) is None
-    assert time.perf_counter() - t0 > 0.19
+    assert link.sleep(1) is None
+    assert link.sleep(1) is None
+    assert time.perf_counter() - t0 > 2.0
 
     t0 = time.perf_counter()
-    future1 = link.sleep(0.1, sync=False)
-    future2 = link.sleep(0.1, sync=False)
+    future1 = link.sleep(1.0, sync=False)
+    future2 = link.sleep(1.0, sync=False)
     assert future1.result() is None
     assert future2.result() is None
-    assert time.perf_counter() - t0 < 0.15
+    assert time.perf_counter() - t0 < 1.5
 
     interrupter1 = service1._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     interrupter2 = service2._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001

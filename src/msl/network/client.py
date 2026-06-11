@@ -161,25 +161,20 @@ class Client:
 
     def disconnect(self) -> None:
         """Close the socket and destroy the context."""
-        if not self._interrupter.sender.closed:
-            self._interrupter()
-            self._interrupter.close()
+        if self._loop is None:
+            return
 
-        if not self._socket.closed:
-            self._poller.unregister(self._socket)
-            self._poller.unregister(self._interrupter.receiver)
-            self._poller.unregister(self._wakeup_receiver)
-            self._socket.close(linger=0)
-
-        if not self._wakeup_receiver.closed:
-            self._wakeup_receiver.close(linger=0)
-            self._wakeup_sender.close(linger=0)
-
+        self._interrupter()
+        self._interrupter.close()
+        self._poller.unregister(self._socket)
+        self._poller.unregister(self._interrupter.receiver)
+        self._poller.unregister(self._wakeup_receiver)
+        self._socket.close(linger=0)
+        self._wakeup_receiver.close(linger=0)
+        self._wakeup_sender.close(linger=0)
         self._context.destroy()
-        if self._loop is not None:
-            logger.debug("%s disconnected", self)
-
         self._loop = None
+        logger.debug("%s disconnected", self)
 
     @contextmanager
     def flag_at(self, flag: Flag) -> Generator[None, None, None]:
