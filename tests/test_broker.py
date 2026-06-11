@@ -110,7 +110,17 @@ def test_main(capfd: pytest.CaptureFixture[str]) -> None:
     assert not out
 
     lines = err.splitlines()
-    assert len(lines) == 2
-    assert "Interrupter" in lines[0]
-    assert "created" in lines[0]
-    assert "Broker running on 0.0.0.0:1875" in lines[1]
+    if is_windows:
+        assert len(lines) == 2
+        assert "Interrupter" in lines[0]
+        assert "created" in lines[0]
+        assert "Broker running on 0.0.0.0:1875" in lines[1]
+    else:
+        assert len(lines) == 5
+        assert "Interrupter" in lines[0]
+        assert "created" in lines[0]
+        assert "Broker running on 0.0.0.0:1875" in lines[1]
+        assert lines[2] == "Broker shut down"
+        assert "Interrupter" in lines[3]
+        assert "destroyed" in lines[3]
+        assert lines[4] == "Broker event loop closed"
