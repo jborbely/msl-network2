@@ -54,12 +54,12 @@ def test_session() -> None:
     assert link.add(1, 2) == 3  # Balancer calls service1
     assert link.add(-1, 1, sync=False).result() == 0  # Balancer calls service2
 
-#     future_issue = link.divide(1, 0, sync=False)  # Balancer calls service1
-#     with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
-#         _ = future_issue.result()
+    future_issue = link.divide(1, 0, sync=False)  # Balancer calls service1
+    with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
+        _ = future_issue.result()
 
-#     assert link.num_requests() == 1  # Balancer calls service2
-#     assert link.num_requests() == 2  # Balancer calls service1
+    assert link.num_requests() == 1  # Balancer calls service2
+    assert link.num_requests() == 2  # Balancer calls service1
 
 #     t0 = time.perf_counter()
 #     assert link.sleep(1) is None
@@ -82,8 +82,8 @@ def test_session() -> None:
     service1_thread.join()
     service2_thread.join()
 
-#     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
-#         _ = link.add(1, 2)
+    with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
+        _ = link.add(1, 2)
 
     client.disconnect()
 
