@@ -56,9 +56,9 @@ def test_flags_at() -> None:
     assert c.flag == Flag.PICKLE
     with c.flag_at(Flag.JSON):
         assert c.flag == Flag.JSON  # type: ignore[comparison-overlap]
-        _ = link.do_something()  # type: ignore[unreachable]
+        _ = link.do_something(sync=False)  # type: ignore[unreachable]
     assert c.flag == Flag.PICKLE  # type: ignore[unreachable]
-    _ = link.do_something()
+    _ = link.do_something(sync=False)
 
 
 def test_request_after_disconnect() -> None:
@@ -89,7 +89,7 @@ def test_result_ok_and_error() -> None:
 
     foo = client.link("Foo")
     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
-        _ = foo.bar().result()
+        _ = foo.bar(sync=False).result()
 
     client.disconnect()
     broker.interrupter()

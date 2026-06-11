@@ -30,6 +30,8 @@ if TYPE_CHECKING:
 
         Self = TypeVar("Self", bound="Client")  # pyright: ignore[reportUnreachable]
 
+    from .typing import FutureOrResult
+
 
 class Client:
     """A Client."""
@@ -228,21 +230,29 @@ class Client:
 
 
 class Link:
-    """A link with a Worker."""
+    """A link with a service."""
 
     def __init__(self, create_future: Callable[..., Future[Any]], service_name: str) -> None:
-        """A link with a Worker."""
-        self._service_name: str = service_name
+        """A link with a service."""
         self._create_future: Callable[..., Future[Any]] = create_future
 
+        self.service_name: str = service_name
+        """The name of the service that the link is with."""
+
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
-        """Returns a string representation of the Worker that the Client is linked with."""
-        return f"Link(service={self._service_name!r})"
+        """Returns a string representation of the Link."""
+        return f"Link(service={self.service_name!r})"
 
-    def __getattr__(self, attr: str) -> Callable[..., Future[Any]]:
-        """Send a request to the linked Worker."""
+    def __getattr__(self, attr: str) -> FutureOrResult:
+        """Send a request to the linked service."""
 
-        def wrapper(*args: Any, **kwargs: Any) -> Future[Any]:
-            return self._create_future(self._service_name, attr, *args, **kwargs)
+        def wrapper(
+            *args: Any, sync: bool = True, sync_timeout: float | None = None, **kwargs: Any
+        ) -> Any | Future[Any]:
+            """Whatever."""
+            future = self._create_future(self.service_name, attr, *args, **kwargs)
+            if sync:
+                return future.result(sync_timeout)
+            return future
 
         return wrapper
