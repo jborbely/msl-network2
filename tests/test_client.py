@@ -1,5 +1,3 @@
-# cSpell: ignore Unraisable
-
 from __future__ import annotations
 
 import logging
@@ -13,24 +11,11 @@ from msl.network import Client, Flag
 from msl.network.broker import Broker
 from msl.network.utils import run_event_loop
 
-# @pytest.mark.filterwarnings("error")
-# def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
-#     # If Client.__del__ issues a pytest.PytestUnraisableExceptionWarning, this test fails
-#     _ = Client(port=0)
-
-#     with Client(port=0) as _:
-#         pass
-
-#     assert not caplog.records
-#     out, err = capsys.readouterr()
-#     assert not out
-#     assert not err
-
 
 def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level("DEBUG")
-    c = Client(port=0)
-    time.sleep(0.1)
+    c = Client(port=9301)
+    time.sleep(0.1)  # allow time for Client to be connected before Interrupt is triggered
     for _ in range(5):
         c.disconnect()
 
@@ -49,20 +34,20 @@ def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: p
 
 
 def test_link_string_representation() -> None:
-    with Client(port=0) as c:
+    with Client(port=8715) as c:
         link = c.link("Missing")
         assert str(link) == "Link(service='Missing')"
         assert repr(link) == "Link(service='Missing')"
 
 
 def test_services_timeout() -> None:
-    c = Client(port=0)
+    c = Client(port=14909)
     with pytest.raises((TimeoutError, futures.TimeoutError)):
         _ = c.services(timeout=0.05)
 
 
 def test_flags_at() -> None:
-    c = Client(flag=Flag.PICKLE, port=0)
+    c = Client(flag=Flag.PICKLE, port=52742)
     link = c.link("Any")
     assert c.flag == Flag.PICKLE
     with c.flag_at(Flag.JSON):
@@ -73,7 +58,7 @@ def test_flags_at() -> None:
 
 
 def test_request_after_disconnect() -> None:
-    c = Client(port=0)
+    c = Client(port=26419)
     c.disconnect()
     with pytest.raises(RuntimeError, match=r"Event loop not running, cannot send request"):
         _ = c.services()
@@ -83,8 +68,8 @@ def test_string_representation() -> None:
     class Custom(Client):
         pass
 
-    c = Custom(port=0)
-    expect = f"Custom(host='127.0.0.1', port=0, id='{c._id}')"  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    c = Custom(port=17590)
+    expect = f"Custom(host='127.0.0.1', port=17590, id='{c._id}')"  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert str(c) == expect
     assert repr(c) == expect
 
