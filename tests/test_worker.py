@@ -1,14 +1,25 @@
+# cSpell: ignore Unraisable
 from __future__ import annotations
 
 import asyncio
 import threading
 import time
 
-import pytest  # noqa: TC002
+import pytest
 import zmq
 
 from msl.network import Flag, Worker
 from msl.network.message import Request, Response
+
+
+@pytest.mark.filterwarnings("error")
+def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
+    # If Worker.__del__ issues a pytest.PytestUnraisableExceptionWarning, this test fails
+    _ = Worker(port=30001)
+    assert not caplog.records
+    out, err = capsys.readouterr()
+    assert not out
+    assert not err
 
 
 def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
