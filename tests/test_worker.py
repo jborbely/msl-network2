@@ -117,7 +117,7 @@ def test_session() -> None:  # noqa: PLR0915
     thread.join()
 
     broker.close(linger=0)
-    context.destroy()
+    context.destroy(linger=0)
 
     # Worker._handle_disconnect() can be called multiple times
     asyncio.run(sn._handle_disconnect())  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001

@@ -36,5 +36,5 @@ class Interrupter:
         """Close the sockets and destroy the context."""
         self.sender.close(linger=0)
         self.receiver.close(linger=0)
-        self.context.destroy()
+        self.context.destroy(linger=0)
         logger.debug("%s destroyed", self.name)

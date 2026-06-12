@@ -68,10 +68,10 @@ def test_string_representation() -> None:
     class Custom(Client):
         pass
 
-    c = Custom(port=17590)
-    expect = f"Custom(host='127.0.0.1', port=17590, id='{c._id}')"  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-    assert str(c) == expect
-    assert repr(c) == expect
+    c = Custom(port=17590, flag=Flag.JSON | Flag.LZMA)
+    _id = c._id  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert str(c) == f"Custom[{_id}]"
+    assert repr(c) == f"Custom(host='127.0.0.1', port=17590, flag='LZMA|JSON', id='{_id}')"
 
 
 def test_result_ok_and_error() -> None:

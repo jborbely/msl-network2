@@ -1,4 +1,4 @@
-"""A Worker handles requests from a Client and heartbeats from a Broker."""
+"""A Worker handles requests from a Client."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ class Worker:
     def __del__(self) -> None:
         """Calls `disconnect` then destroys the context."""
         self.disconnect()
-        self._context.destroy()
+        self._context.destroy(linger=0)
 
     def connect(self) -> None:
         """Connect (or reconnect) to the [Broker][]."""

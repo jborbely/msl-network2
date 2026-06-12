@@ -13,11 +13,8 @@ from msl.network import Client, Worker
 from msl.network.broker import Broker
 from msl.network.utils import run_event_loop
 
-# A couple tests hang on Python 3.13 only
-python_3_13 = sys.version_info[:2] == (3, 13)
 
-
-def test_session() -> None:  # noqa: PLR0915
+def test_session() -> None:
     broker = Broker()
     broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
     broker_thread.start()
@@ -63,9 +60,8 @@ def test_session() -> None:  # noqa: PLR0915
     assert future1.result() == 11
 
     future_issue = link.divide(1, 0, sync=False)  # Balancer calls service1
-    if not python_3_13:
-        with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
-            _ = future_issue.result()
+    with pytest.raises(RuntimeError, match=r"ZeroDivisionError"):
+        _ = future_issue.result()
 
     assert link.num_requests() == 2  # Balancer calls service2
     assert link.num_requests() == 3  # Balancer calls service1
@@ -87,13 +83,15 @@ def test_session() -> None:  # noqa: PLR0915
     assert interrupter1 is not None
     assert interrupter2 is not None
     interrupter1()
-    interrupter2()
     service1_thread.join()
+
+    assert link.add(11, 22) == 33  # service2 still available
+
+    interrupter2()
     service2_thread.join()
 
-    if not python_3_13:
-        with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
-            _ = link.add(1, 2)
+    with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
+        _ = link.add(1, 2)
 
     client.disconnect()
 

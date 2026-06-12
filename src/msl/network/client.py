@@ -102,7 +102,12 @@ class Client:
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns the string representation."""
         host, port = self._host_port
-        return f"{self.__class__.__name__}(host={host!r}, port={port}, id={self._id!r})"
+        flag = "|".join(f.name or "" for f in Flag if self.flag & f)
+        return f"{self.__class__.__name__}(host={host!r}, port={port}, flag={flag!r}, id={self._id!r})"
+
+    def __str__(self) -> str:  # pyright: ignore[reportImplicitOverride]
+        """Returns the string representation with only the ID."""
+        return f"{self.__class__.__name__}[{self._id}]"
 
     def _create_future(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
         if self._loop is None:
@@ -127,10 +132,9 @@ class Client:
     async def _wakeup_event(self) -> None:
         while True:
             worker_id, request = await self._queue.get()
+            self._queue.task_done()
             if request is None:
-                self._queue.task_done()
                 break
-
             _ = await self._wakeup_sender.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
 
     async def _handle_messages(self) -> None:
@@ -141,14 +145,13 @@ class Client:
         logger.debug("%s connected", self)
         while True:
             event = dict(await poller.poll())
-
             if event.get(wakeup):  # Send request
                 worker_id, request = await wakeup.recv_multipart()
-                logger.debug("Client[%s] sent request to %r", self._id, worker_id)
+                logger.debug("%s sent request to %r", self, worker_id)
                 _ = await socket.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
             elif event.get(socket):  # Handle reply
                 worker_id, response = await socket.recv_multipart()
-                logger.debug("Client[%s] received response from %r", self._id, worker_id)
+                logger.debug("%s received response from %r", self, worker_id)
                 r = Response.from_bytes(response)
                 future = self._futures.pop(r.id)
                 if r.ok:
@@ -156,8 +159,12 @@ class Client:
                 else:
                     future.set_exception(RuntimeError(r.result))
             else:  # Shutdown
-                _ = self._loop.call_soon_threadsafe(self._queue.put_nowait, (None, None))
+                await self._queue.put((None, None))
                 break
+
+        # Wait for all running tasks (except for this task) to mark themselves as 'done'
+        pending_tasks = asyncio.all_tasks() - {asyncio.current_task()}
+        _ = await asyncio.gather(*pending_tasks)
 
     def disconnect(self) -> None:
         """Close the socket and destroy the context."""
@@ -172,7 +179,7 @@ class Client:
         self._socket.close(linger=0)
         self._wakeup_receiver.close(linger=0)
         self._wakeup_sender.close(linger=0)
-        self._context.destroy()
+        self._context.destroy(linger=0)
         self._loop = None
         logger.debug("%s disconnected", self)
 
