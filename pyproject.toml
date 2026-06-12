@@ -41,7 +41,7 @@ Source = "https://github.com/MSLNZ/msl-network"
 Tracker = "https://github.com/MSLNZ/msl-network/issues"
 
 [project.scripts]
-msl-network = "msl.network.broker:main"
+msl-network = "msl.network.cli:main"
 
 [dependency-groups]
 doc = [

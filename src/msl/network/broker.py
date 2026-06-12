@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections import deque
 from contextlib import suppress
 
@@ -12,7 +11,7 @@ from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
 from .message import Flag, Request, Response
-from .utils import BROKER_PORT, logger, run_event_loop
+from .utils import logger
 
 
 class WorkerBalancer:
@@ -173,31 +172,3 @@ class Broker:
             result=f"Service {request.service!r} is not available",
         ).to_bytes(Flag.JSON)
         _ = await self.router.send_multipart([sender_id, service_name, response])  # pyright: ignore[reportUnknownMemberType]
-
-
-def main(host: str = "*", port: int = BROKER_PORT, level: int = logging.DEBUG) -> None:
-    """Run the asyncio event loop."""
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s.%(msecs)03d [%(levelname)05s] %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    )
-
-    broker = Broker(host=host, port=port)
-
-    try:
-        run_event_loop(broker.run())
-    except KeyboardInterrupt:
-        pass
-    finally:
-        logger.debug("Broker shut down")
-        broker.poller.unregister(broker.router)
-        broker.poller.unregister(broker.interrupter.receiver)
-        broker.interrupter.close()
-        broker.router.close(linger=0)
-        broker.context.destroy()
-        logger.debug("Broker event loop closed")
-
-
-if __name__ == "__main__":
-    main()

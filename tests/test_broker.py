@@ -128,7 +128,7 @@ def test_main(capfd: pytest.CaptureFixture[str]) -> None:
         assert "Interrupter" in lines[0]
         assert "created" in lines[0]
         assert lines[1].endswith("Broker running on 0.0.0.0:1875")
-        assert lines[2].endswith("Broker shut down")
+        assert lines[2].endswith("Broker shutting down")
         assert "Interrupter" in lines[3]
         assert "destroyed" in lines[3]
         assert lines[4].endswith("Broker event loop closed")
