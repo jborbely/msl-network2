@@ -132,3 +132,44 @@ def test_main(capfd: pytest.CaptureFixture[str]) -> None:
         assert "Interrupter" in lines[3]
         assert "destroyed" in lines[3]
         assert lines[4].endswith("Broker event loop closed")
+
+
+def test_worker_disconnects_without_notifying() -> None:
+    broker = Broker()
+    broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
+    broker_thread.start()
+
+    port = int(broker.address.rsplit(":", 1)[1])
+
+    class Foo(Worker):
+        def add(self, x: float, y: float) -> float:
+            return x + y
+
+        async def _handle_disconnect(self) -> None:  # pyright: ignore[reportImplicitOverride]
+            """Don't notify the Broker that this Worker is disconnecting."""
+            return
+
+    foo = Foo(port=port)
+    foo_thread = threading.Thread(target=foo.connect, daemon=True)
+    foo_thread.start()
+
+    time.sleep(0.1)
+
+    client = Client(port=port)
+    assert client.services() == ["Foo"]
+
+    link = client.link("Foo")
+    assert link.add(1, 2) == 3
+
+    interrupter1 = foo._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert interrupter1 is not None
+    interrupter1()
+    foo_thread.join()
+
+    with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
+        _ = link.add(1, 2)
+
+    client.disconnect()
+
+    broker.interrupter()
+    broker_thread.join()
