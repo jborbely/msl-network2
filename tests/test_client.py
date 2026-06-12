@@ -21,6 +21,10 @@ def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCapt
     with Client(port=17778) as _:
         pass
 
+    c = Client(port=17779)
+    c.__del__()
+    c.__del__()
+
     assert not caplog.records
     out, err = capsys.readouterr()
     assert not out
