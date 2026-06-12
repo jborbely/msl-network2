@@ -1,3 +1,4 @@
+# cSpell: ignore Unraisable
 from __future__ import annotations
 
 import logging
@@ -10,6 +11,20 @@ import pytest
 from msl.network import Client, Flag
 from msl.network.broker import Broker
 from msl.network.utils import run_event_loop
+
+
+@pytest.mark.filterwarnings("error")
+def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
+    # If Client.__del__ issues a pytest.PytestUnraisableExceptionWarning, this test fails
+    _ = Client(port=17777)
+
+    with Client(port=17778) as _:
+        pass
+
+    assert not caplog.records
+    out, err = capsys.readouterr()
+    assert not out
+    assert not err
 
 
 def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
