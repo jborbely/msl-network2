@@ -136,11 +136,11 @@ def test_hostname(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
 
 
 @pytest.mark.parametrize("command", [[], ["--help"]])
-def test_help(command: list[str], capfd: pytest.CaptureFixture[str]) -> None:
+def test_help(command: list[str], capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit):
         main(*command)
 
-    out, err = capfd.readouterr()
+    out, err = capsys.readouterr()
     assert out.startswith("usage:")
     assert out.endswith("Show the version number and exit.\n")
     assert not err
