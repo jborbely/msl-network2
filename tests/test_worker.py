@@ -120,8 +120,8 @@ def test_session() -> None:  # noqa: PLR0915
     response = Response.from_bytes(message)
     assert response.id == 5
     assert not response.ok
-    assert response.result.startswith(b"Traceback (most recent call last):\n")
-    assert response.result.endswith(b"ZeroDivisionError: division by zero\n")
+    assert response.result.startswith("Traceback (most recent call last):\n")
+    assert response.result.endswith("ZeroDivisionError: division by zero\n")
 
     assert sn._interrupter is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     sn._interrupter()  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001

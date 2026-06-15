@@ -85,7 +85,7 @@ class Broker:
         balancer.remove(worker_id)
         if len(balancer) == 0:
             del self.workers[service_name]
-            logger.info("No Workers are available any more for service name %r", service_name)
+            logger.info("No Workers are available for service name %r", service_name)
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""
@@ -163,7 +163,7 @@ class Broker:
                     break
 
                 sender_id, destination_id, message = await self.router.recv_multipart()
-                logger.info("%s -> %s", sender_id, destination_id)
+                logger.debug("%s -> %s", sender_id, destination_id)
                 if destination_id == b"Broker":
                     await self.request_for_broker(sender_id, message)
                 elif sender_id.startswith(b"Client"):

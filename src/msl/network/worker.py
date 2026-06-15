@@ -105,7 +105,7 @@ class Worker:
 
                     In this method, compressed bytes without serialisation is returned.
                     \"\"\"
-                    image = ...  # capture an image from the camera
+                    image: bytes = ...  # capture an image from the camera
                     with self.flag_at(Flag.ZLIB):
                         return image
             ```
@@ -153,14 +153,13 @@ class Worker:
             logger.debug("%s polling...", self._service_name)
             while True:
                 event = dict(await self._poller.poll())
-                mask = event.get(self._socket)
-                if mask is None:  # event must be from self._interrupter.receiver
+                if event.get(self._interrupter.receiver):
                     break
 
                 sender_id, message = await self._socket.recv_multipart()
-                request = Request.from_bytes(message)
                 logger.debug("Request from %r", sender_id)
 
+                request = Request.from_bytes(message)
                 if request.attribute.startswith("_"):
                     result = "PermissionError: Cannot request a private attribute"
                     response = Response(id=request.id, ok=False, result=result)
@@ -178,10 +177,10 @@ class Worker:
                     try:
                         result = attribute(*request.args, **request.kwargs)
                     except Exception:  # noqa: BLE001
-                        response = Response(id=request.id, ok=False, result=traceback.format_exc().encode())
+                        response = Response(id=request.id, ok=False, result=traceback.format_exc())
                     else:
                         response = Response(id=request.id, ok=True, result=result)
-                    _ = await self._socket.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                 else:
                     response = Response(id=request.id, ok=True, result=attribute)
-                    _ = await self._socket.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+
+                _ = await self._socket.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]

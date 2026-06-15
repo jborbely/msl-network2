@@ -11,7 +11,7 @@ from .cli_start import add_parser_start
 
 DESCRIPTION = """A concurrent and asynchronous Broker.
 
-The Broker allows for multiple clients and services to connect to it
+A Broker allows for multiple clients and services to connect to it
 and it links a client's request to the appropriate service to handle
 the request and then the broker sends the response from the service
 back to the client.

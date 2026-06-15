@@ -40,8 +40,8 @@ class Client:
         """A Client.
 
         Args:
-            host: The hostname (or IP address) that the broker is running on.
-            port: The network port that the broker is running on.
+            host: The hostname (or IP address) that the [Broker][] is running on.
+            port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a
                 request before sending the byte stream.
         """
@@ -181,7 +181,7 @@ class Link:
         def wrapper(
             *args: Any, sync: bool = True, sync_timeout: float | None = None, **kwargs: Any
         ) -> Any | Future[Any]:
-            """Whatever."""
+            """Returns the result, if `sync=True`, otherwise a future that will eventually contain the result."""
             future = self._create_future(self.service_name, attr, *args, **kwargs)
             if sync:
                 return future.result(sync_timeout)
@@ -268,14 +268,14 @@ class _AsyncClient:
                 break
 
     def put_nowait(self, transaction: int, item: tuple[bytes, bytes]) -> Future[Any]:
-        """Put a new request into the queue without blocking."""
+        """Put a new request into the request queue without blocking."""
         future: Future[Any] = Future()
         self.futures[transaction] = future
         _ = self.loop.call_soon_threadsafe(self.queue.put_nowait, item)
         return future
 
     async def wakeup_event(self) -> None:
-        """Wake up the Polling to handle a request."""
+        """Wake up the Poller to handle a request."""
         while True:
             worker_id, request = await self.queue.get()
             if request is None:
@@ -286,6 +286,7 @@ class _AsyncClient:
 
 
 async def _create_async_client(client: Client) -> None:
+    """Create the async client and run it in an event loop."""
     async_client = _AsyncClient(client)
     client._async_client = async_client  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     _ = await asyncio.gather(async_client.handle_messages(), async_client.wakeup_event())

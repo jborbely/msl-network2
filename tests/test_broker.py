@@ -179,9 +179,9 @@ def test_worker_sends_bad_messages(caplog: pytest.LogCaptureFixture) -> None:
     assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{broker.interrupter.name} created"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        ("msl.network", logging.INFO, "b'Worker[1]' -> b'Broker'"),
+        ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
-        ("msl.network", logging.INFO, "b'Worker[1]' -> b'Broker'"),
+        ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter.name} triggered"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter.name} destroyed"),
         ("msl.network", logging.DEBUG, "Broker has shut down"),
