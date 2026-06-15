@@ -42,11 +42,11 @@ class Client:
         Args:
             host: The hostname (or IP address) that the broker is running on.
             port: The network port that the broker is running on.
-            flag: The serialization and compression algorithms to apply to a
+            flag: The serialisation and compression algorithms to apply to a
                 request before sending the byte stream.
         """
         self.flag: Flag = flag
-        """The serialization and compression algorithms to apply to a request before sending the byte stream."""
+        """The serialisation and compression algorithms to apply to a request before sending the byte stream."""
 
         self._host_port: tuple[str, int] = (host, port)
         self._id: str = os.urandom(8).hex()

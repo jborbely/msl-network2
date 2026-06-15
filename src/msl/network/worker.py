@@ -33,11 +33,11 @@ class Worker:
                 If not specified, the class name is used.
             host: The hostname (or IP address) that the [Broker][] is running on.
             port: The network port that the [Broker][] is running on.
-            flag: The serialization and compression algorithms to apply to a response before
+            flag: The serialisation and compression algorithms to apply to a response before
                 sending the byte stream.
         """
         self.flag: Flag = flag
-        """The serialization and compression algorithms to apply to a response before sending the byte stream."""
+        """The serialisation and compression algorithms to apply to a response before sending the byte stream."""
 
         self._worker_id: bytes = f"Worker[{os.urandom(8).hex()}]".encode()
         self._service_name: str = name or self.__class__.__name__

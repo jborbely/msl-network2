@@ -12,7 +12,7 @@
 
 ***Fixed:***
 
-- the `to_json()` method was not reliably called for an object, which resulted in the object not being JSON serializable
+- the `to_json()` method was not reliably called for an object, which resulted in the object not being JSON serialisable
 
 ***Removed:***
 

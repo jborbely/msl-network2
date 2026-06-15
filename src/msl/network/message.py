@@ -56,7 +56,7 @@ class Request(NamedTuple):
         """Convert the request to bytes.
 
         !!! note
-            It does not make sense to use Flag.NONE for a request since serialization must occur.
+            It does not make sense to use Flag.NONE for a request since serialisation must occur.
             Neither int, str, tuple, nor dict can be converted to a memoryview, which would then be converted to bytes.
         """
         return flag.to_bytes(2, "little") + compress[flag & COMPRESS](serialize[flag & SERIALIZE](tuple(self)))
@@ -87,7 +87,7 @@ class Response(NamedTuple):
     def to_bytes(self, flag: Flag) -> bytes:
         """Convert the response to bytes.
 
-        Only the `result` is used during serialization and compression. The packed
+        Only the `result` is used during serialisation and compression. The packed
         size of (id, ok) is only 9 bytes anyway, and flag cannot be compressed
         (otherwise we would not know how to decompress the bytes).
         """
@@ -135,13 +135,13 @@ class Flag(IntFlag):
 
     NONE = 0
 
-    # Compression and decompression
+    # (De)Compression
     BZ2 = 1 << 0
     LZMA = 1 << 1
     ZLIB = 1 << 2
     ZSTD = 1 << 3
 
-    # Serialize and deserialize (reserve space for a few more compression options)
+    # (De)Serialisation (reserve space for a few more compression options)
     PICKLE = 1 << 8
     JSON = 1 << 9
     ORJSON = 1 << 10
