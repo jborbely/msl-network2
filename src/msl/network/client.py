@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import os
-import threading
 from concurrent.futures import Future
 from contextlib import contextmanager
+from threading import Thread
 from typing import TYPE_CHECKING
 
 import zmq
@@ -18,8 +18,8 @@ from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
     import sys
-    from collections.abc import Generator
-    from typing import Any, Callable
+    from collections.abc import Callable, Generator
+    from typing import Any
 
     # the Self type was added in Python 3.11 (PEP 673)
     # using TypeVar is equivalent for < 3.11
@@ -48,43 +48,15 @@ class Client:
         self.flag: Flag = flag
         """The serialization and compression algorithms to apply to a request before sending the byte stream."""
 
+        self._host_port: tuple[str, int] = (host, port)
         self._id: str = os.urandom(8).hex()
         self._transaction: int = 0
-        self._futures: dict[int, Future[Any]] = {}
-        self._context: Context = Context()
-        self._loop: asyncio.AbstractEventLoop | None = None
-        self._host_port: tuple[str, int] = (host, port)
+        self._async_client: _AsyncClient | None = None
 
-        # For Ctrl+C to work on Windows
-        self._interrupter: Interrupter = Interrupter()
+        self._thread: Thread = Thread(target=run_event_loop, daemon=True, args=(_create_async_client(self),))
+        self._thread.start()
 
-        # For sending/receiving messages to/from the Broker
-        self._socket: Socket = self._context.socket(zmq.DEALER)
-        self._socket.setsockopt(zmq.IDENTITY, f"Client[{self._id}]".encode())
-        _ = self._socket.connect(f"tcp://{host}:{port}")
-
-        # For waking up the Poller to send another request
-        self._wakeup_sender: Socket = self._context.socket(zmq.PAIR)
-        self._wakeup_receiver: Socket = self._context.socket(zmq.PAIR)
-        _ = self._wakeup_sender.connect(f"inproc://wakeup-{self._id}")
-        _ = self._wakeup_receiver.bind(f"inproc://wakeup-{self._id}")
-
-        # Polls for events on the asyncio event loop
-        self._poller: Poller = Poller()
-        self._poller.register(self._socket, zmq.POLLIN)
-        self._poller.register(self._interrupter.receiver, zmq.POLLIN)
-        self._poller.register(self._wakeup_receiver, zmq.POLLIN)
-
-        # The Queue must be created in the Thread that runs the event loop, just specify the type here
-        self._queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]]
-
-        # Must run the asyncio event loop in a separate thread
-        async def tasks() -> None:
-            self._queue = asyncio.Queue()
-            _ = await asyncio.gather(self._handle_messages(), self._wakeup_event())
-
-        threading.Thread(target=run_event_loop, daemon=True, args=(tasks(),)).start()
-        while not self._loop:
+        while self._async_client is None:
             continue
 
     def __del__(self) -> None:
@@ -110,14 +82,11 @@ class Client:
         return f"{self.__class__.__name__}[{self._id}]"
 
     def _create_future(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
-        if self._loop is None:
+        if self._async_client is None:
             msg = "Event loop not running, cannot send request"
             raise RuntimeError(msg)
 
         self._transaction += 1
-        future: Future[Any] = Future()
-        self._futures[self._transaction] = future
-
         request = Request(
             id=self._transaction,
             service=service_name,
@@ -126,61 +95,16 @@ class Client:
             kwargs=kwargs,
         ).to_bytes(self.flag)
 
-        _ = self._loop.call_soon_threadsafe(self._queue.put_nowait, (service_name.encode(), request))
-        return future
-
-    async def _wakeup_event(self) -> None:
-        while True:
-            worker_id, request = await self._queue.get()
-            self._queue.task_done()
-            if request is None:
-                break
-            _ = await self._wakeup_sender.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
-
-    async def _handle_messages(self) -> None:
-        poller = self._poller
-        socket = self._socket
-        wakeup = self._wakeup_receiver
-        self._loop = asyncio.get_running_loop()
-        logger.debug("%s connected", self)
-        while True:
-            event = dict(await poller.poll())
-            if event.get(wakeup):  # Send request
-                worker_id, request = await wakeup.recv_multipart()
-                logger.debug("%s sent request to %r", self, worker_id)
-                _ = await socket.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
-            elif event.get(socket):  # Handle reply
-                worker_id, response = await socket.recv_multipart()
-                logger.debug("%s received response from %r", self, worker_id)
-                r = Response.from_bytes(response)
-                future = self._futures.pop(r.id)
-                if r.ok:
-                    future.set_result(r.result)
-                else:
-                    future.set_exception(RuntimeError(r.result))
-            else:  # Shutdown
-                await self._queue.put((None, None))
-                break
-
-        # Wait for all running tasks (except for this task) to mark themselves as 'done'
-        pending_tasks = asyncio.all_tasks() - {asyncio.current_task()}
-        _ = await asyncio.gather(*pending_tasks)
+        return self._async_client.put_nowait(self._transaction, (service_name.encode(), request))
 
     def disconnect(self) -> None:
-        """Close the socket and destroy the context."""
-        if self._loop is None:
+        """Close the connection."""
+        if self._async_client is None:
             return
 
-        self._interrupter()
-        self._interrupter.close()
-        self._poller.unregister(self._socket)
-        self._poller.unregister(self._interrupter.receiver)
-        self._poller.unregister(self._wakeup_receiver)
-        self._socket.close(linger=0)
-        self._wakeup_receiver.close(linger=0)
-        self._wakeup_sender.close(linger=0)
-        self._context.destroy(linger=0)
-        self._loop = None
+        self._async_client.disconnect()
+        self._async_client = None
+        self._thread.join()
         logger.debug("%s disconnected", self)
 
     @contextmanager
@@ -228,12 +152,13 @@ class Client:
         """Request the names of the services that are available.
 
         Args:
-            timeout: The maximum number of seconds to wait for the result. If `None`, wait forever.
+            timeout: The maximum number of seconds to wait for the result.
+                If `None`, there is no limit on the wait time.
 
         Returns:
             The names of the services that are available to be [Link][msl.network.client.Link]ed with.
         """
-        return sorted(self._create_future("Broker", "").result(timeout))
+        return sorted(self._create_future("Broker", "SERVICES").result(timeout))
 
 
 class Link:
@@ -263,3 +188,104 @@ class Link:
             return future
 
         return wrapper
+
+
+class _AsyncClient:
+    """An asynchronous client."""
+
+    def __init__(self, client: Client) -> None:
+        """An asynchronous client.
+
+        Args:
+            client: A synchronous client.
+        """
+        (host, port), _id = client._host_port, client._id  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        self._str: str = str(client)
+
+        self.futures: dict[int, Future[Any]] = {}
+        self.queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]] = asyncio.Queue()
+        self.context: Context = Context()
+
+        # For Ctrl+C to work on Windows and to signal handle_messages() to break
+        self.interrupter: Interrupter = Interrupter()
+
+        # For sending/receiving messages to/from the Broker
+        self.dealer: Socket = self.context.socket(zmq.DEALER)
+        self.dealer.setsockopt(zmq.IDENTITY, f"Client[{_id}]".encode())
+        _ = self.dealer.connect(f"tcp://{host}:{port}")
+
+        # For waking up the Poller to send another request
+        self.wakeup_sender: Socket = self.context.socket(zmq.PAIR)
+        self.wakeup_receiver: Socket = self.context.socket(zmq.PAIR)
+        _ = self.wakeup_receiver.bind(f"inproc://wakeup-{_id}")
+        _ = self.wakeup_sender.connect(f"inproc://wakeup-{_id}")
+
+        # Polls for events on the asyncio event loop
+        self.poller: Poller = Poller()
+        self.poller.register(self.dealer, zmq.POLLIN)
+        self.poller.register(self.interrupter.receiver, zmq.POLLIN)
+        self.poller.register(self.wakeup_receiver, zmq.POLLIN)
+
+        self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+
+    def __str__(self) -> str:  # pyright: ignore[reportImplicitOverride]
+        """Returns the string representation of the Client."""
+        return self._str
+
+    def disconnect(self) -> None:
+        """Triggers the interrupter, closes all sockets and destroys the context."""
+        self.interrupter()
+        self.poller.unregister(self.dealer)
+        self.poller.unregister(self.interrupter.receiver)
+        self.poller.unregister(self.wakeup_receiver)
+        self.interrupter.close()
+        self.dealer.close(linger=0)
+        self.wakeup_receiver.close(linger=0)
+        self.wakeup_sender.close(linger=0)
+        self.context.destroy(linger=0)
+
+    async def handle_messages(self) -> None:
+        """Poll for events to handle messages."""
+        logger.debug("%s connected", self)
+        while True:
+            event = dict(await self.poller.poll())
+            if event.get(self.wakeup_receiver):  # Send request
+                worker_id, request = await self.wakeup_receiver.recv_multipart()
+                logger.debug("%s sent request to %r", self, worker_id)
+                _ = await self.dealer.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
+            elif event.get(self.dealer):  # Handle reply
+                worker_id, response = await self.dealer.recv_multipart()
+                logger.debug("%s received response from %r", self, worker_id)
+                r = Response.from_bytes(response)
+                future = self.futures.pop(r.id)
+                if r.ok:
+                    future.set_result(r.result)
+                else:
+                    future.set_exception(RuntimeError(r.result))
+            else:  # Shutdown
+                await self.queue.put((None, None))
+                _ = await asyncio.gather(self.queue.join())
+                break
+
+    def put_nowait(self, transaction: int, item: tuple[bytes, bytes]) -> Future[Any]:
+        """Put a new request into the queue without blocking."""
+        future: Future[Any] = Future()
+        self.futures[transaction] = future
+        _ = self.loop.call_soon_threadsafe(self.queue.put_nowait, item)
+        return future
+
+    async def wakeup_event(self) -> None:
+        """Wake up the Polling to handle a request."""
+        while True:
+            worker_id, request = await self.queue.get()
+            if request is None:
+                self.queue.task_done()
+                break
+            _ = await self.wakeup_sender.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
+            self.queue.task_done()
+
+
+async def _create_async_client(client: Client) -> None:
+    async_client = _AsyncClient(client)
+    client._async_client = async_client  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    _ = await asyncio.gather(async_client.handle_messages(), async_client.wakeup_event())

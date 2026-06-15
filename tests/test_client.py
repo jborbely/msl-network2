@@ -35,10 +35,13 @@ def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: p
     caplog.set_level("DEBUG")
     c = Client(port=9301)
     time.sleep(0.1)  # allow time for Client to be connected before Interrupt is triggered
+
+    assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+
     for _ in range(5):
         c.disconnect()
 
-    interrupter_name = c._interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{interrupter_name} created"),
         ("msl.network", logging.DEBUG, f"{c} connected"),
@@ -98,7 +101,7 @@ def test_result_ok_and_error() -> None:
     thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
     thread.start()
 
-    _, port = broker.address.rsplit(":", 1)
+    _, port = broker.endpoint.rsplit(":", 1)
     client = Client(port=int(port))
     assert client.services() == []
 

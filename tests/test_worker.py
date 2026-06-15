@@ -76,7 +76,7 @@ def test_session() -> None:  # noqa: PLR0915
     request = Request.from_bytes(message)
     assert worker_id.startswith(b"Worker[")
     assert destination_id == b"Broker"
-    assert request.attribute == "READY"
+    assert request.attribute == "WORKER_READY"
     assert request.service == "ServiceName"
 
     # Request private attribute

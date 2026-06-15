@@ -26,8 +26,8 @@ else:
     has_orjson = True
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Any, Callable
+    from collections.abc import Callable, Sequence
+    from typing import Any
 
 
 class Request(NamedTuple):

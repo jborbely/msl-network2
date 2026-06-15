@@ -126,7 +126,7 @@ class Worker:
         if self._socket is None:
             return
 
-        r = Request(id=0, service=self._service_name, attribute="DISCONNECT", args=[], kwargs={})
+        r = Request(id=0, service=self._service_name, attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
         _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
 
@@ -145,7 +145,7 @@ class Worker:
         # service-name registration now or when the Broker runs later. Sending
         # this message now does not wait for the Broker to be ready to receive
         # it and is non-blocking.
-        r = Request(id=0, service=self._service_name, attribute="READY", args=[], kwargs={})
+        r = Request(id=0, service=self._service_name, attribute="WORKER_READY", args=[], kwargs={})
         _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s registered", self._service_name)
 

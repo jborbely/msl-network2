@@ -2,31 +2,45 @@
 
 from __future__ import annotations
 
-import logging
+import sys
 
-from .broker import Broker
-from .utils import BROKER_PORT, logger, run_event_loop
+from .__about__ import __version__
+from .cli_argparse import ArgumentParser
+from .cli_hostname import add_parser_hostname
+from .cli_start import add_parser_start
+
+DESCRIPTION = """A concurrent and asynchronous Broker.
+
+The Broker allows for multiple clients and services to connect to it
+and it links a client's request to the appropriate service to handle
+the request and then the broker sends the response from the service
+back to the client.
+"""
 
 
-def main(host: str = "*", port: int = BROKER_PORT, level: int = logging.DEBUG) -> None:
-    """Run the Broker in an asyncio event loop."""
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s.%(msecs)03d [%(levelname)05s] %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
+def configure_parser() -> ArgumentParser:
+    """Returns the argument parser."""
+    parser = ArgumentParser(description=DESCRIPTION)
+    _ = parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"{__version__}",
+        help="Show the version number and exit.",
     )
+    command_parser = parser.add_subparsers(metavar="command", dest="cmd")
+    command_parser.required = True
+    add_parser_hostname(command_parser)
+    add_parser_start(command_parser)
+    return parser
 
-    broker = Broker(host=host, port=port)
 
-    try:
-        run_event_loop(broker.run())
-    except KeyboardInterrupt:
-        pass
-    finally:
-        logger.debug("Broker shutting down")
-        broker.poller.unregister(broker.router)
-        broker.poller.unregister(broker.interrupter.receiver)
-        broker.interrupter.close()
-        broker.router.close(linger=0)
-        broker.context.destroy()
-        logger.debug("Broker event loop closed")
+def main(*args: str) -> None:
+    """Main entry way to the command-line interface."""
+    if not args:
+        args = tuple(sys.argv[1:])
+        if not args:
+            args = ("--help",)
+    parser = configure_parser()
+    namespace = parser.parse_args(args)
+    sys.exit(namespace.func(namespace))

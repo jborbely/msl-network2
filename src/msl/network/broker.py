@@ -68,7 +68,7 @@ class Broker:
         # Check for Errno.EHOSTUNREACH when a message cannot be routed (must be set before `bind`)
         self.router.setsockopt(zmq.ROUTER_MANDATORY, 1)
         _ = self.router.bind(f"tcp://{host}:{port}")
-        self.address: str = self.router.getsockopt_string(zmq.LAST_ENDPOINT)
+        self.endpoint: str = self.router.getsockopt_string(zmq.LAST_ENDPOINT)
 
         self.interrupter: Interrupter = Interrupter()
 
@@ -85,7 +85,19 @@ class Broker:
         balancer.remove(worker_id)
         if len(balancer) == 0:
             del self.workers[service_name]
-            logger.info("No more Workers available for service name %r", service_name)
+            logger.info("No Workers are available any more for service name %r", service_name)
+
+    def destroy(self) -> None:
+        """Close all sockets and destroy the context."""
+        if self.context.closed:
+            return
+
+        self.poller.unregister(self.router)
+        self.poller.unregister(self.interrupter.receiver)
+        self.interrupter.close()
+        self.router.close(linger=0)
+        self.context.destroy(linger=0)
+        logger.debug("Broker has shut down")
 
     async def request_for_broker(self, sender_id: bytes, message: bytes) -> None:
         """Process a request that is destined for the Broker.
@@ -95,26 +107,31 @@ class Broker:
             message: The message for the Broker.
         """
         request = Request.from_bytes(message)
-        if sender_id.startswith(b"Client"):
+        service_name, attribute = request.service, request.attribute
+        if attribute == "SERVICES":
             response = Response(id=request.id, ok=True, result=list(self.workers)).to_bytes(Flag.JSON)
-            _ = await self.router.send_multipart((sender_id, b"broker", response))  # pyright: ignore[reportUnknownMemberType]
-            return
-
-        service_name = request.service
-        if request.attribute == "READY":
+            _ = await self.router.send_multipart((sender_id, b"Broker", response))  # pyright: ignore[reportUnknownMemberType]
+        elif attribute == "WORKER_READY":
             logger.info("Registered %r with service name %r", sender_id, service_name)
             if service_name not in self.workers:
                 self.workers[service_name] = WorkerBalancer()
             self.workers[service_name].append(sender_id)
-            return
-
-        if request.attribute == "DISCONNECT":
+        elif attribute == "WORKER_UNAVAILABLE":
             balancer = self.workers.get(service_name)
             if balancer is not None:
                 self.remove_worker(sender_id, service_name, balancer)
+        elif sender_id.startswith(b"Client"):
+            response = Response(
+                id=request.id,
+                ok=False,
+                result=f"Unsupported broker request: {attribute!r}",
+            ).to_bytes(Flag.JSON)
+            _ = await self.router.send_multipart((sender_id, b"Broker", response))  # pyright: ignore[reportUnknownMemberType]
+        else:
+            logger.error("Unsupported broker request %r from %r", attribute, sender_id)
 
     async def request_for_worker(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
-        """Send a request from a Client to any Worker that is handling requests for .
+        """Send a request from a Client to any Worker that is handling requests for the *service*.
 
         Args:
             sender_id: Client ID.
@@ -138,7 +155,7 @@ class Broker:
 
     async def run(self) -> None:
         """Run the broker."""
-        logger.info("Broker running on %s", self.address[6:])
+        logger.info("Broker running on %s", self.endpoint[6:])
         with allow_interrupt(self.interrupter):
             while True:
                 socket: dict[Socket, int] = dict(await self.poller.poll())
@@ -156,6 +173,8 @@ class Broker:
                     # Silently ignore all errors if the Client is no longer available
                     with suppress(zmq.error.ZMQError):
                         _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
+
+        self.destroy()
 
     async def send_worker_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
         """Send a response that there are no Workers available for the specified service.

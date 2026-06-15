@@ -1,25 +1,24 @@
-# cSpell: ignore creationflags capfd
 from __future__ import annotations
 
-import signal
-import subprocess
-import sys
+import logging
 import threading
 import time
 
 import pytest
+import zmq
 
 from msl.network import Client, Worker
 from msl.network.broker import Broker
+from msl.network.message import Flag, Request
 from msl.network.utils import run_event_loop
 
 
-def test_session() -> None:
+def test_session() -> None:  # noqa: PLR0915
     broker = Broker()
     broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
     broker_thread.start()
 
-    port = int(broker.address.rsplit(":", 1)[1])
+    port = int(broker.endpoint.rsplit(":", 1)[1])
 
     class Foo(Worker):
         def __init__(self) -> None:
@@ -93,45 +92,13 @@ def test_session() -> None:
     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
         _ = link.add(1, 2)
 
+    with pytest.raises(RuntimeError, match=r"Unsupported broker request: 'WHATEVER'"):
+        _ = client._create_future("Broker", "WHATEVER").result()  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+
     client.disconnect()
 
     broker.interrupter()
     broker_thread.join()
-
-
-def test_main(capfd: pytest.CaptureFixture[str]) -> None:
-    command = ["msl-network"]
-
-    is_windows = sys.platform == "win32"
-    if is_windows:
-        sig = signal.CTRL_BREAK_EVENT
-        p = subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)  # noqa: S603
-    else:
-        sig = signal.SIGINT
-        p = subprocess.Popen(command, start_new_session=True)  # noqa: S603
-
-    time.sleep(0.5)
-    p.send_signal(sig)
-    _ = p.wait()
-
-    out, err = capfd.readouterr()
-    assert not out
-
-    lines = err.splitlines()
-    if is_windows:
-        assert len(lines) == 2
-        assert "Interrupter" in lines[0]
-        assert "created" in lines[0]
-        assert lines[1].endswith("Broker running on 0.0.0.0:1875")
-    else:
-        assert len(lines) == 5
-        assert "Interrupter" in lines[0]
-        assert "created" in lines[0]
-        assert lines[1].endswith("Broker running on 0.0.0.0:1875")
-        assert lines[2].endswith("Broker shutting down")
-        assert "Interrupter" in lines[3]
-        assert "destroyed" in lines[3]
-        assert lines[4].endswith("Broker event loop closed")
 
 
 def test_worker_disconnects_without_notifying() -> None:
@@ -139,7 +106,7 @@ def test_worker_disconnects_without_notifying() -> None:
     broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
     broker_thread.start()
 
-    port = int(broker.address.rsplit(":", 1)[1])
+    port = int(broker.endpoint.rsplit(":", 1)[1])
 
     class Foo(Worker):
         def add(self, x: float, y: float) -> float:
@@ -172,4 +139,50 @@ def test_worker_disconnects_without_notifying() -> None:
     client.disconnect()
 
     broker.interrupter()
+    broker.destroy()  # can call multiple times
+    broker.destroy()
+    broker.destroy()
+    broker.destroy()
     broker_thread.join()
+
+
+def test_worker_sends_bad_messages(caplog: pytest.LogCaptureFixture) -> None:
+    # Tests that an unsupported message gets logged from a Worker and when
+    # WORKER_UNAVAILABLE is sent with a service name that does not exist, the
+    # request get silently ignored by the "is None" check on the broker
+    caplog.set_level("DEBUG")
+
+    broker = Broker()
+    broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
+    broker_thread.start()
+
+    port = int(broker.endpoint.rsplit(":", 1)[1])
+
+    context = zmq.Context()
+    worker = context.socket(zmq.DEALER)
+    worker.setsockopt(zmq.IDENTITY, b"Worker[1]")
+    _ = worker.connect(f"tcp://localhost:{port}")
+
+    r = Request(id=0, service="ignored", attribute="gets_logged", args=[], kwargs={})
+    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])  # pyright: ignore[reportUnknownMemberType]
+
+    r = Request(id=0, service="UnknownServiceName", attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
+    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])  # pyright: ignore[reportUnknownMemberType]
+    time.sleep(0.1)
+
+    worker.close()
+    context.destroy()
+
+    broker.interrupter()
+    broker_thread.join()
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.DEBUG, f"{broker.interrupter.name} created"),
+        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, "b'Worker[1]' -> b'Broker'"),
+        ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
+        ("msl.network", logging.INFO, "b'Worker[1]' -> b'Broker'"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter.name} triggered"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter.name} destroyed"),
+        ("msl.network", logging.DEBUG, "Broker has shut down"),
+    ]
