@@ -6,10 +6,15 @@ import signal
 import subprocess
 import sys
 import time
+from typing import TYPE_CHECKING
 
 import pytest
 
+from msl.network.cli import main
 from msl.network.utils import get_logging_level
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def test_cli_start(capfd: pytest.CaptureFixture[str]) -> None:
@@ -65,3 +70,77 @@ def test_cli_start(capfd: pytest.CaptureFixture[str]) -> None:
 )
 def test_get_logging_level(quiet: int, verbose: int, expected: int) -> None:
     assert get_logging_level(quiet=quiet, verbose=verbose) == expected
+
+
+def test_hostname_list(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("DEBUG")
+    assert not home_dir.is_dir()
+
+    main("hostname", "list")
+
+    assert home_dir.is_dir()
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Authorised devices:\n  127.0.0.1")]
+
+
+def test_hostname(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("DEBUG")
+
+    main("hostname", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Authorised devices:\n  127.0.0.1")]
+    caplog.clear()
+
+    main("hostname", "add", "msl-device", "192.168.1.100")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Added: msl-device, 192.168.1.100")]
+    caplog.clear()
+
+    main("hostname", "remove", "127.0.0.1")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Removed: 127.0.0.1")]
+    caplog.clear()
+
+    main("hostname", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Authorised devices:\n  192.168.1.100\n  msl-device")]
+    caplog.clear()
+
+    main("hostname", "add")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.WARNING, "Warning! You must specify at least one device to add")
+    ]
+    caplog.clear()
+
+    main("hostname", "remove")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.WARNING, "Warning! You must specify at least one device to remove")
+    ]
+    caplog.clear()
+
+    main("hostname", "remove", "missing", "192.168.1.100")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.WARNING, "Warning! Cannot remove 'missing', it is not an authorised device"),
+        ("msl.network", logging.INFO, "Removed: 192.168.1.100"),
+    ]
+    caplog.clear()
+
+    main("hostname", "add", "192.168.1.50")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Added: 192.168.1.50")]
+    caplog.clear()
+
+    main("hostname", "reset")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Reset to only '127.0.0.1' (localhost)")]
+    caplog.clear()
+
+    main("hostname", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Authorised devices:\n  127.0.0.1")]
+    caplog.clear()
+
+    assert (home_dir / "network" / "hostnames.txt").read_text() == "127.0.0.1"
+
+
+@pytest.mark.parametrize("command", [[], ["--help"]])
+def test_help(command: list[str], capfd: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        main(*command)
+
+    out, err = capfd.readouterr()
+    assert out.startswith("usage:")
+    assert out.endswith("Show the version number and exit.\n")
+    assert not err

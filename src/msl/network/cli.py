@@ -43,4 +43,4 @@ def main(*args: str) -> None:
             args = ("--help",)
     parser = configure_parser()
     namespace = parser.parse_args(args)
-    sys.exit(namespace.func(namespace))
+    namespace.func(namespace)

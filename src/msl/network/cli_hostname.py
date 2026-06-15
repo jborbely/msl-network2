@@ -21,14 +21,14 @@ if TYPE_CHECKING:
     from .cli_argparse import ArgumentParser
 
 
-HELP = "Edit authorised hostnames (IP addresses)."
+HELP = "Edit authorised devices (hostnames and IP addresses)."
 
 DESCRIPTION = (
     HELP
     + """
 
 A Broker can be started with the option to use authorised devices, based on
-the hostname (or IP address) of a connecting device, as the authorisation
+the hostname (or IP address) of a connecting device, as the authentication
 mechanism for a client or service to be able to connect to the Broker.
 
 To use authorised hostnames as the authentication check, start the Broker
@@ -45,16 +45,16 @@ Examples:
   # add 'TheHostname' as an authorised device
   msl-network hostname add TheHostname
 
-  # add 'another-hostname' and '192.168.10.30' as authorised devices
-  msl-network hostname add another-hostname 192.168.10.30
+  # add 'my-device' and '192.168.10.30' as authorised devices
+  msl-network hostname add my-device 192.168.10.30
 
   # remove 'TheHostname' as an authorised device
   msl-network hostname remove TheHostname
 
-  # reset the authorised hostnames to only be 'localhost'
+  # reset the authorised devices to only be 'localhost'
   msl-network hostname reset
 
-  # list all authorised hostnames
+  # list all authorised devices
   msl-network hostname list
 
 """
@@ -78,7 +78,7 @@ def add_parser_hostname(parser: _SubParsersAction[ArgumentParser]) -> None:
             "The action to perform:\n"
             "  add: Add one or more hostnames\n"
             "  remove: Remove one or more hostnames\n"
-            "  reset: Reset to only allow '127.0.0.1'\n"
+            "  reset: Reset to only allow '127.0.0.1' (localhost)\n"
             "  list: Show the authorised hostnames"
         ),
     )
@@ -107,11 +107,11 @@ def execute(ns: Namespace) -> None:
     hostnames = set(path.read_text().split(","))
 
     if ns.action == "list":
-        logger.info("Authorised devices:\n  " + "\n  ".join(sorted(hostnames)))
+        logger.info("Authorised devices:\n  %s", "\n  ".join(sorted(hostnames)))
         return
 
     if ns.action == "reset":
-        logger.info("Reset to '127.0.0.1'")
+        logger.info("Reset to only '127.0.0.1' (localhost)")
         _ = path.write_text("127.0.0.1")
         return
 
@@ -128,8 +128,10 @@ def execute(ns: Namespace) -> None:
     # must be "remove"
     removed: list[str] = []
     for name in ns.names:
-        if name not in hostnames:
-            logger.warning("Cannot remove %r, it was not an authorised hostname", name)
-        hostnames.remove(name)
-        removed.append(name)
+        if name in hostnames:
+            hostnames.remove(name)
+            removed.append(name)
+        else:
+            logger.warning("Warning! Cannot remove %r, it is not an authorised device", name)
+    _ = path.write_text(",".join(hostnames))
     logger.info("Removed: %s", ", ".join(removed))

@@ -21,7 +21,7 @@ BROKER_PORT: Final[int] = 1875
 
 USER_DIR: Final[Path] = Path("~" + os.getenv("SUDO_USER", "")).expanduser()
 
-HOME_DIR: Final[Path] = Path(os.getenv("MSL_NETWORK_HOME") or USER_DIR / ".msl", "network")
+HOME_DIR: Final[Path] = Path(os.getenv("MSL_NETWORK_HOME") or USER_DIR / ".msl") / "network"
 """[Path][pathlib.Path] &mdash; The default directory where all files used by msl-network are located.
 
 Can be overwritten by specifying a `MSL_NETWORK_HOME` environment variable.
