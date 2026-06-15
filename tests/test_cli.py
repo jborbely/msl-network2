@@ -141,6 +141,15 @@ def test_help(command: list[str], capsys: pytest.CaptureFixture[str]) -> None:
         main(*command)
 
     out, err = capsys.readouterr()
+    assert not err
     assert out.startswith("usage:")
     assert out.endswith("Show the version number and exit.\n")
-    assert not err
+
+
+def test_help_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        main("unknown")
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert "invalid choice: 'unknown' (choose from" in err
