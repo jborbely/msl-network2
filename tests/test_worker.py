@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 import threading
 import time
 from typing import TYPE_CHECKING
@@ -208,11 +209,17 @@ def test_signatures_warnings(caplog: pytest.LogCaptureFixture) -> None:
     assert w.signatures() == {"set_price": "(value: int) -> None"}
     del w
 
+    fset_expect = (
+        "unreadable attribute [attribute='price']"
+        if sys.version_info[:2] <= (3, 10)
+        else "property 'price' of 'test_signatures_warnings.<locals>.Warner' object has no getter [attribute='price']"
+    )
+
     assert caplog.record_tuples == [
         (
             "msl.network",
             logging.WARNING,
-            "property 'price' of 'test_signatures_warnings.<locals>.Warner' object has no getter [attribute='price']",
+            fset_expect,
         ),
         (
             "msl.network",
