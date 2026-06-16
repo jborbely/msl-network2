@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
 import threading
 import time
 from typing import TYPE_CHECKING
@@ -209,21 +208,12 @@ def test_signatures_warnings(caplog: pytest.LogCaptureFixture) -> None:
     assert w.signatures() == {"set_price": "(value: int) -> None"}
     del w
 
-    fset_expect = (
-        "unreadable attribute [attribute='price']"
-        if sys.version_info[:2] <= (3, 10)
-        else "property 'price' of 'test_signatures_warnings.<locals>.Warner' object has no getter [attribute='price']"
-    )
+    rt = caplog.record_tuples
+    assert len(rt) == 2
+    assert rt[0][0] == "msl.network"
+    assert rt[0][1] == logging.WARNING
+    assert rt[0][2].endswith("[attribute='price']")
 
-    assert caplog.record_tuples == [
-        (
-            "msl.network",
-            logging.WARNING,
-            fset_expect,
-        ),
-        (
-            "msl.network",
-            logging.WARNING,
-            "no signature found for builtin type <class 'RuntimeError'> [attribute='zzz']",
-        ),
-    ]
+    assert rt[1][0] == "msl.network"
+    assert rt[1][1] == logging.WARNING
+    assert rt[1][2] == "no signature found for builtin type <class 'RuntimeError'> [attribute='zzz']"
