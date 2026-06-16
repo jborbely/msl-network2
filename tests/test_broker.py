@@ -128,6 +128,8 @@ def test_worker_disconnects_without_notifying() -> None:
     link = client.link("Foo")
     assert link.add(1, 2) == 3
 
+    assert link.signatures() == {"add": "(x: float, y: float) -> float"}
+
     interrupter1 = foo._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert interrupter1 is not None
     interrupter1()

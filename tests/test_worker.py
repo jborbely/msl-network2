@@ -2,14 +2,19 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import threading
 import time
+from typing import TYPE_CHECKING
 
 import pytest
 import zmq
 
 from msl.network import Flag, Worker
 from msl.network.message import Request, Response
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @pytest.mark.filterwarnings("error")
@@ -133,3 +138,85 @@ def test_session() -> None:  # noqa: PLR0915
     # Worker._handle_disconnect() can be called multiple times
     asyncio.run(sn._handle_disconnect())  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     asyncio.run(sn._handle_disconnect())  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+
+
+def test_signatures() -> None:
+    class Foo(Worker):
+        def __init__(self, ignore_attributes: str | Iterable[str] | None = None) -> None:
+            super().__init__(ignore_attributes=ignore_attributes)
+            self.count: int = 0
+
+        def add(self, x: float, y: float) -> float:
+            return x + y
+
+        def types(self, *, a: bool, b: int, c: float, d: str = "hi", e: list[str] | None = None) -> bytes:
+            _ = a, b, c, d, e
+            return b""
+
+        @property
+        def greet(self) -> str:
+            return "hi"
+
+    foo = Foo()
+    assert foo.signatures() == {
+        "add": "(x: float, y: float) -> float",
+        "count": "() -> int",
+        "greet": "() -> str",
+        "types": "(*, a: bool, b: int, c: float, d: str = hi, e: list[str] | None = None) -> bytes",
+    }
+    foo.disconnect()
+
+    foo = Foo()
+    foo.ignore_attributes("count", "greet")
+    assert foo.signatures() == {
+        "add": "(x: float, y: float) -> float",
+        "types": "(*, a: bool, b: int, c: float, d: str = hi, e: list[str] | None = None) -> bytes",
+    }
+    foo.disconnect()
+
+    foo = Foo("count")
+    assert foo.signatures() == {
+        "add": "(x: float, y: float) -> float",
+        "greet": "() -> str",
+        "types": "(*, a: bool, b: int, c: float, d: str = hi, e: list[str] | None = None) -> bytes",
+    }
+    foo.disconnect()
+
+    foo = Foo(("types", "add"))
+    assert foo.signatures() == {
+        "count": "() -> int",
+        "greet": "() -> str",
+    }
+    foo.disconnect()
+
+
+def test_signatures_warnings(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("DEBUG")
+
+    class Warner(Worker):
+        def __init__(self) -> None:
+            super().__init__()
+            self._price: int = 0
+            self.zzz: type[RuntimeError] = RuntimeError
+
+        def set_price(self, value: int) -> None:
+            self._price = value
+
+        price: property = property(fget=None, fset=set_price, fdel=None, doc=None)
+
+    w = Warner()
+    assert w.signatures() == {"set_price": "(value: int) -> None"}
+    del w
+
+    assert caplog.record_tuples == [
+        (
+            "msl.network",
+            logging.WARNING,
+            "property 'price' of 'test_signatures_warnings.<locals>.Warner' object has no getter [attribute='price']",
+        ),
+        (
+            "msl.network",
+            logging.WARNING,
+            "no signature found for builtin type <class 'RuntimeError'> [attribute='zzz']",
+        ),
+    ]

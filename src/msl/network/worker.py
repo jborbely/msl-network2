@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import os
 import traceback
 from contextlib import contextmanager
@@ -16,14 +17,20 @@ from .message import Flag, Request, Response
 from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Generator, Iterable
 
 
 class Worker:
     """Base class for a Worker."""
 
     def __init__(
-        self, *, name: str | None = None, host: str = "127.0.0.1", port: int = BROKER_PORT, flag: Flag = Flag.PICKLE
+        self,
+        *,
+        name: str | None = None,
+        host: str = "127.0.0.1",
+        port: int = BROKER_PORT,
+        flag: Flag = Flag.PICKLE,
+        ignore_attributes: str | Iterable[str] | None = None,
     ) -> None:
         """Base class for a Worker.
 
@@ -35,6 +42,10 @@ class Worker:
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a response before
                 sending the byte stream.
+            ignore_attributes: The names of the attributes to not include in the
+                [signatures][msl.network.worker.Worker.signatures]. See
+                [ignore_attributes][msl.network.worker.Worker.ignore_attributes]
+                for more details.
         """
         self.flag: Flag = flag
         """The serialisation and compression algorithms to apply to a response before sending the byte stream."""
@@ -46,6 +57,21 @@ class Worker:
         self._poller: Poller = Poller()
         self._interrupter: Interrupter | None = None
         self._socket: Socket | None = None
+
+        self._ignore_attributes: set[str] = {
+            "connect",
+            "disconnect",
+            "flag",
+            "flag_at",
+            "ignore_attributes",
+            "signatures",
+        }
+
+        if ignore_attributes is not None:
+            if isinstance(ignore_attributes, str):
+                self.ignore_attributes(ignore_attributes)
+            else:
+                self.ignore_attributes(*ignore_attributes)
 
     def __del__(self) -> None:
         """Calls `disconnect` then destroys the context."""
@@ -120,6 +146,66 @@ class Worker:
             yield
         finally:
             self.flag = original
+
+    def ignore_attributes(self, *names: str) -> None:
+        """Ignore attributes from being added to the [signature][msl.network.worker.Worker.signatures].
+
+        There are a few reasons why you may want to call this method:
+
+        * If you see warnings that the signature of an attribute cannot be found and you
+          prefer not to see the warnings.
+        * If you do not want an attribute to be made publicly known that it exists; however,
+          a [Client][msl.network.client.Client] can still access ignored attributes.
+
+        Private attributes (i.e., attributes that start with an underscore) are automatically
+        ignored and cannot be accessed from a [Client][msl.network.client.Client] on the network.
+
+        If you want to ignore any attributes then you must call this method before calling
+        [connect][msl.network.worker.Worker.connect].
+
+        Args:
+            names: The names of the attributes to exclude from the
+                [signatures][msl.network.worker.Worker.signatures] map.
+        """
+        self._ignore_attributes.update(names)
+
+    def signatures(self) -> dict[str, str]:
+        """Get the function signatures that the service provides.
+
+        Returns:
+            A mapping between the function (attribute) name and the
+                function signature (attribute value).
+        """
+        signature_map: dict[str, str] = {}
+        for name in dir(self):
+            if name.startswith("_") or (name in self._ignore_attributes):
+                continue
+
+            try:
+                attrib = getattr(self, name)
+            except Exception as e:  # noqa: BLE001
+                # This can happen if the Service is also a subclass of
+                # another class (e.g., the PiCamera class) and the other
+                # class defines some of its attributes using the builtin
+                # property function, e.g., property(fget, fset, fdel, doc),
+                # and defines fget=None or if the getattr() function
+                # executes code, like PiCamera.frame does, which raises
+                # a custom exception if the camera is not running.
+                logger.warning("%s [attribute=%r]", e, name)
+                continue
+
+            try:
+                signature_map[name] = str(inspect.signature(attrib)).replace("'", "")
+            except TypeError:
+                # Then the attribute is not a callable object
+                signature_map[name] = f"() -> {attrib.__class__.__name__}"
+            except ValueError as e:
+                # Cannot get the signature of the callable object.
+                # This can happen if the Worker is also a subclass of
+                # some other object, for example a Qt class.
+                logger.warning("%s [attribute=%r]", e, name)
+
+        return signature_map
 
     async def _handle_disconnect(self) -> None:
         """Notify the Broker that this Worker is disconnecting."""

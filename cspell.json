@@ -27,6 +27,7 @@
         "caplog",
         "capsys",
         "EHOSTUNREACH",
+        "fdel",
         "inproc",
         "msecs",
         "POLLIN",
