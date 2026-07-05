@@ -3,22 +3,20 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from typing import TYPE_CHECKING
 
 import pytest
 import zmq
 
 from msl.network import Client, Worker
-from msl.network.broker import Broker
 from msl.network.message import Flag, Request
-from msl.network.utils import run_event_loop
+
+if TYPE_CHECKING:
+    from conftest import Broker
 
 
-def test_session() -> None:  # noqa: PLR0915
-    broker = Broker()
-    broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
-    broker_thread.start()
-
-    port = int(broker.endpoint.rsplit(":", 1)[1])
+def test_session(broker: Broker) -> None:
+    port = broker.run()
 
     class Foo(Worker):
         def __init__(self) -> None:
@@ -97,16 +95,11 @@ def test_session() -> None:  # noqa: PLR0915
 
     client.disconnect()
 
-    broker.interrupter()
-    broker_thread.join()
+    broker.stop()
 
 
-def test_worker_disconnects_without_notifying() -> None:
-    broker = Broker()
-    broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
-    broker_thread.start()
-
-    port = int(broker.endpoint.rsplit(":", 1)[1])
+def test_worker_disconnects_without_notifying(broker: Broker) -> None:
+    port = broker.run()
 
     class Foo(Worker):
         def add(self, x: float, y: float) -> float:
@@ -139,26 +132,16 @@ def test_worker_disconnects_without_notifying() -> None:
         _ = link.add(1, 2)
 
     client.disconnect()
-
-    broker.interrupter()
-    broker.destroy()  # can call multiple times
-    broker.destroy()
-    broker.destroy()
-    broker.destroy()
-    broker_thread.join()
+    broker.stop()
 
 
-def test_worker_sends_bad_messages(caplog: pytest.LogCaptureFixture) -> None:
+def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     # Tests that an unsupported message gets logged from a Worker and when
     # WORKER_UNAVAILABLE is sent with a service name that does not exist, the
     # request get silently ignored by the "is None" check on the broker
     caplog.set_level("DEBUG")
 
-    broker = Broker()
-    broker_thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
-    broker_thread.start()
-
-    port = int(broker.endpoint.rsplit(":", 1)[1])
+    port = broker.run()
 
     context = zmq.Context()
     worker = context.socket(zmq.DEALER)
@@ -175,16 +158,15 @@ def test_worker_sends_bad_messages(caplog: pytest.LogCaptureFixture) -> None:
     worker.close()
     context.destroy()
 
-    broker.interrupter()
-    broker_thread.join()
+    broker.stop()
 
     assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"{broker.interrupter.name} created"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter_name} created"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
-        ("msl.network", logging.DEBUG, f"{broker.interrupter.name} triggered"),
-        ("msl.network", logging.DEBUG, f"{broker.interrupter.name} destroyed"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter_name} triggered"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter_name} destroyed"),
         ("msl.network", logging.DEBUG, "Broker has shut down"),
     ]

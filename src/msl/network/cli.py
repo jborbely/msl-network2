@@ -3,24 +3,20 @@
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
 from .__about__ import __version__
 from .cli_argparse import ArgumentParser
-from .cli_hostname import add_parser_hostname
+from .cli_device import add_parser_device
 from .cli_start import add_parser_start
 
-DESCRIPTION = """A concurrent and asynchronous Broker.
-
-A Broker allows for multiple clients and services to connect to it
-and it links a client's request to the appropriate service to handle
-the request and then the broker sends the response from the service
-back to the client.
-"""
+if TYPE_CHECKING:
+    from argparse import Namespace
 
 
 def configure_parser() -> ArgumentParser:
     """Returns the argument parser."""
-    parser = ArgumentParser(description=DESCRIPTION)
+    parser = ArgumentParser(prog="msl-network", description="Exchange concurrent and asynchronous messages.")
     _ = parser.add_argument(
         "-V",
         "--version",
@@ -28,19 +24,21 @@ def configure_parser() -> ArgumentParser:
         version=f"{__version__}",
         help="Show the version number and exit.",
     )
-    command_parser = parser.add_subparsers(metavar="command", dest="cmd")
-    command_parser.required = True
-    add_parser_hostname(command_parser)
-    add_parser_start(command_parser)
+    sub_parser = parser.add_subparsers(metavar="command", dest="cmd")
+    sub_parser.required = True
+    add_parser_device(sub_parser)
+    add_parser_start(sub_parser)
     return parser
+
+
+def parse_args(*args: str) -> Namespace:
+    """Parse command-line arguments."""
+    args = tuple(args or sys.argv[1:] or ["--help"])
+    parser = configure_parser()
+    return parser.parse_args(args)
 
 
 def main(*args: str) -> None:
     """Main entry way to the command-line interface."""
-    if not args:
-        args = tuple(sys.argv[1:])
-        if not args:
-            args = ("--help",)
-    parser = configure_parser()
-    namespace = parser.parse_args(args)
+    namespace = parse_args(*args)
     namespace.func(namespace)

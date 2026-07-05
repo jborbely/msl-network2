@@ -101,6 +101,9 @@ def test_result_ok_and_error() -> None:
     thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
     thread.start()
 
+    while not broker.endpoint:
+        continue
+
     _, port = broker.endpoint.rsplit(":", 1)
     client = Client(port=int(port))
     assert client.services() == []

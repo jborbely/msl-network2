@@ -28,10 +28,14 @@
         "capsys",
         "EHOSTUNREACH",
         "fdel",
+        "gaierror",
+        "gethostname",
         "inproc",
         "msecs",
         "POLLIN",
         "POLLOUT",
+        "PUBLICKEY",
+        "SECRETKEY",
         "tobytes",
         "urandom"
     ]

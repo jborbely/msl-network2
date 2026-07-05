@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 from collections import deque
 from contextlib import suppress
+from typing import TYPE_CHECKING
 
 import zmq
 from zmq.asyncio import Context, Poller, Socket
+from zmq.auth.base import Authenticator
 from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
 from .message import Flag, Request, Response
 from .utils import logger
+
+if TYPE_CHECKING:
+    from .utils import Curve
 
 
 class WorkerBalancer:
@@ -55,29 +61,19 @@ class WorkerBalancer:
 class Broker:
     """ZeroMQ broker to forward requests and responses."""
 
-    def __init__(self, host: str = "*", port: int = 0) -> None:
-        """ZeroMQ broker to forward requests and responses.
-
-        Args:
-            host: The network interface to run the Broker on.
-            port: The port number to run the Broker on. If `0`, use a random port.
-        """
-        self.context: Context = Context()
-        self.router: Socket = self.context.socket(zmq.ROUTER)
-
-        # Check for Errno.EHOSTUNREACH when a message cannot be routed (must be set before `bind`)
-        self.router.setsockopt(zmq.ROUTER_MANDATORY, 1)
-        _ = self.router.bind(f"tcp://{host}:{port}")
-        self.endpoint: str = self.router.getsockopt_string(zmq.LAST_ENDPOINT)
-
-        self.interrupter: Interrupter = Interrupter()
-
-        self.poller: Poller = Poller()
-        self.poller.register(self.router, zmq.POLLIN)
-        self.poller.register(self.interrupter.receiver, zmq.POLLIN)
+    def __init__(self) -> None:
+        """ZeroMQ broker to forward requests and responses."""
+        self.auth: Authenticator | None = None
+        self.endpoint: str = ""
+        self.running: bool = False
 
         # key: service name
         self.workers: dict[str, WorkerBalancer] = {}
+
+        self.interrupter: Interrupter
+        self.context: Context
+        self.router: Socket
+        self.poller: Poller
 
     def remove_worker(self, worker_id: bytes, service_name: str, balancer: WorkerBalancer) -> None:
         """Worker is no longer available, remove it."""
@@ -89,8 +85,15 @@ class Broker:
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""
+        self.running = False
         if self.context.closed:
             return
+
+        if self.auth is not None:
+            self.poller.unregister(self.auth.zap_socket)  # pyright: ignore[reportUnknownMemberType]
+            self.auth.log.setLevel(logging.WARNING)
+            self.auth.stop()
+            self.auth = None
 
         self.poller.unregister(self.router)
         self.poller.unregister(self.interrupter.receiver)
@@ -153,26 +156,92 @@ class Broker:
             else:
                 logger.exception(e)
 
-    async def run(self) -> None:
-        """Run the broker."""
+    async def run(  # noqa: PLR0913, PLR0915
+        self,
+        *,
+        addresses: dict[str, str] | None = None,
+        curve: Curve | None = None,
+        debug: bool = False,
+        domain: str = "*",
+        host: str = "*",
+        plain: dict[str, str] | None = None,
+        port: int = 0,
+    ) -> None:
+        """Run the broker.
+
+        Args:
+            addresses: A hostname/address to IPv4 address mapping of devices that are allowed to connect to the broker.
+                If not specified, all devices can connect to proceed to PLAIN or CURVE authentication (if used).
+            curve: The information required for [CURVE](https://rfc.zeromq.org/spec/26/) authentication.
+            debug: Whether to allow DEBUG log messages during [ZAP](https://rfc.zeromq.org/spec/27/) authentication.
+            domain: The domain to use for [ZAP](https://rfc.zeromq.org/spec/27/) authentication.
+            host: The network interface to run the Broker on.
+            plain: A username to password mapping to use for [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
+            port: The port number to run the Broker on. If `0`, use a random port.
+        """
+        self.interrupter = Interrupter()
+
+        self.context = Context()
+        self.router = self.context.socket(zmq.ROUTER)
+
+        self.poller = Poller()
+        self.poller.register(self.router, zmq.POLLIN)
+        self.poller.register(self.interrupter.receiver, zmq.POLLIN)
+
+        # must configure Authenticator and the ROUTER socket before binding the socket
+        if addresses or curve or plain:
+            self.auth = Authenticator(self.context)
+            self.auth.log.setLevel(logging.WARNING)
+            if addresses:
+                self.auth.allow(*addresses.values())
+                logger.info("Allowed devices: %s", ", ".join(addresses))
+
+            if curve:
+                self.auth.configure_curve_callback(domain=domain, credentials_provider=curve)
+                self.router.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
+                self.router.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
+                self.router.setsockopt(zmq.CURVE_SERVER, 1)
+                n = "*" if not curve.keys else str(len(curve.keys))
+                logger.info("Using CURVE authentication [domain:%s, keys:%s]", domain, n)
+            elif plain:
+                self.auth.configure_plain(domain=domain, passwords=plain)
+                self.router.setsockopt(zmq.PLAIN_SERVER, 1)
+                logger.info("Using PLAIN authentication [domain:%s]", domain)
+            else:
+                self.router.setsockopt(zmq.ZAP_DOMAIN, domain.encode())
+                logger.info("Using NULL authentication [domain:%s]", domain)
+
+            self.auth.start()
+            self.poller.register(self.auth.zap_socket, zmq.POLLIN)  # pyright: ignore[reportUnknownMemberType]
+            self.auth.log.setLevel(logging.DEBUG if debug else logging.WARNING)
+
+        # Check for Errno.EHOSTUNREACH when a message cannot be routed (must be set before `bind`)
+        self.router.setsockopt(zmq.ROUTER_MANDATORY, 1)
+
+        _ = self.router.bind(f"tcp://{host}:{port}")
+        self.endpoint = self.router.getsockopt_string(zmq.LAST_ENDPOINT)
+
         logger.info("Broker running on %s", self.endpoint[6:])
         with allow_interrupt(self.interrupter):
+            self.running = True
             while True:
-                socket: dict[Socket, int] = dict(await self.poller.poll())
-                if socket.get(self.router) is None:  # must be from Interrupter
-                    break
-
-                sender_id, destination_id, message = await self.router.recv_multipart()
-                logger.debug("%s -> %s", sender_id, destination_id)
-                if destination_id == b"Broker":
-                    await self.request_for_broker(sender_id, message)
-                elif sender_id.startswith(b"Client"):
-                    await self.request_for_worker(sender_id, destination_id, message)
+                event = dict(await self.poller.poll())
+                if event.get(self.router):
+                    sender_id, destination_id, message = await self.router.recv_multipart()
+                    logger.debug("%s -> %s", sender_id, destination_id)
+                    if destination_id == b"Broker":
+                        await self.request_for_broker(sender_id, message)
+                    elif sender_id.startswith(b"Client"):
+                        await self.request_for_worker(sender_id, destination_id, message)
+                    else:
+                        # A response from a Worker to be sent to a Client
+                        # Silently ignore all errors if the Client is no longer available
+                        with suppress(zmq.error.ZMQError):
+                            _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
+                elif self.auth is not None and event.get(self.auth.zap_socket):  # pyright: ignore[reportUnknownMemberType]
+                    await self.auth.handle_zap_message(self.auth.zap_socket.recv_multipart())  # pyright: ignore[reportUnknownMemberType]
                 else:
-                    # A response from a Worker to be sent to a Client
-                    # Silently ignore all errors if the Client is no longer available
-                    with suppress(zmq.error.ZMQError):
-                        _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
+                    break  # event must be from self.interrupter.receiver
 
         self.destroy()
 
