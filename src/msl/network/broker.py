@@ -201,8 +201,9 @@ class Broker:
                 self.router.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
                 self.router.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
                 self.router.setsockopt(zmq.CURVE_SERVER, 1)
-                n = "*" if not curve.keys else str(len(curve.keys))
-                logger.info("Using CURVE authentication [domain:%s, keys:%s]", domain, n)
+                n = len(curve.keys)
+                text = {0: "all keys", 1: "1 key"}.get(n, f"{n} keys")
+                logger.info("Using CURVE authentication [%s allowed, domain:%s]", text, domain)
             elif plain:
                 self.auth.configure_plain(domain=domain, passwords=plain)
                 self.router.setsockopt(zmq.PLAIN_SERVER, 1)

@@ -141,7 +141,7 @@ def load_devices(home_dir: Path | None = None) -> tuple[Path, set[str]]:
         return path, {"localhost"}
 
 
-def load_plain(path: Path | None = None) -> tuple[Path, dict[str, str] | None]:
+def load_plain(path: str | Path | None = None) -> tuple[Path, dict[str, str] | None]:
     """Load a JSON file containing the PLAIN username to password mapping.
 
     The mapping is `None` if the file does not exist or contains invalid JSON data.
@@ -152,6 +152,7 @@ def load_plain(path: Path | None = None) -> tuple[Path, dict[str, str] | None]:
             MSL_NETWORK_HOME.mkdir(parents=True, exist_ok=True)
             _ = path.write_text("{}")
 
+    path = Path(path)
     logger.debug("Loading PLAIN authentication data from '%s'", path)
 
     try:

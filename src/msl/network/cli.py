@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING
 
 from .__about__ import __version__
 from .cli_argparse import ArgumentParser
+from .cli_curve import add_parser_curve
 from .cli_device import add_parser_device
+from .cli_plain import add_parser_plain
 from .cli_start import add_parser_start
 
 if TYPE_CHECKING:
@@ -26,7 +28,9 @@ def configure_parser() -> ArgumentParser:
     )
     sub_parser = parser.add_subparsers(metavar="command", dest="cmd")
     sub_parser.required = True
+    add_parser_curve(sub_parser)
     add_parser_device(sub_parser)
+    add_parser_plain(sub_parser)
     add_parser_start(sub_parser)
     return parser
 

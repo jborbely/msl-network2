@@ -43,10 +43,7 @@ def execute(ns: Namespace) -> None:
     path, devices = load_devices()
 
     if ns.action == "list":
-        if devices:
-            logger.info("Authorised devices:\n  %s", "\n  ".join(sorted(devices)))
-        else:
-            logger.info("There are no authorised devices")
+        logger.info("Authorised devices:\n  %s", "\n  ".join(sorted(devices)))
         return
 
     if ns.action == "reset":

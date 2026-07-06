@@ -44,6 +44,11 @@ def add_parser_start(parser: _SubParsersAction[ArgumentParser]) -> None:
         ),
     )
     _ = p.add_argument(
+        "--auth-curve-allow-any",
+        action="store_true",
+        help="Allow CURVE keys from any device. Enabled by default if no *.key files are found.",
+    )
+    _ = p.add_argument(
         "--auth-domain",
         default="*",
         help="The domain to use for PLAIN and CURVE authentication. Default is '*'.",
@@ -125,6 +130,8 @@ def namespace_to_run_kwargs(ns: Namespace, *, debug: bool = False) -> RunKwargs:
     if ns.auth_curve is not None:
         home_dir = None if ns.auth_curve == CONST else Path(ns.auth_curve)
         curve = load_curves(home_dir, domain=ns.auth_domain)
+        if curve is not None and ns.auth_curve_allow_any:
+            curve.keys.clear()
 
     return {
         "host": ns.host,

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from concurrent.futures import Future  # noqa: TC003
-from typing import Any, Literal, Protocol, overload
+from typing import Any, Literal, Protocol, Union, overload  # pyright: ignore[reportDeprecated]
 
 
 class FutureOrResult(Protocol):
@@ -25,3 +26,7 @@ class FutureOrResult(Protocol):
 
     @overload
     def __call__(self, *args: Any, sync: bool = True, sync_timeout: float | None = None, **kwargs: Any) -> Any: ...
+
+
+PathLike = Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]  # pyright: ignore[reportDeprecated]
+"""A [path-like object][]."""

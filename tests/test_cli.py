@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -301,12 +302,22 @@ def test_namespace_to_run_kwargs_auth_curve_default(home_dir: Path) -> None:
     assert curve.domain == "*"
 
 
-def test_namespace_to_run_kwargs_auth_curve_custom_domain(tmp_path: Path) -> None:
-    ns = parse_args("start", "--auth-curve", str(tmp_path), "--auth-domain", "msl")
+@pytest.mark.parametrize("allow_any", [False, True])
+def test_namespace_to_run_kwargs_auth_curve_domain_and_keys(tmp_path: Path, allow_any: bool) -> None:  # noqa: FBT001
+    curves = tmp_path / "curves"
+    curves.mkdir()
+
+    _ = (curves / "a.key").write_text("public-key = abc")
+    _ = (curves / "x.key").write_text("public-key = xyz")
+
+    args = ["start", "--auth-curve", str(tmp_path), "--auth-domain", "msl"]
+    if allow_any:
+        args.append("--auth-curve-allow-any")
+
+    ns = parse_args(*args)
     kwargs = namespace_to_run_kwargs(ns)
 
     file = next(tmp_path.glob("*.key_secret"))
-
     public, secret = certs.load_certificate(file)  # pyright: ignore[reportUnknownMemberType]
 
     curve = kwargs["curve"]
@@ -314,5 +325,144 @@ def test_namespace_to_run_kwargs_auth_curve_custom_domain(tmp_path: Path) -> Non
     assert curve.public_key == public
     assert secret is not None
     assert curve.secret_key == secret
-    assert curve.keys == set()
     assert curve.domain == "msl"
+
+    if allow_any:
+        assert not curve.keys
+    else:
+        assert curve.keys == {b"abc", b"xyz"}
+
+
+def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:  # noqa: PLR0915
+    caplog.set_level("INFO")
+
+    main("plain", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "{}")]
+    caplog.clear()
+
+    main("plain", "add")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, "Must specify both --username and --password to add a user")
+    ]
+    caplog.clear()
+
+    main("plain", "add", "--file", "missing.json")
+    assert caplog.record_tuples == [("msl.network", logging.ERROR, "File not found: missing.json")]
+    caplog.clear()
+
+    main("plain", "add", "-u", "me", "-p", "safe")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Added authentication for 'me'")]
+    caplog.clear()
+
+    main("plain", "add", "--username", "msl", "--password", "12345")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Added authentication for 'msl'")]
+    caplog.clear()
+
+    main("plain", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, '{\n  "me": "safe",\n  "msl": "12345"\n}')]
+    caplog.clear()
+
+    main("plain", "remove")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Must specify --username to remove a user")]
+    caplog.clear()
+
+    main("plain", "remove", "-u", "msl")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Removed authentication for 'msl'")]
+    caplog.clear()
+
+    main("plain", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, '{\n  "me": "safe"\n}')]
+    caplog.clear()
+
+    main("plain", "remove", "-u", "msl")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "User 'msl' does not exist, cannot remove")]
+    caplog.clear()
+
+    main("plain", "reset")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Removed all usernames and passwords")]
+    caplog.clear()
+
+    main("plain", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "{}")]
+    caplog.clear()
+
+    main("plain", "reset", "-u", "user")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, "Must specify both --username and --password or neither")
+    ]
+    caplog.clear()
+
+    main("plain", "reset", "-p", "text")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, "Must specify both --username and --password or neither")
+    ]
+    caplog.clear()
+
+    main("plain", "reset", "--username", "user", "--password", "text")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Reset authentication for only 'user'")]
+    caplog.clear()
+
+    main("plain", "list")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, '{\n  "user": "text"\n}')]
+    caplog.clear()
+
+    plain_file = home_dir / "plain.json"
+    assert plain_file.read_text() == '{\n  "user": "text"\n}'
+
+
+def test_cli_curve_default_dir(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("INFO")
+
+    name = "cert"
+    secret = home_dir / f"{name}.key_secret"
+    public = home_dir / f"{name}.key"
+
+    assert not secret.is_file()
+    assert not public.is_file()
+
+    main("curve", "-n", name)
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"Created secret certificate {secret}"),
+        ("msl.network", logging.INFO, f"Created public certificate {public}"),
+        (
+            "msl.network",
+            logging.INFO,
+            "Copy the public certificate to the $HOME/.curve directory on the computer running the broker",
+        ),
+    ]
+    caplog.clear()
+
+    assert secret.is_file()
+    assert public.is_file()
+
+
+def test_cli_curve_custom_dir(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("INFO")
+
+    assert not list(tmp_path.glob("*.key"))
+    assert not list(tmp_path.glob("*.key_secret"))
+
+    main("curve", "-d", "missing")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.ERROR, "Cannot create certificates, does 'missing' directory exist?")
+    ]
+    caplog.clear()
+
+    hostname = socket.gethostname()
+    secret = tmp_path / f"{hostname}.key_secret"
+    public = tmp_path / f"{hostname}.key"
+
+    main("curve", "--dir", str(tmp_path))
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"Created secret certificate {secret}"),
+        ("msl.network", logging.INFO, f"Created public certificate {public}"),
+        (
+            "msl.network",
+            logging.INFO,
+            "Copy the public certificate to the $HOME/.curve directory on the computer running the broker",
+        ),
+    ]
+    caplog.clear()
+
+    assert secret.is_file()
+    assert public.is_file()
