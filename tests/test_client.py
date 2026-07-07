@@ -122,6 +122,7 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     c = Client(port=29501, plain=AuthPlain("hi", "hello"))
     assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    time.sleep(0.1)
     c.disconnect()
 
     assert caplog.record_tuples == [
@@ -145,6 +146,7 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     )
     assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    time.sleep(0.1)
     c.disconnect()
 
     assert caplog.record_tuples == [
