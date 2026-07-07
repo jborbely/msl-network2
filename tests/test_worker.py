@@ -246,7 +246,7 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
 
     assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{interrupter.name} created"),
-        ("msl.network", logging.DEBUG, "Using PLAIN authentication"),
+        ("msl.network", logging.DEBUG, "Using PLAIN authentication [domain:*]"),
         ("msl.network", logging.DEBUG, "Worker connected"),
         ("msl.network", logging.DEBUG, "Worker registered"),
         ("msl.network", logging.DEBUG, "Worker polling..."),
@@ -279,7 +279,7 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
 
     assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{interrupter.name} created"),
-        ("msl.network", logging.DEBUG, "Using CURVE authentication"),
+        ("msl.network", logging.DEBUG, "Using CURVE authentication [domain:*]"),
         ("msl.network", logging.DEBUG, "Worker connected"),
         ("msl.network", logging.DEBUG, "Worker registered"),
         ("msl.network", logging.DEBUG, "Worker polling..."),

@@ -242,12 +242,12 @@ class Worker:
             self._socket.setsockopt(zmq.CURVE_SECRETKEY, self._curve.secret_key)
             self._socket.setsockopt(zmq.CURVE_SERVERKEY, self._curve.broker_key)
             self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
-            logger.debug("Using CURVE authentication")
+            logger.debug("Using CURVE authentication [domain:%s]", self._domain.decode())
         elif self._plain is not None:
             self._socket.setsockopt(zmq.PLAIN_USERNAME, self._plain.username)
             self._socket.setsockopt(zmq.PLAIN_PASSWORD, self._plain.password)
             self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
-            logger.debug("Using PLAIN authentication")
+            logger.debug("Using PLAIN authentication [domain:%s]", self._domain.decode())
 
         self._poller.register(self._socket, zmq.POLLIN)
         self._poller.register(self._interrupter.receiver, zmq.POLLIN)

@@ -240,10 +240,12 @@ class _AsyncClient:
             self.dealer.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
             self.dealer.setsockopt(zmq.CURVE_SERVERKEY, curve.broker_key)
             self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
+            logger.debug("Using CURVE authentication [domain:%s]", domain.decode())
         elif plain is not None:
             self.dealer.setsockopt(zmq.PLAIN_USERNAME, plain.username)
             self.dealer.setsockopt(zmq.PLAIN_PASSWORD, plain.password)
             self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
+            logger.debug("Using PLAIN authentication [domain:%s]", domain.decode())
 
         _ = self.dealer.connect(f"tcp://{host}:{port}")
 

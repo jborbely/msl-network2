@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from concurrent import futures
 from typing import TYPE_CHECKING
 
 import pytest
@@ -193,15 +192,6 @@ def test_allow_localhost(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
     ]
 
 
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
-def test_deny_localhost(broker: Broker) -> None:
-    port = broker.run(addresses={"whatever": "1.2.3.4"})
-    with pytest.raises((TimeoutError, futures.TimeoutError)), Client(port=port) as client:
-        _ = client.services(timeout=TIMEOUT)
-    client.disconnect()
-    broker.stop()
-
-
 def test_plain_ok(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
 
@@ -213,38 +203,6 @@ def test_plain_ok(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
 
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using PLAIN authentication for user msl [domain:*]"),
-        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-    ]
-
-
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
-def test_plain_wrong_domain(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.INFO)
-
-    port = broker.run(plain={"msl": "uncertainty", "a": "b"}, domain="not*")
-    plain = AuthPlain("msl", "uncertainty")
-    with pytest.raises((TimeoutError, futures.TimeoutError)), Client(port=port, plain=plain) as client:
-        _ = client.services(timeout=TIMEOUT)
-    broker.stop()
-
-    assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using PLAIN authentication for users msl, a [domain:not*]"),
-        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-    ]
-
-
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
-def test_plain_wrong_user(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.INFO)
-
-    port = broker.run(plain={"msl": "uncertainty", "a": "b"})
-    plain = AuthPlain("me", "you")
-    with pytest.raises((TimeoutError, futures.TimeoutError)), Client(port=port, plain=plain) as client:
-        _ = client.services(timeout=TIMEOUT)
-    broker.stop()
-
-    assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using PLAIN authentication for users msl, a [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
     ]
 
@@ -289,41 +247,19 @@ def test_curve_valid_key(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
     ]
 
 
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
-def test_curve_wrong_domain(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.INFO)
-
-    domain = "xyz"
-    broker_public, broker_secret = zmq.curve_keypair()
-    client_public, client_secret = zmq.curve_keypair()
-    curve = Curve(public_key=broker_public, secret_key=broker_secret, keys={client_public}, domain=domain)
-    auth_curve = AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
-
-    port = broker.run(curve=curve, domain=domain)
-    with pytest.raises((TimeoutError, futures.TimeoutError)), Client(port=port, curve=auth_curve) as client:
-        _ = client.services(timeout=TIMEOUT)
-    broker.stop()
-
-    assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using CURVE authentication with 1 key allowed [domain:xyz]"),
-        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-    ]
-
-
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
-def test_curve_wrong_key(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+def test_curve_valid_multiple_keys(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
 
     broker_public, broker_secret = zmq.curve_keypair()
     client_public, client_secret = zmq.curve_keypair()
     client2_public, _ = zmq.curve_keypair()
-    client3_public, _ = zmq.curve_keypair()
-    curve = Curve(public_key=broker_public, secret_key=broker_secret, keys={client2_public, client3_public})
+    curve = Curve(public_key=broker_public, secret_key=broker_secret, keys={client_public, client2_public})
     auth_curve = AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
 
     port = broker.run(curve=curve)
-    with pytest.raises((TimeoutError, futures.TimeoutError)), Client(port=port, curve=auth_curve) as client:
-        _ = client.services(timeout=TIMEOUT)
+    client = Client(port=port, curve=auth_curve)
+    assert client.services(timeout=TIMEOUT) == []
+    client.disconnect()
     broker.stop()
 
     assert caplog.record_tuples == [

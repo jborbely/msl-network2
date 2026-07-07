@@ -7,6 +7,7 @@ from concurrent import futures
 from typing import TYPE_CHECKING
 
 import pytest
+import zmq
 
 from msl.network import AuthCurve, AuthPlain, Client, Flag
 
@@ -113,3 +114,44 @@ def test_result_ok_and_error(broker: Broker) -> None:
 def test_plain_and_curve() -> None:
     with pytest.raises(ValueError, match=r"Cannot use both PLAIN and CURVE"):
         _ = Client(curve=AuthCurve(b"a", b"b", b"c"), plain=AuthPlain("a", "b"))
+
+
+def test_plain(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    c = Client(port=29501, plain=AuthPlain("hi", "hello"))
+    assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    c.disconnect()
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.DEBUG, f"{interrupter_name} created"),
+        ("msl.network", logging.DEBUG, "Using PLAIN authentication [domain:*]"),
+        ("msl.network", logging.DEBUG, f"{c} connected"),
+        ("msl.network", logging.DEBUG, f"{interrupter_name} triggered"),
+        ("msl.network", logging.DEBUG, f"{interrupter_name} destroyed"),
+        ("msl.network", logging.DEBUG, f"{c} disconnected"),
+    ]
+
+
+def test_curve(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    broker_public, _ = zmq.curve_keypair()
+    client_public, client_secret = zmq.curve_keypair()
+
+    c = Client(
+        port=49162, curve=AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
+    )
+    assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    c.disconnect()
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.DEBUG, f"{interrupter_name} created"),
+        ("msl.network", logging.DEBUG, "Using CURVE authentication [domain:*]"),
+        ("msl.network", logging.DEBUG, f"{c} connected"),
+        ("msl.network", logging.DEBUG, f"{interrupter_name} triggered"),
+        ("msl.network", logging.DEBUG, f"{interrupter_name} destroyed"),
+        ("msl.network", logging.DEBUG, f"{c} disconnected"),
+    ]
