@@ -88,6 +88,12 @@ def add_parser_start(parser: _SubParsersAction[ArgumentParser]) -> None:
         default=BROKER_PORT,
         help="The port number to use for the Broker. Default is %(default)s.",
     )
+    _ = p.add_argument(
+        "-m",
+        "--monitor",
+        action="store_true",
+        help="Whether to allow ZeroMQ event monitoring (as INFO log messages).",
+    )
     add_argument_quiet(p)
     add_argument_verbose(p)
     p.set_defaults(func=execute)
@@ -98,11 +104,12 @@ class RunKwargs(TypedDict):
 
     addresses: dict[str, str] | None
     curve: Curve | None
-    debug: bool
+    monitor: bool
     domain: str
     host: str
     plain: dict[str, str] | None
     port: int
+    zap_debug: bool
 
 
 def namespace_to_run_kwargs(ns: Namespace, *, debug: bool = False) -> RunKwargs:
@@ -137,10 +144,11 @@ def namespace_to_run_kwargs(ns: Namespace, *, debug: bool = False) -> RunKwargs:
         "host": ns.host,
         "port": ns.port,
         "domain": ns.auth_domain,
-        "debug": debug,
+        "monitor": ns.monitor or debug,
         "addresses": addresses,
         "curve": curve,
         "plain": plain,
+        "zap_debug": debug,
     }
 
 

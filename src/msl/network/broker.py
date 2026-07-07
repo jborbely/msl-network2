@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import zmq
 from zmq.asyncio import Context, Poller, Socket
 from zmq.auth.base import Authenticator
+from zmq.utils.monitor import recv_monitor_message
 from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
@@ -156,16 +157,17 @@ class Broker:
             else:
                 logger.exception(e)
 
-    async def run(  # noqa: PLR0913, PLR0915
+    async def run(  # noqa: C901, PLR0912, PLR0913, PLR0915
         self,
         *,
         addresses: dict[str, str] | None = None,
         curve: Curve | None = None,
-        debug: bool = False,
+        monitor: bool = False,
         domain: str = "*",
         host: str = "*",
         plain: dict[str, str] | None = None,
         port: int = 0,
+        zap_debug: bool = False,
     ) -> None:
         """Run the broker.
 
@@ -173,11 +175,12 @@ class Broker:
             addresses: A hostname/address to IPv4 address mapping of devices that are allowed to connect to the broker.
                 If not specified, all devices can connect to proceed to PLAIN or CURVE authentication (if used).
             curve: The information required for [CURVE](https://rfc.zeromq.org/spec/26/) authentication.
-            debug: Whether to allow DEBUG log messages during [ZAP](https://rfc.zeromq.org/spec/27/) authentication.
+            monitor: Whether to allow ZeroMQ event monitoring (as INFO log messages).
             domain: The domain to use for [ZAP](https://rfc.zeromq.org/spec/27/) authentication.
             host: The network interface to run the Broker on.
             plain: A username to password mapping to use for [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
             port: The port number to run the Broker on. If `0`, use a random port.
+            zap_debug: Whether to allow DEBUG log messages during [ZAP](https://rfc.zeromq.org/spec/27/) authentication.
         """
         self.interrupter = Interrupter()
 
@@ -215,13 +218,18 @@ class Broker:
 
             self.auth.start()
             self.poller.register(self.auth.zap_socket, zmq.POLLIN)  # pyright: ignore[reportUnknownMemberType]
-            self.auth.log.setLevel(logging.DEBUG if debug else logging.WARNING)
+            self.auth.log.setLevel(logging.DEBUG if zap_debug else logging.WARNING)
 
         # Check for Errno.EHOSTUNREACH when a message cannot be routed (must be set before `bind`)
         self.router.setsockopt(zmq.ROUTER_MANDATORY, 1)
 
         _ = self.router.bind(f"tcp://{host}:{port}")
         self.endpoint = self.router.getsockopt_string(zmq.LAST_ENDPOINT)
+
+        monitor_socket: Socket | None = None
+        if monitor:
+            monitor_socket = self.router.get_monitor_socket()
+            self.poller.register(monitor_socket, zmq.POLLIN)
 
         logger.info("Broker running on %s", self.endpoint[6:])
         with allow_interrupt(self.interrupter):
@@ -234,7 +242,12 @@ class Broker:
                     if destination_id == b"Broker":
                         await self.request_for_broker(sender_id, message)
                     elif sender_id.startswith(b"Client"):
-                        await self.request_for_worker(sender_id, destination_id, message)
+                        try:
+                            await self.request_for_worker(sender_id, destination_id, message)
+                        except:  # noqa: E722
+                            logger.exception("Bad client request %r", message)
+                    elif not destination_id:
+                        logger.debug("Undefined destination ID, ignoring message %r", message)
                     else:
                         # A response from a Worker to be sent to a Client
                         # Silently ignore all errors if the Client is no longer available
@@ -243,8 +256,15 @@ class Broker:
                 elif self.auth is not None and event.get(self.auth.zap_socket):  # pyright: ignore[reportUnknownMemberType]
                     self.auth.log.debug("ZAP request initiated...")
                     await self.auth.handle_zap_message(self.auth.zap_socket.recv_multipart())  # pyright: ignore[reportUnknownMemberType]
+                elif monitor_socket and event.get(monitor_socket):
+                    m = await recv_monitor_message(monitor_socket)
+                    logger.info("Monitor event=%r, value=%r", m["event"], m["value"])
                 else:
                     break  # event must be from self.interrupter.receiver
+
+        if monitor:
+            self.router.disable_monitor()
+            self.poller.unregister(monitor_socket)
 
         self.destroy()
 

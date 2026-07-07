@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 import threading
 import time
 from typing import TYPE_CHECKING
@@ -266,3 +267,77 @@ def test_curve_valid_multiple_keys(broker: Broker, caplog: pytest.LogCaptureFixt
         ("msl.network", logging.INFO, "Using CURVE authentication with 2 keys allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
     ]
+
+
+def test_monitor_tcp_socket(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+    port = broker.run(monitor=True)
+
+    with socket.socket() as s:
+        s.connect(("127.0.0.1", port))
+
+    broker.stop()
+
+    records = caplog.records
+    assert len(records) == 4
+    assert records[0].levelname == "INFO"
+    assert records[0].message == f"Broker running on 0.0.0.0:{port}"
+    assert records[1].levelname == "INFO"
+    assert records[1].message.startswith("Monitor event=<Event.ACCEPTED: 32>")
+    assert records[2].levelname == "INFO"
+    assert records[2].message.startswith("Monitor event=<Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
+    assert records[3].levelname == "INFO"
+    assert records[3].message.startswith("Monitor event=<Event.DISCONNECTED: 512>")
+
+
+def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+    port = broker.run()
+
+    ctx = zmq.Context()
+    socket = ctx.socket(zmq.REQ)  # use REQ instead of DEALER
+    socket.setsockopt(zmq.ROUTING_ID, b"Client[123]")
+    _ = socket.connect(f"tcp://127.0.0.1:{port}")
+    socket.send(b"invalid")
+    time.sleep(0.01)
+    socket.close(linger=0)
+    ctx.destroy(linger=0)
+
+    broker.stop()
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.ERROR, "Bad client request b'invalid'"),
+    ]
+
+
+def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+    port = broker.run()
+
+    ctx = zmq.Context()
+    socket = ctx.socket(zmq.REQ)  # use REQ instead of DEALER
+    _ = socket.connect(f"tcp://127.0.0.1:{port}")
+    socket.send(b"hi")
+    time.sleep(0.01)
+    socket.close()
+    ctx.destroy()
+
+    broker.stop()
+
+    records = caplog.records
+    assert len(records) == 7
+    assert records[0].levelname == "DEBUG"
+    assert records[0].message == f"{broker.interrupter_name} created"
+    assert records[1].levelname == "INFO"
+    assert records[1].message == f"Broker running on 0.0.0.0:{port}"
+    assert records[2].levelname == "DEBUG"
+    assert records[2].message == "b'\\x00\\x80\\x00\\x00)' -> b''"
+    assert records[3].levelname == "DEBUG"
+    assert records[3].message == "Undefined destination ID, ignoring message b'hi'"
+    assert records[4].levelname == "DEBUG"
+    assert records[4].message == f"{broker.interrupter_name} triggered"
+    assert records[5].levelname == "DEBUG"
+    assert records[5].message == f"{broker.interrupter_name} destroyed"
+    assert records[6].levelname == "DEBUG"
+    assert records[6].message == "Broker has shut down"

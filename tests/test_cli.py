@@ -195,7 +195,8 @@ def test_namespace_to_run_kwargs_debug(debug: bool) -> None:  # noqa: FBT001
         "host": "*",
         "port": BROKER_PORT,
         "domain": "*",
-        "debug": debug,
+        "zap_debug": debug,
+        "monitor": debug,
         "addresses": None,
         "curve": None,
         "plain": None,
@@ -210,7 +211,8 @@ def test_namespace_to_run_kwargs_auth_device_default(home_dir: Path) -> None:
         "host": "*",
         "port": BROKER_PORT,
         "domain": "*",
-        "debug": False,
+        "zap_debug": False,
+        "monitor": False,
         "addresses": {"localhost": "127.0.0.1"},
         "curve": None,
         "plain": None,
@@ -224,7 +226,8 @@ def test_namespace_to_run_kwargs_auth_device_specified() -> None:
         "host": "*",
         "port": BROKER_PORT,
         "domain": "*",
-        "debug": False,
+        "zap_debug": False,
+        "monitor": False,
         "addresses": {"127.0.0.1": "127.0.0.1", "localhost": "127.0.0.1"},
         "curve": None,
         "plain": None,
@@ -240,7 +243,8 @@ def test_namespace_to_run_kwargs_auth_device_gaierror(caplog: pytest.LogCaptureF
         "host": "*",
         "port": BROKER_PORT,
         "domain": "*",
-        "debug": False,
+        "zap_debug": False,
+        "monitor": False,
         "addresses": {"localhost": "127.0.0.1"},
         "curve": None,
         "plain": None,
@@ -259,7 +263,8 @@ def test_namespace_to_run_kwargs_auth_plain_default(home_dir: Path) -> None:
         "host": "*",
         "port": BROKER_PORT,
         "domain": "*",
-        "debug": False,
+        "zap_debug": False,
+        "monitor": False,
         "addresses": None,
         "curve": None,
         "plain": {},
@@ -276,7 +281,8 @@ def test_namespace_to_run_kwargs_auth_plain_custom(tmp_path: Path) -> None:
         "host": "*",
         "port": BROKER_PORT,
         "domain": "*",
-        "debug": False,
+        "zap_debug": False,
+        "monitor": False,
         "addresses": None,
         "curve": None,
         "plain": {"a": "b"},
@@ -331,6 +337,21 @@ def test_namespace_to_run_kwargs_auth_curve_domain_and_keys(tmp_path: Path, allo
         assert not curve.keys
     else:
         assert curve.keys == {b"abc", b"xyz"}
+
+
+def test_namespace_to_run_kwargs_monitor() -> None:
+    ns = parse_args("start", "--monitor")
+    kwargs = namespace_to_run_kwargs(ns)
+    assert kwargs == {
+        "host": "*",
+        "port": BROKER_PORT,
+        "domain": "*",
+        "zap_debug": False,
+        "monitor": True,
+        "addresses": None,
+        "curve": None,
+        "plain": None,
+    }
 
 
 def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:  # noqa: PLR0915
