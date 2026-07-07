@@ -332,7 +332,7 @@ def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> 
     assert records[1].levelname == "INFO"
     assert records[1].message == f"Broker running on 0.0.0.0:{port}"
     assert records[2].levelname == "DEBUG"
-    assert records[2].message == "b'\\x00\\x80\\x00\\x00)' -> b''"
+    assert records[2].message.endswith("' -> b''")  # Ignore default source_id since it is platform dependant
     assert records[3].levelname == "DEBUG"
     assert records[3].message == "Undefined destination ID, ignoring message b'hi'"
     assert records[4].levelname == "DEBUG"
