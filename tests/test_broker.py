@@ -299,7 +299,7 @@ def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) ->
     socket.setsockopt(zmq.ROUTING_ID, b"Client[123]")
     _ = socket.connect(f"tcp://127.0.0.1:{port}")
     socket.send(b"invalid")
-    time.sleep(0.01)
+    time.sleep(0.05)
     socket.close(linger=0)
     ctx.destroy(linger=0)
 
@@ -319,7 +319,7 @@ def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> 
     socket = ctx.socket(zmq.REQ)  # use REQ instead of DEALER
     _ = socket.connect(f"tcp://127.0.0.1:{port}")
     socket.send(b"hi")
-    time.sleep(0.01)
+    time.sleep(0.05)
     socket.close()
     ctx.destroy()
 
