@@ -1,4 +1,4 @@
-"""Authentication tools for Clients and Workers to connect to a Broker."""
+"""Authentication tools for [Client][]s and [Worker][]s to connect to a [Broker][]."""
 
 from __future__ import annotations
 
@@ -33,17 +33,17 @@ def load_certificate(path: PathLike) -> tuple[bytes, bytes | None]:
 
 
 class AuthPlain:
-    """PLAIN authentication credentials to connect to a broker."""
+    """PLAIN authentication credentials to connect to a [Broker][]."""
 
-    def __init__(self, username: str, password: str) -> None:
-        """PLAIN authentication credentials to connect to a broker.
+    def __init__(self, username: str | bytes, password: str | bytes) -> None:
+        """PLAIN authentication credentials to connect to a [Broker][].
 
         Args:
-            username: The username registered with the broker.
-            password: The password registered with the broker.
+            username: The username registered with the [Broker][].
+            password: The password registered with the [Broker][].
         """
-        self.username: str = username
-        self.password: str = password
+        self.username: bytes = username.encode() if isinstance(username, str) else username
+        self.password: bytes = password.encode() if isinstance(password, str) else password
 
     @staticmethod
     def load(path: PathLike | None = None, sep: str | None = None) -> AuthPlain:
@@ -94,15 +94,15 @@ class AuthPlain:
 
 
 class AuthCurve:
-    """CURVE authentication credentials to connect to a broker."""
+    """CURVE authentication credentials to connect to a [Broker][]."""
 
     def __init__(self, public_key: bytes, secret_key: bytes, broker_key: bytes) -> None:
-        """CURVE authentication credentials to connect to a broker.
+        """CURVE authentication credentials to connect to a [Broker][].
 
         Args:
-            public_key: The public key of the client or worker.
-            secret_key: The secret key of the client or worker.
-            broker_key: The public key of the broker.
+            public_key: The public key of the [Client][] or [Worker][].
+            secret_key: The secret key of the [Client][] or [Worker][].
+            broker_key: The public key of the [Broker][].
         """
         self.public_key: bytes = public_key
         self.secret_key: bytes = secret_key
@@ -113,9 +113,9 @@ class AuthCurve:
         """Load CURVE authentication credentials from files.
 
         Args:
-            broker: The path to the file that contains the broker's public key.
+            broker: The path to the file that contains the [Broker][]'s public key.
             own: The path to the file that contains the public and secret keys of the
-                client or worker that connects to the broker. If `None`, loads the
+                client or worker that connects to the [Broker][]. If `None`, loads the
                 credentials that were created by running the `msl-network curve` command.
 
         Returns:

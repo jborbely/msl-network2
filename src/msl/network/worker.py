@@ -19,17 +19,22 @@ from .utils import BROKER_PORT, logger, run_event_loop
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
+    from .auth import AuthCurve, AuthPlain
+
 
 class Worker:
     """Base class for a Worker."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         *,
         name: str | None = None,
         host: str = "127.0.0.1",
         port: int = BROKER_PORT,
         flag: Flag = Flag.PICKLE,
+        domain: str = "*",
+        curve: AuthCurve | None = None,
+        plain: AuthPlain | None = None,
         ignore_attributes: str | Iterable[str] | None = None,
     ) -> None:
         """Base class for a Worker.
@@ -42,6 +47,10 @@ class Worker:
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a response before
                 sending the byte stream.
+            domain: The domain to use for [CURVE](https://rfc.zeromq.org/spec/26/) or
+                [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
+            curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
+            plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             ignore_attributes: The names of the attributes to not include in the
                 [signatures][msl.network.worker.Worker.signatures]. See
                 [ignore_attributes][msl.network.worker.Worker.ignore_attributes]
@@ -57,6 +66,13 @@ class Worker:
         self._poller: Poller = Poller()
         self._interrupter: Interrupter | None = None
         self._socket: Socket | None = None
+        self._domain: bytes = domain.encode()
+        self._curve: AuthCurve | None = curve
+        self._plain: AuthPlain | None = plain
+
+        if curve is not None and plain is not None:
+            msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
+            raise ValueError(msg)
 
         self._ignore_attributes: set[str] = {
             "connect",
@@ -216,12 +232,26 @@ class Worker:
         _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
 
-    async def _handle_requests(self) -> None:
+    async def _handle_requests(self) -> None:  # noqa: PLR0915
         self._interrupter = Interrupter()
         self._socket = self._context.socket(zmq.DEALER)
-        self._socket.setsockopt(zmq.IDENTITY, self._worker_id)
+        self._socket.setsockopt(zmq.ROUTING_ID, self._worker_id)
+
+        if self._curve is not None:
+            self._socket.setsockopt(zmq.CURVE_PUBLICKEY, self._curve.public_key)
+            self._socket.setsockopt(zmq.CURVE_SECRETKEY, self._curve.secret_key)
+            self._socket.setsockopt(zmq.CURVE_SERVERKEY, self._curve.broker_key)
+            self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
+            logger.debug("Using CURVE authentication")
+        elif self._plain is not None:
+            self._socket.setsockopt(zmq.PLAIN_USERNAME, self._plain.username)
+            self._socket.setsockopt(zmq.PLAIN_PASSWORD, self._plain.password)
+            self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
+            logger.debug("Using PLAIN authentication")
+
         self._poller.register(self._socket, zmq.POLLIN)
         self._poller.register(self._interrupter.receiver, zmq.POLLIN)
+
         _ = self._socket.connect(self._broker_address)
         logger.debug("%s connected", self._service_name)
 

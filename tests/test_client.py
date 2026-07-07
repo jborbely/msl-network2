@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import logging
-import threading
 import time
 from concurrent import futures
+from typing import TYPE_CHECKING
 
 import pytest
 
-from msl.network import Client, Flag
-from msl.network.broker import Broker
-from msl.network.utils import run_event_loop
+from msl.network import AuthCurve, AuthPlain, Client, Flag
+
+if TYPE_CHECKING:
+    from conftest import Broker
 
 
 @pytest.mark.filterwarnings("error")
@@ -96,16 +97,9 @@ def test_string_representation() -> None:
     assert repr(c) == f"Custom(host='127.0.0.1', port=17590, flag='LZMA|JSON', id='{_id}')"
 
 
-def test_result_ok_and_error() -> None:
-    broker = Broker()
-    thread = threading.Thread(target=run_event_loop, daemon=True, args=(broker.run(),))
-    thread.start()
-
-    while not broker.endpoint:
-        continue
-
-    _, port = broker.endpoint.rsplit(":", 1)
-    client = Client(port=int(port))
+def test_result_ok_and_error(broker: Broker) -> None:
+    port = broker.run()
+    client = Client(port=port)
     assert client.services() == []
 
     foo = client.link("Foo")
@@ -113,5 +107,9 @@ def test_result_ok_and_error() -> None:
         _ = foo.bar(sync=False).result()
 
     client.disconnect()
-    broker.interrupter()
-    thread.join()
+    broker.stop()
+
+
+def test_plain_and_curve() -> None:
+    with pytest.raises(ValueError, match=r"Cannot use both PLAIN and CURVE"):
+        _ = Client(curve=AuthCurve(b"a", b"b", b"c"), plain=AuthPlain("a", "b"))

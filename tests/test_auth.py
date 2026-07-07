@@ -42,8 +42,8 @@ def test_auth_plain_custom_exists_empty(tmp_path: Path) -> None:
 def test_auth_plain_default_exists(home_dir: Path) -> None:
     main("plain", "add", "-u", "msl", "-p", "anything")
     auth = AuthPlain.load()
-    assert auth.username == "msl"
-    assert auth.password == "anything"  # noqa: S105
+    assert auth.username == b"msl"
+    assert auth.password == b"anything"
     assert (home_dir / "plain.json").read_text() == '{\n  "msl": "anything"\n}'
 
 
@@ -66,16 +66,16 @@ def test_auth_plain_custom_text_default_sep_none(tmp_path: Path) -> None:
     path = tmp_path / "plain.txt"
     _ = path.write_text("uname pass")
     auth = AuthPlain.load(path=path)
-    assert auth.username == "uname"
-    assert auth.password == "pass"  # noqa: S105
+    assert auth.username == b"uname"
+    assert auth.password == b"pass"
 
 
 def test_auth_plain_custom_text_default_sep_equals(tmp_path: Path) -> None:
     path = tmp_path / "plain.txt"
     _ = path.write_text("uname = pass")
     auth = AuthPlain.load(path=path, sep="=")
-    assert auth.username == "uname"
-    assert auth.password == "pass"  # noqa: S105
+    assert auth.username == b"uname"
+    assert auth.password == b"pass"
 
 
 def test_auth_curve_broker_missing() -> None:

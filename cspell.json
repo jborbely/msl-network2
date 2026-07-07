@@ -36,6 +36,7 @@
         "POLLOUT",
         "PUBLICKEY",
         "SECRETKEY",
+        "SERVERKEY",
         "tobytes",
         "urandom"
     ]

@@ -194,7 +194,7 @@ class Broker:
             self.auth.log.setLevel(logging.WARNING)
             if addresses:
                 self.auth.allow(*addresses.values())
-                logger.info("Allowed devices: %s", ", ".join(addresses))
+                logger.info("ZAP allowed devices: %s", ", ".join(addresses))
 
             if curve:
                 self.auth.configure_curve_callback(domain=domain, credentials_provider=curve)
@@ -203,11 +203,12 @@ class Broker:
                 self.router.setsockopt(zmq.CURVE_SERVER, 1)
                 n = len(curve.keys)
                 text = {0: "all keys", 1: "1 key"}.get(n, f"{n} keys")
-                logger.info("Using CURVE authentication [%s allowed, domain:%s]", text, domain)
+                logger.info("Using CURVE authentication with %s allowed [domain:%s]", text, domain)
             elif plain:
                 self.auth.configure_plain(domain=domain, passwords=plain)
                 self.router.setsockopt(zmq.PLAIN_SERVER, 1)
-                logger.info("Using PLAIN authentication [domain:%s]", domain)
+                s = "" if len(plain) == 1 else "s"
+                logger.info("Using PLAIN authentication for user%s %s [domain:%s]", s, ", ".join(plain), domain)
             else:
                 self.router.setsockopt(zmq.ZAP_DOMAIN, domain.encode())
                 logger.info("Using NULL authentication [domain:%s]", domain)
@@ -240,6 +241,7 @@ class Broker:
                         with suppress(zmq.error.ZMQError):
                             _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
                 elif self.auth is not None and event.get(self.auth.zap_socket):  # pyright: ignore[reportUnknownMemberType]
+                    self.auth.log.debug("ZAP request initiated...")
                     await self.auth.handle_zap_message(self.auth.zap_socket.recv_multipart())  # pyright: ignore[reportUnknownMemberType]
                 else:
                     break  # event must be from self.interrupter.receiver

@@ -30,13 +30,23 @@ if TYPE_CHECKING:
 
         Self = TypeVar("Self", bound="Client")  # pyright: ignore[reportUnreachable]
 
+    from .auth import AuthCurve, AuthPlain
     from .typing import FutureOrResult
 
 
 class Client:
     """A Client."""
 
-    def __init__(self, *, host: str = "127.0.0.1", port: int = BROKER_PORT, flag: Flag = Flag.PICKLE) -> None:
+    def __init__(  # noqa: PLR0913
+        self,
+        *,
+        host: str = "127.0.0.1",
+        port: int = BROKER_PORT,
+        flag: Flag = Flag.PICKLE,
+        domain: str = "*",
+        curve: AuthCurve | None = None,
+        plain: AuthPlain | None = None,
+    ) -> None:
         """A Client.
 
         Args:
@@ -44,6 +54,10 @@ class Client:
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a
                 request before sending the byte stream.
+            domain: The domain to use for [CURVE](https://rfc.zeromq.org/spec/26/) or
+                [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
+            curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
+            plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
         """
         self.flag: Flag = flag
         """The serialisation and compression algorithms to apply to a request before sending the byte stream."""
@@ -53,7 +67,13 @@ class Client:
         self._transaction: int = 0
         self._async_client: _AsyncClient | None = None
 
-        self._thread: Thread = Thread(target=run_event_loop, daemon=True, args=(_create_async_client(self),))
+        if curve is not None and plain is not None:
+            msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
+            raise ValueError(msg)
+
+        self._thread: Thread = Thread(
+            target=run_event_loop, daemon=True, args=(_create_async_client(self, domain.encode(), curve, plain),)
+        )
         self._thread.start()
 
         while self._async_client is None:
@@ -193,12 +213,14 @@ class Link:
 class _AsyncClient:
     """An asynchronous client."""
 
-    def __init__(self, client: Client) -> None:
-        """An asynchronous client.
-
-        Args:
-            client: A synchronous client.
-        """
+    def __init__(
+        self,
+        client: Client,
+        domain: bytes = b"*",
+        curve: AuthCurve | None = None,
+        plain: AuthPlain | None = None,
+    ) -> None:
+        """An asynchronous client."""
         (host, port), _id = client._host_port, client._id  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
         self._str: str = str(client)
 
@@ -211,7 +233,18 @@ class _AsyncClient:
 
         # For sending/receiving messages to/from the Broker
         self.dealer: Socket = self.context.socket(zmq.DEALER)
-        self.dealer.setsockopt(zmq.IDENTITY, f"Client[{_id}]".encode())
+        self.dealer.setsockopt(zmq.ROUTING_ID, f"Client[{_id}]".encode())
+
+        if curve is not None:
+            self.dealer.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
+            self.dealer.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
+            self.dealer.setsockopt(zmq.CURVE_SERVERKEY, curve.broker_key)
+            self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
+        elif plain is not None:
+            self.dealer.setsockopt(zmq.PLAIN_USERNAME, plain.username)
+            self.dealer.setsockopt(zmq.PLAIN_PASSWORD, plain.password)
+            self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
+
         _ = self.dealer.connect(f"tcp://{host}:{port}")
 
         # For waking up the Poller to send another request
@@ -285,8 +318,13 @@ class _AsyncClient:
             self.queue.task_done()
 
 
-async def _create_async_client(client: Client) -> None:
+async def _create_async_client(
+    client: Client,
+    domain: bytes = b"*",
+    curve: AuthCurve | None = None,
+    plain: AuthPlain | None = None,
+) -> None:
     """Create the async client and run it in an event loop."""
-    async_client = _AsyncClient(client)
+    async_client = _AsyncClient(client, domain, curve, plain)
     client._async_client = async_client  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     _ = await asyncio.gather(async_client.handle_messages(), async_client.wakeup_event())

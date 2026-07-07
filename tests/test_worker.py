@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import pytest
 import zmq
 
-from msl.network import Flag, Worker
+from msl.network import AuthCurve, AuthPlain, Flag, Worker
 from msl.network.message import Request, Response
 
 if TYPE_CHECKING:
@@ -65,7 +65,7 @@ def test_flags_at() -> None:
 def test_session() -> None:  # noqa: PLR0915
     context = zmq.Context()
     broker = context.socket(zmq.ROUTER)
-    broker.setsockopt(zmq.IDENTITY, b"Broker")
+    broker.setsockopt(zmq.ROUTING_ID, b"Broker")
     port = broker.bind_to_random_port("tcp://localhost")
 
     class ServiceName(Worker):
@@ -149,6 +149,9 @@ def test_signatures() -> None:
         def add(self, x: float, y: float) -> float:
             return x + y
 
+        def multiple(self, x: int) -> tuple[int, float, str]:
+            return x + 1, 5.2, "hi"
+
         def types(self, *, a: bool, b: int, c: float, d: str = "hi", e: list[str] | None = None) -> bytes:
             _ = a, b, c, d, e
             return b""
@@ -162,6 +165,7 @@ def test_signatures() -> None:
         "add": "(x: float, y: float) -> float",
         "count": "() -> int",
         "greet": "() -> str",
+        "multiple": "(x: int) -> tuple[int, float, str]",
         "types": "(*, a: bool, b: int, c: float, d: str = hi, e: list[str] | None = None) -> bytes",
     }
     foo.disconnect()
@@ -170,6 +174,7 @@ def test_signatures() -> None:
     foo.ignore_attributes("count", "greet")
     assert foo.signatures() == {
         "add": "(x: float, y: float) -> float",
+        "multiple": "(x: int) -> tuple[int, float, str]",
         "types": "(*, a: bool, b: int, c: float, d: str = hi, e: list[str] | None = None) -> bytes",
     }
     foo.disconnect()
@@ -178,11 +183,12 @@ def test_signatures() -> None:
     assert foo.signatures() == {
         "add": "(x: float, y: float) -> float",
         "greet": "() -> str",
+        "multiple": "(x: int) -> tuple[int, float, str]",
         "types": "(*, a: bool, b: int, c: float, d: str = hi, e: list[str] | None = None) -> bytes",
     }
     foo.disconnect()
 
-    foo = Foo(("types", "add"))
+    foo = Foo(("types", "add", "multiple"))
     assert foo.signatures() == {
         "count": "() -> int",
         "greet": "() -> str",
@@ -217,3 +223,69 @@ def test_signatures_warnings(caplog: pytest.LogCaptureFixture) -> None:
     assert rt[1][0] == "msl.network"
     assert rt[1][1] == logging.WARNING
     assert rt[1][2] == "no signature found for builtin type <class 'RuntimeError'> [attribute='zzz']"
+
+
+def test_plain_and_curve() -> None:
+    with pytest.raises(ValueError, match=r"Cannot use both PLAIN and CURVE"):
+        _ = Worker(curve=AuthCurve(b"a", b"b", b"c"), plain=AuthPlain("a", "b"))
+
+
+def test_plain(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    w = Worker(port=29501, plain=AuthPlain("hi", "hello"))
+    thread = threading.Thread(target=w.connect, daemon=True)
+    thread.start()
+
+    time.sleep(0.1)
+    interrupter = w._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert interrupter is not None
+
+    interrupter()
+    time.sleep(0.1)
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.DEBUG, f"{interrupter.name} created"),
+        ("msl.network", logging.DEBUG, "Using PLAIN authentication"),
+        ("msl.network", logging.DEBUG, "Worker connected"),
+        ("msl.network", logging.DEBUG, "Worker registered"),
+        ("msl.network", logging.DEBUG, "Worker polling..."),
+        ("msl.network", logging.DEBUG, f"{interrupter.name} triggered"),
+        ("msl.network", logging.DEBUG, "Worker unregistered"),
+        ("msl.network", logging.DEBUG, f"{interrupter.name} destroyed"),
+        ("msl.network", logging.DEBUG, "Worker disconnected"),
+        ("msl.network", logging.DEBUG, "Worker event loop closed"),
+    ]
+
+
+def test_curve(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    broker_public, _ = zmq.curve_keypair()
+    client_public, client_secret = zmq.curve_keypair()
+
+    w = Worker(
+        port=49162, curve=AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
+    )
+    thread = threading.Thread(target=w.connect, daemon=True)
+    thread.start()
+
+    time.sleep(0.1)
+    interrupter = w._interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert interrupter is not None
+
+    interrupter()
+    time.sleep(0.1)
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.DEBUG, f"{interrupter.name} created"),
+        ("msl.network", logging.DEBUG, "Using CURVE authentication"),
+        ("msl.network", logging.DEBUG, "Worker connected"),
+        ("msl.network", logging.DEBUG, "Worker registered"),
+        ("msl.network", logging.DEBUG, "Worker polling..."),
+        ("msl.network", logging.DEBUG, f"{interrupter.name} triggered"),
+        ("msl.network", logging.DEBUG, "Worker unregistered"),
+        ("msl.network", logging.DEBUG, f"{interrupter.name} destroyed"),
+        ("msl.network", logging.DEBUG, "Worker disconnected"),
+        ("msl.network", logging.DEBUG, "Worker event loop closed"),
+    ]
