@@ -104,6 +104,7 @@ def test_result_ok_and_error(broker: Broker) -> None:
     assert client.services() == []
 
     foo = client.link("Foo")
+    assert foo.timeout is None
     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
         _ = foo.bar(sync=False).result()
 

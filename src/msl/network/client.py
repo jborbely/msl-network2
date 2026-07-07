@@ -188,8 +188,14 @@ class Link:
         """A link with a service."""
         self._create_future: Callable[..., Future[Any]] = create_future
 
+        self.timeout: float | None = None
+        """[float][] or `None` &mdash; The number of seconds to wait for a response from a *synchronous* request.
+
+        The value is always `None` for new links, which means that there is no limit on the wait time.
+        """
+
         self.service_name: str = service_name
-        """The name of the service that the link is with."""
+        """[str][] &mdash; The name of the service that the link is with."""
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns a string representation of the Link."""
@@ -198,13 +204,11 @@ class Link:
     def __getattr__(self, attr: str) -> FutureOrResult:
         """Send a request to the linked service."""
 
-        def wrapper(
-            *args: Any, sync: bool = True, sync_timeout: float | None = None, **kwargs: Any
-        ) -> Any | Future[Any]:
+        def wrapper(*args: Any, sync: bool = True, **kwargs: Any) -> Any | Future[Any]:
             """Returns the result, if `sync=True`, otherwise a future that will eventually contain the result."""
             future = self._create_future(self.service_name, attr, *args, **kwargs)
             if sync:
-                return future.result(sync_timeout)
+                return future.result(self.timeout)
             return future
 
         return wrapper
