@@ -145,9 +145,11 @@ def test_load_plain_key_and_value_not_str(tmp_path: Path, caplog: pytest.LogCapt
     assert path == file
     assert data == {"123": "pw1", "user2": "456"}
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading PLAIN authentication data from '{file}'"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading PLAIN authentication data from '{file}'"
+    assert len(r) == 1
 
 
 def test_load_curve_default_path(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -186,17 +188,19 @@ def test_load_curve_default_path(home_dir: Path, caplog: pytest.LogCaptureFixtur
     user_dir = USER_DIR / ".curve"
     assert not user_dir.exists()  # assumption for test
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "IMPORTANT! Created new CURVE authentication certificates"),
-        (
-            "msl.network",
-            logging.INFO,
-            f"IMPORTANT! Copy '{public_file}' to a device that connects as a client or service",
-        ),
-        ("msl.network", logging.DEBUG, f"Loading CURVE authentication certificates from '{secret_file}'"),
-        ("msl.network", logging.DEBUG, f"Loaded 0 CURVE certificates from '{curves_dir}'"),
-        ("msl.network", logging.DEBUG, f"Skipping CURVE certificates in '{user_dir}' [directory does not exist]"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "INFO"
+    assert r[0].message == "IMPORTANT! Created new CURVE authentication certificates"
+    assert r[1].levelname == "INFO"
+    assert r[1].message == f"IMPORTANT! Copy '{public_file}' to a device that connects as a client or service"
+    assert r[2].levelname == "DEBUG"
+    assert r[2].message == f"Loading CURVE authentication certificates from '{secret_file}'"
+    assert r[3].levelname == "DEBUG"
+    assert r[3].message == f"Loaded 0 CURVE certificates from '{curves_dir}'"
+    assert r[4].levelname == "DEBUG"
+    assert r[4].message == f"Skipping CURVE certificates in '{user_dir}' [directory does not exist]"
+    assert len(r) == 5
 
     caplog.clear()
 
