@@ -70,14 +70,20 @@ def test_services_timeout() -> None:
         _ = c.services(timeout=0.05)
 
 
-def test_flags_at() -> None:
+def test_flag_at() -> None:
     c = Client(flag=Flag.PICKLE, port=52742)
     link = c.link("Any")
     assert c.flag == Flag.PICKLE
+
     with c.flag_at(Flag.JSON):
         assert c.flag == Flag.JSON  # type: ignore[comparison-overlap]
         _ = link.do_something(sync=False)  # type: ignore[unreachable]
-    assert c.flag == Flag.PICKLE  # type: ignore[unreachable]
+
+    with link.flag_at(Flag.BZ2 | Flag.JSON):  # type: ignore[unreachable]
+        assert c.flag == Flag.BZ2 | Flag.JSON
+        _ = link.do_something(sync=False)
+
+    assert c.flag == Flag.PICKLE
     _ = link.do_something(sync=False)
 
 

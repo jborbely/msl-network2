@@ -20,6 +20,7 @@ from .utils import BROKER_PORT, logger, run_event_loop
 if TYPE_CHECKING:
     import sys
     from collections.abc import Callable, Generator
+    from contextlib import AbstractContextManager
     from typing import Any
 
     # the Self type was added in Python 3.11 (PEP 673)
@@ -144,13 +145,13 @@ class Client:
             # uses PICKLE to serialise the request
             link.do_something()
 
-            with client.flag_at(Flag.JSON):
+            with link.flag_at(Flag.JSON):
                 # uses JSON to serialise the request
                 link.do_something_else()
 
             # uses PICKLE to serialise the request
             link.do_something()
-        ```
+            ```
 
         Args:
             flag: The temporary flag to use while within the context. Once the
@@ -174,7 +175,7 @@ class Client:
         Args:
             service_name: The name of a service to create a [Link][msl.network.client.Link] with.
         """
-        return Link(self._create_future, service_name)
+        return Link(self._create_future, self.flag_at, service_name)
 
     def services(self, timeout: float | None = None) -> list[str]:
         """Request the names of the services that are available.
@@ -192,18 +193,26 @@ class Client:
 class Link:
     """A link with a service."""
 
-    def __init__(self, create_future: Callable[..., Future[Any]], service_name: str) -> None:
+    def __init__(
+        self,
+        create_future: Callable[[str, str, Any, Any], Future[Any]],
+        flag_at: Callable[[Flag], AbstractContextManager[None]],
+        service_name: str,
+    ) -> None:
         """A link with a service."""
-        self._create_future: Callable[..., Future[Any]] = create_future
+        self._create_future: Callable[[str, str, Any, Any], Future[Any]] = create_future
+
+        self.flag_at: Callable[[Flag], AbstractContextManager[None]] = flag_at
+        """Reference to [flag_at][msl.network.client.Client.flag_at]."""
+
+        self.service_name: str = service_name
+        """[str][] &mdash; The name of the service that the link is with."""
 
         self.timeout: float | None = None
         """[float][] or `None` &mdash; The number of seconds to wait for a response from a *synchronous* request.
 
         The value is always `None` for new links, which means that there is no limit on the wait time.
         """
-
-        self.service_name: str = service_name
-        """[str][] &mdash; The name of the service that the link is with."""
 
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns a string representation of the Link."""
@@ -240,7 +249,7 @@ class _AsyncClient:
         self.endpoint: str = f"tcp://{host}:{port}"
 
         self.futures: dict[int, Future[Any]] = {}
-        self.queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]] = asyncio.Queue()
+        self.queue: asyncio.Queue[tuple[bytes, bytes]] = asyncio.Queue()
         self.context: Context = Context()
 
         # For Ctrl+C to work on Windows and to signal handle_messages() to break
@@ -324,8 +333,7 @@ class _AsyncClient:
                     self.is_connected.clear()
                 logger.debug("Monitor %r value=%d", m["event"], m["value"])
             else:  # Shutdown
-                self.dealer.disable_monitor()
-                await self.queue.put((None, None))
+                await self.queue.put((b"", b""))
                 _ = await asyncio.gather(self.queue.join())
                 break
 
@@ -340,7 +348,7 @@ class _AsyncClient:
         """Wake up the Poller to handle a request."""
         while True:
             worker_id, request = await self.queue.get()
-            if request is None:
+            if not request:
                 self.queue.task_done()
                 break
             _ = await self.wakeup_sender.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
