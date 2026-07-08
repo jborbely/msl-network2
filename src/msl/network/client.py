@@ -6,11 +6,12 @@ import asyncio
 import os
 from concurrent.futures import Future
 from contextlib import contextmanager
-from threading import Thread
+from threading import Event, Thread
 from typing import TYPE_CHECKING
 
 import zmq
 from zmq.asyncio import Context, Poller, Socket
+from zmq.utils.monitor import recv_monitor_message
 
 from .interrupter import Interrupter
 from .message import Flag, Request, Response
@@ -66,6 +67,7 @@ class Client:
         self._id: str = os.urandom(8).hex()
         self._transaction: int = 0
         self._async_client: _AsyncClient | None = None
+        self._is_connected: Event = Event()
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
@@ -123,6 +125,7 @@ class Client:
             return
 
         self._async_client.disconnect()
+        self._is_connected.clear()
         self._async_client = None
         self._thread.join()
         logger.debug("%s disconnected", self)
@@ -159,6 +162,11 @@ class Client:
             yield
         finally:
             self.flag = original
+
+    @property
+    def is_connected(self) -> bool:
+        """[bool][] &mdash; Whether the client is connected to the [Broker][]."""
+        return self._is_connected.is_set()
 
     def link(self, service_name: str) -> Link:
         """Link with a service.
@@ -228,6 +236,9 @@ class _AsyncClient:
         (host, port), _id = client._host_port, client._id  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
         self._str: str = str(client)
 
+        self.is_connected: Event = client._is_connected  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        self.endpoint: str = f"tcp://{host}:{port}"
+
         self.futures: dict[int, Future[Any]] = {}
         self.queue: asyncio.Queue[tuple[bytes, bytes] | tuple[None, None]] = asyncio.Queue()
         self.context: Context = Context()
@@ -251,7 +262,7 @@ class _AsyncClient:
             self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
             logger.debug("Using PLAIN authentication [domain:%s]", domain.decode())
 
-        _ = self.dealer.connect(f"tcp://{host}:{port}")
+        self.monitor_socket: Socket = self.dealer.get_monitor_socket()
 
         # For waking up the Poller to send another request
         self.wakeup_sender: Socket = self.context.socket(zmq.PAIR)
@@ -264,6 +275,7 @@ class _AsyncClient:
         self.poller.register(self.dealer, zmq.POLLIN)
         self.poller.register(self.interrupter.receiver, zmq.POLLIN)
         self.poller.register(self.wakeup_receiver, zmq.POLLIN)
+        self.poller.register(self.monitor_socket, zmq.POLLIN)
 
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
@@ -277,7 +289,10 @@ class _AsyncClient:
         self.poller.unregister(self.dealer)
         self.poller.unregister(self.interrupter.receiver)
         self.poller.unregister(self.wakeup_receiver)
+        self.poller.unregister(self.monitor_socket)
         self.interrupter.close()
+        self.monitor_socket.close(linger=0)
+        self.dealer.disable_monitor()
         self.dealer.close(linger=0)
         self.wakeup_receiver.close(linger=0)
         self.wakeup_sender.close(linger=0)
@@ -285,7 +300,8 @@ class _AsyncClient:
 
     async def handle_messages(self) -> None:
         """Poll for events to handle messages."""
-        logger.debug("%s connected", self)
+        logger.debug("%s connecting...", self)
+        _ = self.dealer.connect(self.endpoint)
         while True:
             event = dict(await self.poller.poll())
             if event.get(self.wakeup_receiver):  # Send request
@@ -301,7 +317,15 @@ class _AsyncClient:
                     future.set_result(r.result)
                 else:
                     future.set_exception(RuntimeError(r.result))
+            elif event.get(self.monitor_socket):
+                m = await recv_monitor_message(self.monitor_socket)
+                if m["event"] == zmq.EVENT_CONNECTED:
+                    self.is_connected.set()
+                elif m["event"] == zmq.EVENT_DISCONNECTED:
+                    self.is_connected.clear()
+                logger.debug("Monitor %r value=%d", m["event"], m["value"])
             else:  # Shutdown
+                self.dealer.disable_monitor()
                 await self.queue.put((None, None))
                 _ = await asyncio.gather(self.queue.join())
                 break

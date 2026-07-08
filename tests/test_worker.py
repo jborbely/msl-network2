@@ -40,16 +40,16 @@ def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
     interrupter()
     time.sleep(0.1)
 
-    r = caplog.records
-    assert r[0].message == f"{interrupter.name} created"
-    assert r[1].message == "Worker connected"
-    assert r[2].message == "Worker registered"
-    assert r[3].message == "Worker polling..."
-    assert r[4].message == f"{interrupter.name} triggered"
-    assert r[5].message == "Worker unregistered"
-    assert r[6].message == f"{interrupter.name} destroyed"
-    assert r[7].message == "Worker disconnected"
-    assert r[8].message == "Worker event loop closed"
+    # the order of ZMQ event-monitoring messages are unpredictable so ignore them
+    r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0] == f"{interrupter.name} created"
+    assert r[1] == "Worker registered"
+    assert r[2] == "Worker polling..."
+    assert r[3] == f"{interrupter.name} triggered"
+    assert r[4] == "Worker unregistered"
+    assert r[5] == f"{interrupter.name} destroyed"
+    assert r[6] == "Worker disconnected"
+    assert r[7] == "Worker event loop closed"
 
     thread.join()
 
@@ -244,18 +244,17 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     interrupter()
     time.sleep(0.1)
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"{interrupter.name} created"),
-        ("msl.network", logging.DEBUG, "Using PLAIN authentication [domain:*]"),
-        ("msl.network", logging.DEBUG, "Worker connected"),
-        ("msl.network", logging.DEBUG, "Worker registered"),
-        ("msl.network", logging.DEBUG, "Worker polling..."),
-        ("msl.network", logging.DEBUG, f"{interrupter.name} triggered"),
-        ("msl.network", logging.DEBUG, "Worker unregistered"),
-        ("msl.network", logging.DEBUG, f"{interrupter.name} destroyed"),
-        ("msl.network", logging.DEBUG, "Worker disconnected"),
-        ("msl.network", logging.DEBUG, "Worker event loop closed"),
-    ]
+    # the order of ZMQ event-monitoring messages are unpredictable so ignore them
+    r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0] == f"{interrupter.name} created"
+    assert r[1] == "Using PLAIN authentication [domain:*]"
+    assert r[2] == "Worker registered"
+    assert r[3] == "Worker polling..."
+    assert r[4] == f"{interrupter.name} triggered"
+    assert r[5] == "Worker unregistered"
+    assert r[6] == f"{interrupter.name} destroyed"
+    assert r[7] == "Worker disconnected"
+    assert r[8] == "Worker event loop closed"
 
 
 def test_curve(caplog: pytest.LogCaptureFixture) -> None:
@@ -277,15 +276,14 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     interrupter()
     time.sleep(0.1)
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"{interrupter.name} created"),
-        ("msl.network", logging.DEBUG, "Using CURVE authentication [domain:*]"),
-        ("msl.network", logging.DEBUG, "Worker connected"),
-        ("msl.network", logging.DEBUG, "Worker registered"),
-        ("msl.network", logging.DEBUG, "Worker polling..."),
-        ("msl.network", logging.DEBUG, f"{interrupter.name} triggered"),
-        ("msl.network", logging.DEBUG, "Worker unregistered"),
-        ("msl.network", logging.DEBUG, f"{interrupter.name} destroyed"),
-        ("msl.network", logging.DEBUG, "Worker disconnected"),
-        ("msl.network", logging.DEBUG, "Worker event loop closed"),
-    ]
+    # the order of ZMQ event-monitoring messages are unpredictable so ignore them
+    r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0] == f"{interrupter.name} created"
+    assert r[1] == "Using CURVE authentication [domain:*]"
+    assert r[2] == "Worker registered"
+    assert r[3] == "Worker polling..."
+    assert r[4] == f"{interrupter.name} triggered"
+    assert r[5] == "Worker unregistered"
+    assert r[6] == f"{interrupter.name} destroyed"
+    assert r[7] == "Worker disconnected"
+    assert r[8] == "Worker event loop closed"

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 import zmq
 from zmq.asyncio import Context, Poller, Socket
+from zmq.utils.monitor import recv_monitor_message
 from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
@@ -66,6 +67,7 @@ class Worker:
         self._poller: Poller = Poller()
         self._interrupter: Interrupter | None = None
         self._socket: Socket | None = None
+        self._monitor_socket: Socket | None = None
         self._domain: bytes = domain.encode()
         self._curve: AuthCurve | None = curve
         self._plain: AuthPlain | None = plain
@@ -110,15 +112,19 @@ class Worker:
 
         Unregister from the poller, close the interrupter and close the socket.
         """
-        if self._interrupter is None or self._socket is None:
+        if self._interrupter is None or self._socket is None or self._monitor_socket is None:
             return
 
         self._poller.unregister(self._socket)
         self._poller.unregister(self._interrupter.receiver)
+        self._poller.unregister(self._monitor_socket)
         self._interrupter.close()
+        self._monitor_socket.close(linger=0)
+        self._socket.disable_monitor()
         self._socket.close(linger=0)
         self._interrupter = None
         self._socket = None
+        self._monitor_socket = None
         logger.debug("%s disconnected", self._service_name)
 
     @contextmanager
@@ -232,7 +238,7 @@ class Worker:
         _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
 
-    async def _handle_requests(self) -> None:  # noqa: PLR0915
+    async def _handle_requests(self) -> None:  # noqa: C901, PLR0915
         self._interrupter = Interrupter()
         self._socket = self._context.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.ROUTING_ID, self._worker_id)
@@ -249,11 +255,13 @@ class Worker:
             self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
             logger.debug("Using PLAIN authentication [domain:%s]", self._domain.decode())
 
+        self._monitor_socket = self._socket.get_monitor_socket()
+
         self._poller.register(self._socket, zmq.POLLIN)
         self._poller.register(self._interrupter.receiver, zmq.POLLIN)
+        self._poller.register(self._monitor_socket, zmq.POLLIN)
 
         _ = self._socket.connect(self._broker_address)
-        logger.debug("%s connected", self._service_name)
 
         # Register the service_name for this Worker with the Broker. DEALER
         # sockets add messages to a queue and deliver the message when the
@@ -269,6 +277,11 @@ class Worker:
             logger.debug("%s polling...", self._service_name)
             while True:
                 event = dict(await self._poller.poll())
+                if event.get(self._monitor_socket):
+                    m = await recv_monitor_message(self._monitor_socket)
+                    logger.debug("Monitor %r value=%d", m["event"], m["value"])
+                    continue
+
                 if event.get(self._interrupter.receiver):
                     break
 

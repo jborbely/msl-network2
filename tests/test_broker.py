@@ -283,11 +283,11 @@ def test_monitor_tcp_socket(broker: Broker, caplog: pytest.LogCaptureFixture) ->
     assert records[0].levelname == "INFO"
     assert records[0].message == f"Broker running on 0.0.0.0:{port}"
     assert records[1].levelname == "INFO"
-    assert records[1].message.startswith("Monitor event=<Event.ACCEPTED: 32>")
+    assert records[1].message.startswith("Monitor <Event.ACCEPTED: 32>")
     assert records[2].levelname == "INFO"
-    assert records[2].message.startswith("Monitor event=<Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
+    assert records[2].message.startswith("Monitor <Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
     assert records[3].levelname == "INFO"
-    assert records[3].message.startswith("Monitor event=<Event.DISCONNECTED: 512>")
+    assert records[3].message.startswith("Monitor <Event.DISCONNECTED: 512>")
 
 
 def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:

@@ -256,13 +256,14 @@ class Broker:
                 elif self.auth is not None and event.get(self.auth.zap_socket):  # pyright: ignore[reportUnknownMemberType]
                     self.auth.log.debug("ZAP request initiated...")
                     await self.auth.handle_zap_message(self.auth.zap_socket.recv_multipart())  # pyright: ignore[reportUnknownMemberType]
-                elif monitor_socket and event.get(monitor_socket):
+                elif monitor_socket is not None and event.get(monitor_socket):
                     m = await recv_monitor_message(monitor_socket)
-                    logger.info("Monitor event=%r, value=%r", m["event"], m["value"])
+                    logger.info("Monitor %r value=%d", m["event"], m["value"])
                 else:
                     break  # event must be from self.interrupter.receiver
 
-        if monitor:
+        if monitor_socket is not None:
+            monitor_socket.close(linger=0)
             self.router.disable_monitor()
             self.poller.unregister(monitor_socket)
 

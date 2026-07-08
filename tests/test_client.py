@@ -44,13 +44,13 @@ def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: p
     for _ in range(5):
         c.disconnect()
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"{interrupter_name} created"),
-        ("msl.network", logging.DEBUG, f"{c} connected"),
-        ("msl.network", logging.DEBUG, f"{interrupter_name} triggered"),
-        ("msl.network", logging.DEBUG, f"{interrupter_name} destroyed"),
-        ("msl.network", logging.DEBUG, f"{c} disconnected"),
-    ]
+    # the order of ZMQ event-monitoring messages are unpredictable so ignore them
+    r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0] == f"{interrupter_name} created"
+    assert r[1] == f"{c} connecting..."
+    assert r[2] == f"{interrupter_name} triggered"
+    assert r[3] == f"{interrupter_name} destroyed"
+    assert r[4] == f"{c} disconnected"
 
     out, err = capsys.readouterr()
     assert not out
@@ -108,8 +108,13 @@ def test_result_ok_and_error(broker: Broker) -> None:
     with pytest.raises(RuntimeError, match=r"Service 'Foo' is not available"):
         _ = foo.bar(sync=False).result()
 
-    client.disconnect()
+    assert client.is_connected
+
     broker.stop()
+    time.sleep(0.1)
+
+    assert not client.is_connected  # should have received ZMQ_EVENT_DISCONNECTED from the broker stopping
+    client.disconnect()  # type: ignore[unreachable]
 
 
 def test_plain_and_curve() -> None:
@@ -126,14 +131,14 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     time.sleep(0.1)
     c.disconnect()
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"{interrupter_name} created"),
-        ("msl.network", logging.DEBUG, "Using PLAIN authentication [domain:*]"),
-        ("msl.network", logging.DEBUG, f"{c} connected"),
-        ("msl.network", logging.DEBUG, f"{interrupter_name} triggered"),
-        ("msl.network", logging.DEBUG, f"{interrupter_name} destroyed"),
-        ("msl.network", logging.DEBUG, f"{c} disconnected"),
-    ]
+    # the order of ZMQ event-monitoring messages are unpredictable so ignore them
+    r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0] == f"{interrupter_name} created"
+    assert r[1] == "Using PLAIN authentication [domain:*]"
+    assert r[2] == f"{c} connecting..."
+    assert r[3] == f"{interrupter_name} triggered"
+    assert r[4] == f"{interrupter_name} destroyed"
+    assert r[5] == f"{c} disconnected"
 
 
 def test_curve(caplog: pytest.LogCaptureFixture) -> None:
@@ -150,11 +155,11 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     time.sleep(0.1)
     c.disconnect()
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"{interrupter_name} created"),
-        ("msl.network", logging.DEBUG, "Using CURVE authentication [domain:*]"),
-        ("msl.network", logging.DEBUG, f"{c} connected"),
-        ("msl.network", logging.DEBUG, f"{interrupter_name} triggered"),
-        ("msl.network", logging.DEBUG, f"{interrupter_name} destroyed"),
-        ("msl.network", logging.DEBUG, f"{c} disconnected"),
-    ]
+    # the order of ZMQ event-monitoring messages are unpredictable so ignore them
+    r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0] == f"{interrupter_name} created"
+    assert r[1] == "Using CURVE authentication [domain:*]"
+    assert r[2] == f"{c} connecting..."
+    assert r[3] == f"{interrupter_name} triggered"
+    assert r[4] == f"{interrupter_name} destroyed"
+    assert r[5] == f"{c} disconnected"
