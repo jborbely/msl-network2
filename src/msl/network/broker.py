@@ -263,7 +263,6 @@ class Broker:
                     break  # event must be from self.interrupter.receiver
 
         if monitor_socket is not None:
-            monitor_socket.close(linger=0)
             self.router.disable_monitor()
             self.poller.unregister(monitor_socket)
 

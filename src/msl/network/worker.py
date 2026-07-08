@@ -119,7 +119,6 @@ class Worker:
         self._poller.unregister(self._interrupter.receiver)
         self._poller.unregister(self._monitor_socket)
         self._interrupter.close()
-        self._monitor_socket.close(linger=0)
         self._socket.disable_monitor()
         self._socket.close(linger=0)
         self._interrupter = None

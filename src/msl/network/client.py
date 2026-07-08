@@ -291,7 +291,6 @@ class _AsyncClient:
         self.poller.unregister(self.wakeup_receiver)
         self.poller.unregister(self.monitor_socket)
         self.interrupter.close()
-        self.monitor_socket.close(linger=0)
         self.dealer.disable_monitor()
         self.dealer.close(linger=0)
         self.wakeup_receiver.close(linger=0)
