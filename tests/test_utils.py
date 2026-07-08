@@ -97,10 +97,13 @@ def test_load_plain_file_not_found(caplog: pytest.LogCaptureFixture) -> None:
     assert path == file
     assert data is None
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading PLAIN authentication data from '{file}'"),
-        ("msl.network", logging.ERROR, f"File not found: {file}"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading PLAIN authentication data from '{file}'"
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == f"File not found: {file}"
+    assert len(r) == 2
 
 
 def test_load_plain_bad_json(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -113,10 +116,13 @@ def test_load_plain_bad_json(tmp_path: Path, caplog: pytest.LogCaptureFixture) -
     assert path == file
     assert data is None
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading PLAIN authentication data from '{file}'"),
-        ("msl.network", logging.ERROR, f"Invalid JSON file for PLAIN authentication: {file}"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading PLAIN authentication data from '{file}'"
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == f"Invalid JSON file for PLAIN authentication: {file}"
+    assert len(r) == 2
 
 
 def test_load_plain_invalid_dict(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -129,10 +135,13 @@ def test_load_plain_invalid_dict(tmp_path: Path, caplog: pytest.LogCaptureFixtur
     assert path == file
     assert data is None
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading PLAIN authentication data from '{file}'"),
-        ("msl.network", logging.ERROR, 'The PLAIN authentication file must be a {"username": "password"} mapping'),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading PLAIN authentication data from '{file}'"
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == 'The PLAIN authentication file must be a {"username": "password"} mapping'
+    assert len(r) == 2
 
 
 def test_load_plain_key_and_value_not_str(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -218,9 +227,11 @@ def test_load_curve_invalid_directory(caplog: pytest.LogCaptureFixture) -> None:
     curve = load_curves(Path("missing"))
     assert curve is None
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.ERROR, "Cannot create broker certificates, the 'missing' directory does not exist"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "ERROR"
+    assert r[0].message == "Cannot create broker certificates, the 'missing' directory does not exist"
+    assert len(r) == 1
 
 
 def test_load_curve_non_default_directory_empty(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -247,17 +258,19 @@ def test_load_curve_non_default_directory_empty(tmp_path: Path, caplog: pytest.L
     user_dir = USER_DIR / ".curve"
     assert not user_dir.exists()  # assumption for test
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "IMPORTANT! Created new CURVE authentication certificates"),
-        (
-            "msl.network",
-            logging.INFO,
-            f"IMPORTANT! Copy '{public_file}' to a device that connects as a client or service",
-        ),
-        ("msl.network", logging.DEBUG, f"Loading CURVE authentication certificates from '{secret_file}'"),
-        ("msl.network", logging.DEBUG, f"Skipping CURVE certificates in '{curves_dir}' [directory does not exist]"),
-        ("msl.network", logging.DEBUG, f"Skipping CURVE certificates in '{user_dir}' [directory does not exist]"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "INFO"
+    assert r[0].message == "IMPORTANT! Created new CURVE authentication certificates"
+    assert r[1].levelname == "INFO"
+    assert r[1].message == f"IMPORTANT! Copy '{public_file}' to a device that connects as a client or service"
+    assert r[2].levelname == "DEBUG"
+    assert r[2].message == f"Loading CURVE authentication certificates from '{secret_file}'"
+    assert r[3].levelname == "DEBUG"
+    assert r[3].message == f"Skipping CURVE certificates in '{curves_dir}' [directory does not exist]"
+    assert r[4].levelname == "DEBUG"
+    assert r[4].message == f"Skipping CURVE certificates in '{user_dir}' [directory does not exist]"
+    assert len(r) == 5
 
 
 def test_load_curve_no_public_key(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -269,10 +282,13 @@ def test_load_curve_no_public_key(tmp_path: Path, caplog: pytest.LogCaptureFixtu
     curve = load_curves(tmp_path)
     assert curve is None
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading CURVE authentication certificates from '{secret_file}'"),
-        ("msl.network", logging.ERROR, f"No public key found in {secret_file}"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading CURVE authentication certificates from '{secret_file}'"
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == f"No public key found in {secret_file}"
+    assert len(r) == 2
 
 
 def test_load_curve_no_secret_key(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -284,10 +300,13 @@ def test_load_curve_no_secret_key(tmp_path: Path, caplog: pytest.LogCaptureFixtu
     curve = load_curves(tmp_path)
     assert curve is None
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading CURVE authentication certificates from '{secret_file}'"),
-        ("msl.network", logging.ERROR, f"No secret key found in '{secret_file}'"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading CURVE authentication certificates from '{secret_file}'"
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == f"No secret key found in '{secret_file}'"
+    assert len(r) == 2
 
 
 def test_load_curve_no_client_public_key(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -308,12 +327,12 @@ def test_load_curve_no_client_public_key(tmp_path: Path, caplog: pytest.LogCaptu
     user_dir = USER_DIR / ".curve"
     assert not user_dir.exists()  # assumption for test
 
-    assert caplog.record_tuples == [
-        ("msl.network", logging.DEBUG, f"Loading CURVE authentication certificates from '{secret_file}'"),
-        (
-            "msl.network",
-            logging.ERROR,
-            f"Skipping all CURVE certificates in '{curves_dir}' [No public key found in {client_file}]",
-        ),
-        ("msl.network", logging.DEBUG, f"Skipping CURVE certificates in '{user_dir}' [directory does not exist]"),
-    ]
+    # ZMQ event-monitoring messages can appear in this test so ignore them
+    r = [r for r in caplog.records if not r.message.startswith("Monitor")]
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message == f"Loading CURVE authentication certificates from '{secret_file}'"
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == f"Skipping all CURVE certificates in '{curves_dir}' [No public key found in {client_file}]"
+    assert r[2].levelname == "DEBUG"
+    assert r[2].message == f"Skipping CURVE certificates in '{user_dir}' [directory does not exist]"
+    assert len(r) == 3
