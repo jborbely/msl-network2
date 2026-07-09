@@ -113,6 +113,8 @@ class Broker:
         try:
             _ = zmq.proxy(xsub, xpub, capture)
         except zmq.ZMQError:
+            pass
+        finally:
             xpub.close(linger=0)
             xsub.close(linger=0)
             capture.close(linger=0)
