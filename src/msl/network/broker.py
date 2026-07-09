@@ -340,7 +340,7 @@ class Broker:
         self.poller.unregister(pub_sub_capture)
         pub_sub_capture.close(linger=0)
         self.destroy()
-        pub_sub_thread.join()
+        # pub_sub_thread.join()
 
     async def send_worker_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
         """Send a response that there are no Workers available for the specified service.
