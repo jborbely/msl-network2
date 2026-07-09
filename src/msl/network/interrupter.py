@@ -37,4 +37,4 @@ class Interrupter:
         self.sender.close(linger=0)
         self.receiver.close(linger=0)
         self.context.destroy(linger=0)
-        logger.debug("%s destroyed", self.name)
+        logger.debug("%s terminated", self.name)

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import inspect
 import os
 import traceback
 from contextlib import contextmanager
+from threading import get_ident
 from typing import TYPE_CHECKING
 
 import zmq
@@ -18,7 +20,8 @@ from .message import Flag, Request, Response
 from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Iterable
+    from collections.abc import Awaitable, Generator, Iterable
+    from typing import Any
 
     from .auth import AuthCurve, AuthPlain
 
@@ -36,6 +39,7 @@ class Worker:
         domain: str = "*",
         curve: AuthCurve | None = None,
         plain: AuthPlain | None = None,
+        xsub_port: int | None = None,
         ignore_attributes: str | Iterable[str] | None = None,
     ) -> None:
         """Base class for a Worker.
@@ -52,6 +56,8 @@ class Worker:
                 [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
+            xsub_port: The port on the [Broker][] that is subscribed to publications.
+                Typically, this value is `port + 2` and does not need to be specified.
             ignore_attributes: The names of the attributes to not include in the
                 [signatures][msl.network.worker.Worker.signatures]. See
                 [ignore_attributes][msl.network.worker.Worker.ignore_attributes]
@@ -62,7 +68,7 @@ class Worker:
 
         self._worker_id: bytes = f"Worker[{os.urandom(8).hex()}]".encode()
         self._service_name: str = name or self.__class__.__name__
-        self._broker_address: str = f"tcp://{host}:{port}"
+        self._host_port: tuple[str, int] = (host, port)
         self._context: Context = Context()
         self._poller: Poller = Poller()
         self._interrupter: Interrupter | None = None
@@ -71,17 +77,25 @@ class Worker:
         self._domain: bytes = domain.encode()
         self._curve: AuthCurve | None = curve
         self._plain: AuthPlain | None = plain
+        self._tasks: list[Awaitable[None]] = []
+        self._loop_thread_id: int = -1
+        self._loop: asyncio.AbstractEventLoop
+        self._xsub_port: int = xsub_port or port + 2  # Worker connects with PUBlish: PUB -> XSUB
+
+        self._pub_queue: asyncio.Queue[bytes] | None = None
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
             raise ValueError(msg)
 
         self._ignore_attributes: set[str] = {
+            "add_tasks",
             "connect",
             "disconnect",
             "flag",
             "flag_at",
             "ignore_attributes",
+            "publish",
             "signatures",
         }
 
@@ -96,10 +110,20 @@ class Worker:
         self.disconnect()
         self._context.destroy(linger=0)
 
+    def add_tasks(self, *aws: Awaitable[None]) -> None:
+        """Additional tasks to run in the event loop.
+
+        !!! note "Added in version 1.0"
+
+        Args:
+            aws: Awaitables that will run in the event loop.
+        """
+        self._tasks.extend(aws)
+
     def connect(self) -> None:
         """Connect (or reconnect) to the [Broker][]."""
         try:
-            run_event_loop(self._handle_requests())
+            run_event_loop(self._gather())
         except KeyboardInterrupt:  # pragma: no cover
             pass
         finally:
@@ -112,6 +136,9 @@ class Worker:
 
         Unregister from the poller, close the interrupter and close the socket.
         """
+        if self._pub_queue is not None:
+            self._pub_queue.put_nowait(b"")
+
         if self._interrupter is None or self._socket is None or self._monitor_socket is None:
             return
 
@@ -190,6 +217,24 @@ class Worker:
         """
         self._ignore_attributes.update(names)
 
+    def publish(self, result: Any, flag: Flag | None = None) -> None:
+        """Publish a message to all subscribers.
+
+        Args:
+            result: The result to publish.
+            flag: The flag to use to convert the message to bytes. If `None`, uses
+                the flag defined by [flag][..flag].
+        """
+        if self._pub_queue is None:
+            msg = "Event loop not running, cannot publish result"
+            raise RuntimeError(msg)
+
+        data = Response(id=0, ok=True, result=result).to_bytes(flag or self.flag)
+        if get_ident() == self._loop_thread_id:
+            self._pub_queue.put_nowait(data)
+        else:
+            _ = self._loop.call_soon_threadsafe(self._pub_queue.put_nowait, data)
+
     def signatures(self) -> dict[str, str]:
         """Get the function signatures that the service provides.
 
@@ -228,6 +273,10 @@ class Worker:
 
         return signature_map
 
+    async def _gather(self) -> None:
+        """Gather all awaitables to run in the event loop."""
+        _ = await asyncio.gather(self._handle_publishing(), self._handle_requests(), *self._tasks)
+
     async def _handle_disconnect(self) -> None:
         """Notify the Broker that this Worker is disconnecting."""
         if self._socket is None:
@@ -236,6 +285,29 @@ class Worker:
         r = Request(id=0, service=self._service_name, attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
         _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
+
+    async def _handle_publishing(self) -> None:
+        name = self._service_name.encode()
+        self._pub_queue = asyncio.Queue()
+        self._loop_thread_id = get_ident()
+        self._loop = asyncio.get_running_loop()
+
+        host, _ = self._host_port
+        pub_socket = self._context.socket(zmq.PUB)
+        _ = pub_socket.connect(f"tcp://{host}:{self._xsub_port}")
+
+        logger.debug("%s publisher ready", self._service_name)
+        while True:
+            data = await self._pub_queue.get()
+            if not data:
+                self._pub_queue.task_done()
+                break
+            _ = await pub_socket.send_multipart([name, data])  # pyright: ignore[reportUnknownMemberType]
+            self._pub_queue.task_done()
+            logger.debug("%s published data", self._service_name)
+
+        pub_socket.close(linger=0)
+        logger.debug("%s publisher done", self._service_name)
 
     async def _handle_requests(self) -> None:  # noqa: C901, PLR0915
         self._interrupter = Interrupter()
@@ -260,7 +332,8 @@ class Worker:
         self._poller.register(self._interrupter.receiver, zmq.POLLIN)
         self._poller.register(self._monitor_socket, zmq.POLLIN)
 
-        _ = self._socket.connect(self._broker_address)
+        host, port = self._host_port
+        _ = self._socket.connect(f"tcp://{host}:{port}")
 
         # Register the service_name for this Worker with the Broker. DEALER
         # sockets add messages to a queue and deliver the message when the
@@ -282,6 +355,10 @@ class Worker:
                     continue
 
                 if event.get(self._interrupter.receiver):
+                    if self._pub_queue is not None:
+                        self._pub_queue.put_nowait(b"")
+                        await self._pub_queue.join()
+                        self._pub_queue = None
                     break
 
                 sender_id, message = await self._socket.recv_multipart()

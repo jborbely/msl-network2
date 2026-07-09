@@ -38,6 +38,8 @@
         "SECRETKEY",
         "SERVERKEY",
         "tobytes",
-        "urandom"
+        "urandom",
+        "XPUB",
+        "XSUB"
     ]
 }

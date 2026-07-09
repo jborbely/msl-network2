@@ -32,14 +32,15 @@ class Broker:
         self.thread: threading.Thread | None = None
         self.interrupter_name: str = ""
 
-    def run(self, **kwargs: Any) -> int:
-        """Run the broker and return the port number that the broker is running on."""
+    def run(self, **kwargs: Any) -> tuple[int, int, int]:
+        """Run the broker and return the port, XPUB, XSUB numbers that the broker is using."""
         self.thread = threading.Thread(target=utils.run_event_loop, daemon=True, args=(self.broker.run(**kwargs),))
         self.thread.start()
-        while not self.broker.running:
+        while (not self.broker.running) or (self.broker.xsub_port == -1):
             continue
         self.interrupter_name = self.broker.interrupter.name
-        return int(self.broker.endpoint.rsplit(":", 1)[1])
+        port = int(self.broker.endpoint.rsplit(":", 1)[1])
+        return port, self.broker.xpub_port, self.broker.xsub_port
 
     def stop(self) -> None:
         """Stop the broker."""

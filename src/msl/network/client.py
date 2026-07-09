@@ -48,6 +48,7 @@ class Client:
         domain: str = "*",
         curve: AuthCurve | None = None,
         plain: AuthPlain | None = None,
+        xpub_port: int | None = None,
     ) -> None:
         """A Client.
 
@@ -60,15 +61,19 @@ class Client:
                 [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
+            xpub_port: The port on the [Broker][] that is publishing messages.
+                Typically, this value is `port + 1` and does not need to be specified.
         """
         self.flag: Flag = flag
         """The serialisation and compression algorithms to apply to a request before sending the byte stream."""
 
         self._host_port: tuple[str, int] = (host, port)
+        self._xpub_port: int = xpub_port or port + 1  # Link connects via SUBscribe: SUB -> XPUB
         self._id: str = os.urandom(8).hex()
         self._transaction: int = 0
         self._async_client: _AsyncClient | None = None
         self._is_connected: Event = Event()
+        self._links: list[Link] = []
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
@@ -125,6 +130,9 @@ class Client:
         if self._async_client is None:
             return
 
+        for link in self._links:
+            link.unlink()
+
         self._async_client.disconnect()
         self._is_connected.clear()
         self._async_client = None
@@ -175,7 +183,9 @@ class Client:
         Args:
             service_name: The name of a service to create a [Link][msl.network.client.Link] with.
         """
-        return Link(self._create_future, self.flag_at, service_name)
+        link = Link(self, service_name)
+        self._links.append(link)
+        return link
 
     def services(self, timeout: float | None = None) -> list[str]:
         """Request the names of the services that are available.
@@ -193,16 +203,9 @@ class Client:
 class Link:
     """A link with a service."""
 
-    def __init__(
-        self,
-        create_future: Callable[[str, str, Any, Any], Future[Any]],
-        flag_at: Callable[[Flag], AbstractContextManager[None]],
-        service_name: str,
-    ) -> None:
+    def __init__(self, client: Client, service_name: str) -> None:
         """A link with a service."""
-        self._create_future: Callable[[str, str, Any, Any], Future[Any]] = create_future
-
-        self.flag_at: Callable[[Flag], AbstractContextManager[None]] = flag_at
+        self.flag_at: Callable[[Flag], AbstractContextManager[None]] = client.flag_at
         """Reference to [flag_at][msl.network.client.Client.flag_at]."""
 
         self.service_name: str = service_name
@@ -214,9 +217,19 @@ class Link:
         The value is always `None` for new links, which means that there is no limit on the wait time.
         """
 
+        self._create_future: Callable[[str, str, Any, Any], Future[Any]] = client._create_future  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        host, _ = client._host_port  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        self._link_subscriber: _LinkSubscriber = _LinkSubscriber(service_name, host, client._xpub_port)  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        self._client: Client = client
+
+        self._thread: Thread = Thread(
+            target=run_event_loop, daemon=True, args=(_create_async_subscriber(self._link_subscriber),)
+        )
+        self._thread.start()
+
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns a string representation of the Link."""
-        return f"Link(service={self.service_name!r})"
+        return f"Link[{self.service_name}]"
 
     def __getattr__(self, attr: str) -> FutureOrResult:
         """Send a request to the linked service."""
@@ -229,6 +242,27 @@ class Link:
             return future
 
         return wrapper
+
+    def subscribe(self, callback: Callable[[Any], None]) -> None:
+        """Subscribe to publications from the linked service.
+
+        Args:
+            callback: The callback function to receive the published *result*. The callback
+                receives a single argument, the published *result*, and the returned value is ignored.
+        """
+        self._link_subscriber.callback = callback
+
+    def unsubscribe(self) -> None:
+        """Unsubscribe from receiving publications from the linked service."""
+        self._link_subscriber.callback = None
+
+    def unlink(self) -> None:
+        """Unlink from the service."""
+        if self._link_subscriber.interrupter is not None:
+            self._link_subscriber.interrupter()
+            self._client._links.remove(self)  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+            self._thread.join()
+            logger.debug("%s unlinked", self)
 
 
 class _AsyncClient:
@@ -325,14 +359,14 @@ class _AsyncClient:
                     future.set_result(r.result)
                 else:
                     future.set_exception(RuntimeError(r.result))
-            elif event.get(self.monitor_socket):
+            elif event.get(self.monitor_socket):  # ZMQ monitoring
                 m = await recv_monitor_message(self.monitor_socket)
                 if m["event"] == zmq.EVENT_CONNECTED:
                     self.is_connected.set()
                 elif m["event"] == zmq.EVENT_DISCONNECTED:
                     self.is_connected.clear()
                 logger.debug("Monitor %r value=%d", m["event"], m["value"])
-            else:  # Shutdown
+            else:  # Interrupter
                 await self.queue.put((b"", b""))
                 _ = await asyncio.gather(self.queue.join())
                 break
@@ -355,6 +389,57 @@ class _AsyncClient:
             self.queue.task_done()
 
 
+class _LinkSubscriber:
+    """Handle publications from a Worker."""
+
+    def __init__(self, service_name: str, host: str, xpub_port: int) -> None:
+        """Handle publications from a Worker.
+
+        Args:
+            service_name: The name of the service that publishes messages.
+            host: The hostname (or IP address) that the Broker is running on.
+            xpub_port: The XPUB port that is running on the Broker.
+        """
+        self.callback: Callable[[Any], None] | None = None
+        self.service_name: str = service_name
+        self.endpoint: str = f"tcp://{host}:{xpub_port}"
+        self.interrupter: Interrupter | None = None
+
+    async def handle_publications(self) -> None:
+        """Poll for publications from a Worker."""
+        context: Context = Context()
+
+        # For Ctrl+C to work on Windows and to signal the while loop below to break
+        self.interrupter = Interrupter()
+
+        sub_socket: Socket = context.socket(zmq.SUB)
+        sub_socket.setsockopt(zmq.SUBSCRIBE, self.service_name.encode())
+        _ = sub_socket.connect(self.endpoint)
+
+        # Polls for events on the asyncio event loop
+        poller: Poller = Poller()
+        poller.register(sub_socket, zmq.POLLIN)
+        poller.register(self.interrupter.receiver, zmq.POLLIN)
+
+        logger.debug("Link[%s] polling...", self.service_name)
+        while True:
+            event = dict(await poller.poll())
+            if event.get(sub_socket):  # Publication received
+                _, data = await sub_socket.recv_multipart()
+                if self.callback is not None:
+                    self.callback(Response.from_bytes(data).result)
+            else:  # Interrupter
+                break
+
+        poller.unregister(sub_socket)
+        poller.unregister(self.interrupter.receiver)
+        sub_socket.close(linger=0)
+        self.interrupter.close()
+        self.interrupter = None
+        context.destroy()
+        logger.debug("Link[%s] stopped polling", self.service_name)
+
+
 async def _create_async_client(
     client: Client,
     domain: bytes = b"*",
@@ -365,3 +450,8 @@ async def _create_async_client(
     async_client = _AsyncClient(client, domain, curve, plain)
     client._async_client = async_client  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     _ = await asyncio.gather(async_client.handle_messages(), async_client.wakeup_event())
+
+
+async def _create_async_subscriber(link_subscriber: _LinkSubscriber) -> None:
+    """Create the async subscriber and run it in an event loop."""
+    _ = await asyncio.gather(link_subscriber.handle_publications())

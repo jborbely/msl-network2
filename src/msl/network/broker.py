@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections import deque
 from contextlib import suppress
+from threading import Thread
 from typing import TYPE_CHECKING
 
 import zmq
@@ -67,6 +68,9 @@ class Broker:
         self.auth: Authenticator | None = None
         self.endpoint: str = ""
         self.running: bool = False
+        self.pub_sub_capture_endpoint: str = "inproc://pub-sub-capture"
+        self.xpub_port: int = -1
+        self.xsub_port: int = -1
 
         # key: service name
         self.workers: dict[str, WorkerBalancer] = {}
@@ -75,6 +79,44 @@ class Broker:
         self.context: Context
         self.router: Socket
         self.poller: Poller
+
+    def pub_sub_proxy(self, endpoint: str) -> None:
+        """Proxy to forward all publisher messages to subscribers.
+
+        Args:
+            endpoint: The ZMQ address that the Broker is using.
+        """
+        xpub = self.context.socket(zmq.XPUB)
+        xsub = self.context.socket(zmq.XSUB)
+        capture = self.context.socket(zmq.PAIR)
+
+        addr, port = endpoint.rsplit(":", maxsplit=1)
+        xpub_port = int(port) + 1  # Link connects via SUBscribe: SUB -> XPUB
+        xsub_port = int(port) + 2  # Worker connects via PUBlish: PUB -> XSUB
+
+        try:
+            _ = xpub.bind(f"{addr}:{xpub_port}")
+        except zmq.ZMQError:
+            xpub_port = xpub.bind_to_random_port(addr)
+
+        try:
+            _ = xsub.bind(f"{addr}:{xsub_port}")
+        except zmq.ZMQError:
+            xsub_port = xsub.bind_to_random_port(addr)
+
+        _ = capture.bind(self.pub_sub_capture_endpoint)
+
+        self.xpub_port = xpub_port
+        self.xsub_port = xsub_port
+
+        logger.info("XPUB/XSUB bound to ports %d/%d", xpub_port, xsub_port)
+        try:
+            _ = zmq.proxy(xsub, xpub, capture)
+        except zmq.ZMQError:
+            xpub.close(linger=0)
+            xsub.close(linger=0)
+            capture.close(linger=0)
+            logger.debug("XPUB/XSUB terminated")
 
     def remove_worker(self, worker_id: bytes, service_name: str, balancer: WorkerBalancer) -> None:
         """Worker is no longer available, remove it."""
@@ -101,7 +143,7 @@ class Broker:
         self.interrupter.close()
         self.router.close(linger=0)
         self.context.destroy(linger=0)
-        logger.debug("Broker has shut down")
+        logger.debug("Broker terminated")
 
     async def request_for_broker(self, sender_id: bytes, message: bytes) -> None:
         """Process a request that is destined for the Broker.
@@ -187,9 +229,13 @@ class Broker:
         self.context = Context()
         self.router = self.context.socket(zmq.ROUTER)
 
+        pub_sub_capture = self.context.socket(zmq.PAIR)
+        _ = pub_sub_capture.connect(self.pub_sub_capture_endpoint)
+
         self.poller = Poller()
         self.poller.register(self.router, zmq.POLLIN)
         self.poller.register(self.interrupter.receiver, zmq.POLLIN)
+        self.poller.register(pub_sub_capture, zmq.POLLIN)
 
         # must configure Authenticator and the ROUTER socket before binding the socket
         if addresses or curve or plain:
@@ -223,7 +269,13 @@ class Broker:
         # Check for Errno.EHOSTUNREACH when a message cannot be routed (must be set before `bind`)
         self.router.setsockopt(zmq.ROUTER_MANDATORY, 1)
 
-        _ = self.router.bind(f"tcp://{host}:{port}")
+        try:
+            _ = self.router.bind(f"tcp://{host}:{port}")
+        except zmq.ZMQError as e:
+            logger.error("%s", e)
+            self.destroy()
+            return
+
         self.endpoint = self.router.getsockopt_string(zmq.LAST_ENDPOINT)
 
         monitor_socket: Socket | None = None
@@ -232,6 +284,10 @@ class Broker:
             self.poller.register(monitor_socket, zmq.POLLIN)
 
         logger.info("Broker running on %s", self.endpoint[6:])
+
+        pub_sub_thread = Thread(target=self.pub_sub_proxy, args=(self.endpoint,), daemon=True)
+        pub_sub_thread.start()
+
         with allow_interrupt(self.interrupter):
             self.running = True
             while True:
@@ -253,6 +309,18 @@ class Broker:
                         # Silently ignore all errors if the Client is no longer available
                         with suppress(zmq.error.ZMQError):
                             _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
+                elif event.get(pub_sub_capture):
+                    # The multipart message length can be 1 or 2
+                    # [b'\x00ServiceName'] when a subscriber disconnects or unsubscribes from a topic
+                    # [b'\x01ServiceName'] when a subscriber connects or subscribes to a topic
+                    # [b'ServiceName', b'<data>'] when a publisher publishes a message
+                    service_name, *data = await pub_sub_capture.recv_multipart()
+                    if data:
+                        logger.info("%r published a result", service_name)
+                    elif service_name.startswith(b"\x01"):
+                        logger.debug("%r has been subscribed to", service_name[1:])
+                    else:
+                        logger.debug("%r has been unsubscribed from", service_name[1:])
                 elif self.auth is not None and event.get(self.auth.zap_socket):  # pyright: ignore[reportUnknownMemberType]
                     self.auth.log.debug("ZAP request initiated...")
                     await self.auth.handle_zap_message(self.auth.zap_socket.recv_multipart())  # pyright: ignore[reportUnknownMemberType]
@@ -266,7 +334,10 @@ class Broker:
             self.router.disable_monitor()
             self.poller.unregister(monitor_socket)
 
+        self.poller.unregister(pub_sub_capture)
+        pub_sub_capture.close(linger=0)
         self.destroy()
+        pub_sub_thread.join()
 
     async def send_worker_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
         """Send a response that there are no Workers available for the specified service.

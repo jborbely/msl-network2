@@ -49,7 +49,7 @@ def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: p
     assert r[0] == f"{interrupter_name} created"
     assert r[1] == f"{c} connecting..."
     assert r[2] == f"{interrupter_name} triggered"
-    assert r[3] == f"{interrupter_name} destroyed"
+    assert r[3] == f"{interrupter_name} terminated"
     assert r[4] == f"{c} disconnected"
 
     out, err = capsys.readouterr()
@@ -60,8 +60,8 @@ def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: p
 def test_link_string_representation() -> None:
     with Client(port=8715) as c:
         link = c.link("Missing")
-        assert str(link) == "Link(service='Missing')"
-        assert repr(link) == "Link(service='Missing')"
+        assert str(link) == "Link[Missing]"
+        assert repr(link) == "Link[Missing]"
 
 
 def test_services_timeout() -> None:
@@ -105,7 +105,7 @@ def test_string_representation() -> None:
 
 
 def test_result_ok_and_error(broker: Broker) -> None:
-    port = broker.run()
+    port, *_ = broker.run()
     client = Client(port=port)
     assert client.services() == []
 
@@ -143,7 +143,7 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     assert r[1] == "Using PLAIN authentication [domain:*]"
     assert r[2] == f"{c} connecting..."
     assert r[3] == f"{interrupter_name} triggered"
-    assert r[4] == f"{interrupter_name} destroyed"
+    assert r[4] == f"{interrupter_name} terminated"
     assert r[5] == f"{c} disconnected"
 
 
@@ -167,5 +167,5 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     assert r[1] == "Using CURVE authentication [domain:*]"
     assert r[2] == f"{c} connecting..."
     assert r[3] == f"{interrupter_name} triggered"
-    assert r[4] == f"{interrupter_name} destroyed"
+    assert r[4] == f"{interrupter_name} terminated"
     assert r[5] == f"{c} disconnected"

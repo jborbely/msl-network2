@@ -10,6 +10,7 @@ import pytest
 import zmq
 
 from msl.network import AuthCurve, AuthPlain, Client, Worker
+from msl.network.cli import main
 from msl.network.message import Flag, Request
 from msl.network.utils import Curve
 
@@ -21,7 +22,7 @@ TIMEOUT = 0.1
 
 
 def test_session(broker: Broker) -> None:
-    port = broker.run()
+    port, *_ = broker.run()
 
     class Foo(Worker):
         def __init__(self) -> None:
@@ -104,7 +105,7 @@ def test_session(broker: Broker) -> None:
 
 
 def test_worker_disconnects_without_notifying(broker: Broker) -> None:
-    port = broker.run()
+    port, *_ = broker.run()
 
     class Foo(Worker):
         def add(self, x: float, y: float) -> float:
@@ -146,7 +147,7 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
     # request get silently ignored by the "is None" check on the broker
     caplog.set_level("DEBUG")
 
-    port = broker.run()
+    port, xpub, xsub = broker.run()
 
     context = zmq.Context()
     worker = context.socket(zmq.DEALER)
@@ -168,19 +169,21 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
     assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} created"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} triggered"),
-        ("msl.network", logging.DEBUG, f"{broker.interrupter_name} destroyed"),
-        ("msl.network", logging.DEBUG, "Broker has shut down"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter_name} terminated"),
+        ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
+        ("msl.network", logging.DEBUG, "Broker terminated"),
     ]
 
 
 def test_allow_localhost(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
 
-    port = broker.run(addresses={"localhost": "127.0.0.1"})
+    port, xpub, xsub = broker.run(addresses={"localhost": "127.0.0.1"})
     client = Client(port=port)
     assert client.services(timeout=TIMEOUT) == []
     client.disconnect()
@@ -190,13 +193,14 @@ def test_allow_localhost(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
         ("msl.network", logging.INFO, "ZAP allowed devices: localhost"),
         ("msl.network", logging.INFO, "Using NULL authentication [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
     ]
 
 
 def test_plain_ok(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
 
-    port = broker.run(plain={"msl": "uncertainty"})
+    port, xpub, xsub = broker.run(plain={"msl": "uncertainty"})
     client = Client(port=port, plain=AuthPlain("msl", "uncertainty"))
     assert client.services(timeout=TIMEOUT) == []
     client.disconnect()
@@ -205,6 +209,7 @@ def test_plain_ok(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using PLAIN authentication for user msl [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
     ]
 
 
@@ -216,7 +221,7 @@ def test_curve_all_keys(broker: Broker, caplog: pytest.LogCaptureFixture) -> Non
     curve = Curve(public_key=broker_public, secret_key=broker_secret)
     auth_curve = AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
 
-    port = broker.run(curve=curve)
+    port, xpub, xsub = broker.run(curve=curve)
     client = Client(port=port, curve=auth_curve)
     assert client.services(timeout=TIMEOUT) == []
     client.disconnect()
@@ -225,6 +230,7 @@ def test_curve_all_keys(broker: Broker, caplog: pytest.LogCaptureFixture) -> Non
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using CURVE authentication with all keys allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
     ]
 
 
@@ -236,7 +242,7 @@ def test_curve_valid_key(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
     curve = Curve(public_key=broker_public, secret_key=broker_secret, keys={client_public})
     auth_curve = AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
 
-    port = broker.run(curve=curve)
+    port, xpub, xsub = broker.run(curve=curve)
     client = Client(port=port, curve=auth_curve)
     assert client.services(timeout=TIMEOUT) == []
     client.disconnect()
@@ -245,6 +251,7 @@ def test_curve_valid_key(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using CURVE authentication with 1 key allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
     ]
 
 
@@ -257,7 +264,7 @@ def test_curve_valid_multiple_keys(broker: Broker, caplog: pytest.LogCaptureFixt
     curve = Curve(public_key=broker_public, secret_key=broker_secret, keys={client_public, client2_public})
     auth_curve = AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
 
-    port = broker.run(curve=curve)
+    port, xpub, xsub = broker.run(curve=curve)
     client = Client(port=port, curve=auth_curve)
     assert client.services(timeout=TIMEOUT) == []
     client.disconnect()
@@ -266,12 +273,13 @@ def test_curve_valid_multiple_keys(broker: Broker, caplog: pytest.LogCaptureFixt
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using CURVE authentication with 2 keys allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
     ]
 
 
 def test_monitor_tcp_socket(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
-    port = broker.run(monitor=True)
+    port, xpub, xsub = broker.run(monitor=True)
 
     with socket.socket() as s:
         s.connect(("127.0.0.1", port))
@@ -279,20 +287,22 @@ def test_monitor_tcp_socket(broker: Broker, caplog: pytest.LogCaptureFixture) ->
     broker.stop()
 
     records = caplog.records
-    assert len(records) == 4
+    assert len(records) == 5
     assert records[0].levelname == "INFO"
     assert records[0].message == f"Broker running on 0.0.0.0:{port}"
     assert records[1].levelname == "INFO"
-    assert records[1].message.startswith("Monitor <Event.ACCEPTED: 32>")
+    assert records[1].message == f"XPUB/XSUB bound to ports {xpub}/{xsub}"
     assert records[2].levelname == "INFO"
-    assert records[2].message.startswith("Monitor <Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
+    assert records[2].message.startswith("Monitor <Event.ACCEPTED: 32>")
     assert records[3].levelname == "INFO"
-    assert records[3].message.startswith("Monitor <Event.DISCONNECTED: 512>")
+    assert records[3].message.startswith("Monitor <Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
+    assert records[4].levelname == "INFO"
+    assert records[4].message.startswith("Monitor <Event.DISCONNECTED: 512>")
 
 
 def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
-    port = broker.run()
+    port, xpub, xsub = broker.run()
 
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REQ)  # use REQ instead of DEALER
@@ -307,13 +317,14 @@ def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) ->
 
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub}"),
         ("msl.network", logging.ERROR, "Bad client request b'invalid'"),
     ]
 
 
 def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG)
-    port = broker.run()
+    port, xpub, xsub = broker.run()
 
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REQ)  # use REQ instead of DEALER
@@ -326,18 +337,48 @@ def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> 
     broker.stop()
 
     records = caplog.records
-    assert len(records) == 7
+    assert len(records) == 9
     assert records[0].levelname == "DEBUG"
     assert records[0].message == f"{broker.interrupter_name} created"
     assert records[1].levelname == "INFO"
     assert records[1].message == f"Broker running on 0.0.0.0:{port}"
-    assert records[2].levelname == "DEBUG"
-    assert records[2].message.endswith("' -> b''")  # Ignore default source_id since it is platform dependant
+    assert records[2].levelname == "INFO"
+    assert records[2].message == f"XPUB/XSUB bound to ports {xpub}/{xsub}"
     assert records[3].levelname == "DEBUG"
-    assert records[3].message == "Undefined destination ID, ignoring message b'hi'"
+    assert records[3].message.endswith("' -> b''")  # Ignore default source_id since it is platform dependant
     assert records[4].levelname == "DEBUG"
-    assert records[4].message == f"{broker.interrupter_name} triggered"
+    assert records[4].message == "Undefined destination ID, ignoring message b'hi'"
     assert records[5].levelname == "DEBUG"
-    assert records[5].message == f"{broker.interrupter_name} destroyed"
+    assert records[5].message == f"{broker.interrupter_name} triggered"
     assert records[6].levelname == "DEBUG"
-    assert records[6].message == "Broker has shut down"
+    assert records[6].message == f"{broker.interrupter_name} terminated"
+    assert records[7].levelname == "DEBUG"
+    assert records[7].message == "XPUB/XSUB terminated"
+    assert records[8].levelname == "DEBUG"
+    assert records[8].message == "Broker terminated"
+
+
+def test_broker_port_in_use(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("DEBUG")
+
+    port = 18750
+
+    s = socket.socket()
+    s.bind(("127.0.0.1", port))
+
+    main("start", "--verbose", "--port", str(port))
+
+    s.close()
+
+    r = caplog.records
+    assert len(r) == 4
+    assert r[0].levelname == "DEBUG"
+    assert r[0].message.startswith("Interrupter")
+    assert r[0].message.endswith("created")
+    assert r[1].levelname == "ERROR"
+    assert r[1].message == f"Address in use (addr='tcp://*:{port}')"
+    assert r[2].levelname == "DEBUG"
+    assert r[2].message.startswith("Interrupter")
+    assert r[2].message.endswith("terminated")
+    assert r[3].levelname == "DEBUG"
+    assert r[3].message == "Broker terminated"

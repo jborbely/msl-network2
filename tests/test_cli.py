@@ -40,18 +40,21 @@ def test_cli_start(capfd: pytest.CaptureFixture[str]) -> None:
 
     lines = err.splitlines()
     if is_windows:
-        assert len(lines) == 2
+        assert len(lines) == 3
         assert "Interrupter" in lines[0]
         assert "created" in lines[0]
         assert lines[1].endswith("Broker running on 0.0.0.0:1875")
+        assert lines[2].endswith("XPUB/XSUB bound to ports 1876/1877")
     else:
-        assert len(lines) == 4
+        assert len(lines) == 6
         assert "Interrupter" in lines[0]
         assert "created" in lines[0]
         assert lines[1].endswith("Broker running on 0.0.0.0:1875")
-        assert "Interrupter" in lines[2]
-        assert "destroyed" in lines[2]
-        assert lines[3].endswith("Broker has shut down")
+        assert lines[2].endswith("XPUB/XSUB bound to ports 1876/1877")
+        assert "Interrupter" in lines[3]
+        assert "terminated" in lines[3]
+        assert lines[4].endswith("XPUB/XSUB has shut down")
+        assert lines[5].endswith("Broker has shut down")
 
 
 def test_cli_device(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
