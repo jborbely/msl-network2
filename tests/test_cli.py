@@ -53,8 +53,8 @@ def test_cli_start(capfd: pytest.CaptureFixture[str]) -> None:
         assert lines[2].endswith("XPUB/XSUB bound to ports 1876/1877")
         assert "Interrupter" in lines[3]
         assert "terminated" in lines[3]
-        assert lines[4].endswith("XPUB/XSUB has shut down")
-        assert lines[5].endswith("Broker has shut down")
+        assert lines[4].endswith("XPUB/XSUB terminated")
+        assert lines[5].endswith("Broker terminated")
 
 
 def test_cli_device(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
