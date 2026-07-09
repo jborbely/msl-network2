@@ -32,11 +32,18 @@ class Broker:
         self.thread: threading.Thread | None = None
         self.interrupter_name: str = ""
 
+    def proxy_init_message(self, port: int, xpub: int, xsub: int) -> str:
+        """Returns the INFO log message when the proxy starts."""
+        msg = f"XPUB/XSUB bound to ports {xpub}/{xsub}"
+        if (xpub != port + 1) or (xsub != port + 2):
+            msg += " [ATTENTION! using non-default ports]"
+        return msg
+
     def run(self, **kwargs: Any) -> tuple[int, int, int]:
         """Run the broker and return the port, XPUB, XSUB numbers that the broker is using."""
         self.thread = threading.Thread(target=utils.run_event_loop, daemon=True, args=(self.broker.run(**kwargs),))
         self.thread.start()
-        while (not self.broker.running) or (self.broker.xsub_port == -1):
+        while not (self.broker.poller_running and self.broker.proxy_running):
             continue
         self.interrupter_name = self.broker.interrupter.name
         port = int(self.broker.endpoint.rsplit(":", 1)[1])
