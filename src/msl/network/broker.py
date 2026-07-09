@@ -111,7 +111,7 @@ class Broker:
 
         logger.info("XPUB/XSUB bound to ports %d/%d", xpub_port, xsub_port)
         try:
-            _ = zmq.proxy(xsub, xpub, capture)
+            _ = zmq.proxy_steerable(xsub, xpub, capture)
         except zmq.ZMQError:
             pass
         finally:
@@ -336,6 +336,7 @@ class Broker:
             self.router.disable_monitor()
             self.poller.unregister(monitor_socket)
 
+        _ = await pub_sub_capture.send(b"TERMINATE")
         self.poller.unregister(pub_sub_capture)
         pub_sub_capture.close(linger=0)
         self.destroy()
