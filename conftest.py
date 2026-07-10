@@ -55,7 +55,9 @@ class Broker:
             return
 
         self.broker.interrupter()
-        self.thread.join()
+        # self.thread.join()
+        import time
+        time.sleep(1)
         self.thread = None
 
         # okay to call again
