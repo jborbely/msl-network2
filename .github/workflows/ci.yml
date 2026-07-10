@@ -24,4 +24,4 @@ jobs:
         with:
           enable-cache: false
       - name: Run tests
-        run: uv run --python ${{ matrix.python-version }} --no-dev --group test -- pytest tests/test_broker.py::test_session tests/test_broker.py::test_session::test_worker_disconnects_without_notifying
+        run: uv run --python ${{ matrix.python-version }} --no-dev --group test -- pytest tests/test_broker.py
