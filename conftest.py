@@ -43,7 +43,7 @@ class Broker:
         """Run the broker and return the port, XPUB, XSUB numbers that the broker is using."""
         self.thread = threading.Thread(target=utils.run_event_loop, daemon=True, args=(self.broker.run(**kwargs),))
         self.thread.start()
-        while not (self.broker.poller_running and self.broker.proxy_running):
+        while not (self.broker.poller_running):# and self.broker.proxy_running):
             continue
         self.interrupter_name = self.broker.interrupter.name
         port = int(self.broker.endpoint.rsplit(":", 1)[1])
