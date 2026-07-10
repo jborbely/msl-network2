@@ -169,12 +169,12 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
     assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} created"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        #("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} triggered"),
-        #("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
+        ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} terminated"),
         ("msl.network", logging.DEBUG, "Broker terminated"),
     ]
@@ -193,7 +193,7 @@ def test_allow_localhost(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
         ("msl.network", logging.INFO, "ZAP allowed devices: localhost"),
         ("msl.network", logging.INFO, "Using NULL authentication [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        #("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
 
 
@@ -209,7 +209,7 @@ def test_plain_ok(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using PLAIN authentication for user msl [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        # ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
 
 
@@ -230,7 +230,7 @@ def test_curve_all_keys(broker: Broker, caplog: pytest.LogCaptureFixture) -> Non
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using CURVE authentication with all keys allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        # ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
 
 
@@ -251,7 +251,7 @@ def test_curve_valid_key(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using CURVE authentication with 1 key allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        # ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
 
 
@@ -273,7 +273,7 @@ def test_curve_valid_multiple_keys(broker: Broker, caplog: pytest.LogCaptureFixt
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "Using CURVE authentication with 2 keys allowed [domain:*]"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        # ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
 
 
@@ -287,17 +287,17 @@ def test_monitor_tcp_socket(broker: Broker, caplog: pytest.LogCaptureFixture) ->
     broker.stop()
 
     records = caplog.records
-    assert len(records) == 4#5
+    assert len(records) == 5
     assert records[0].levelname == "INFO"
     assert records[0].message == f"Broker running on 0.0.0.0:{port}"
-    # assert records[1].levelname == "INFO"
-    # assert records[1].message == broker.proxy_init_message(port, xpub, xsub)
     assert records[1].levelname == "INFO"
-    assert records[1].message.startswith("Monitor <Event.ACCEPTED: 32>")
+    assert records[1].message == broker.proxy_init_message(port, xpub, xsub)
     assert records[2].levelname == "INFO"
-    assert records[2].message.startswith("Monitor <Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
+    assert records[2].message.startswith("Monitor <Event.ACCEPTED: 32>")
     assert records[3].levelname == "INFO"
-    assert records[3].message.startswith("Monitor <Event.DISCONNECTED: 512>")
+    assert records[3].message.startswith("Monitor <Event.HANDSHAKE_FAILED_NO_DETAIL: 2048>")
+    assert records[4].levelname == "INFO"
+    assert records[4].message.startswith("Monitor <Event.DISCONNECTED: 512>")
 
 
 def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
@@ -317,7 +317,7 @@ def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) ->
 
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
-        # ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
         ("msl.network", logging.ERROR, "Bad client request b'invalid'"),
     ]
 
@@ -337,25 +337,25 @@ def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> 
     broker.stop()
 
     records = caplog.records
-    assert len(records) == 7#9
+    assert len(records) == 9
     assert records[0].levelname == "DEBUG"
     assert records[0].message == f"{broker.interrupter_name} created"
     assert records[1].levelname == "INFO"
     assert records[1].message == f"Broker running on 0.0.0.0:{port}"
-    # assert records[2].levelname == "INFO"
-    # assert records[2].message == broker.proxy_init_message(port, xpub, xsub)
-    assert records[2].levelname == "DEBUG"
-    assert records[2].message.endswith("' -> b''")  # Ignore default source_id since it is platform dependant
+    assert records[2].levelname == "INFO"
+    assert records[2].message == broker.proxy_init_message(port, xpub, xsub)
     assert records[3].levelname == "DEBUG"
-    assert records[3].message == "Undefined destination ID, ignoring message b'hi'"
+    assert records[3].message.endswith("' -> b''")  # Ignore default source_id since it is platform dependant
     assert records[4].levelname == "DEBUG"
-    assert records[4].message == f"{broker.interrupter_name} triggered"
-    # assert records[6].levelname == "DEBUG"
-    # assert records[6].message == "XPUB/XSUB terminated"
+    assert records[4].message == "Undefined destination ID, ignoring message b'hi'"
     assert records[5].levelname == "DEBUG"
-    assert records[5].message == f"{broker.interrupter_name} terminated"
+    assert records[5].message == f"{broker.interrupter_name} triggered"
     assert records[6].levelname == "DEBUG"
-    assert records[6].message == "Broker terminated"
+    assert records[6].message == "XPUB/XSUB terminated"
+    assert records[7].levelname == "DEBUG"
+    assert records[7].message == f"{broker.interrupter_name} terminated"
+    assert records[8].levelname == "DEBUG"
+    assert records[8].message == "Broker terminated"
 
 
 def test_broker_port_in_use(caplog: pytest.LogCaptureFixture) -> None:

@@ -302,8 +302,8 @@ class Broker:
 
         logger.info("Broker running on %s", self.endpoint[6:])
 
-        # xpub_xsub_thread = Thread(target=self.xpub_xsub_proxy, args=(self.endpoint,), daemon=True)
-        # xpub_xsub_thread.start()
+        xpub_xsub_thread = Thread(target=self.xpub_xsub_proxy, args=(self.endpoint,), daemon=True)
+        xpub_xsub_thread.start()
 
         with allow_interrupt(self.interrupter):
             self.poller_running = True
@@ -355,7 +355,7 @@ class Broker:
         self.poller.unregister(xpub_xsub_capture)
         xpub_xsub_capture.close(linger=0)
         xpub_xsub_control.close(linger=0)
-        # xpub_xsub_thread.join()
+        xpub_xsub_thread.join()
         self.destroy()
 
     async def send_worker_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
