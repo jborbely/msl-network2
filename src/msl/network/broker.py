@@ -153,10 +153,8 @@ class Broker:
             self.auth.stop()
             self.auth = None
 
-        if self.router in self.poller:
-            self.poller.unregister(self.router)
-        if self.interrupter.receiver in self.poller:
-            self.poller.unregister(self.interrupter.receiver)
+        self.poller.unregister(self.router)
+        self.poller.unregister(self.interrupter.receiver)
         self.interrupter.close()
         self.router.close(linger=0)
         self.context.destroy(linger=0)
@@ -246,17 +244,17 @@ class Broker:
         self.context = Context()
         self.router = self.context.socket(zmq.ROUTER)
 
-        xpub_xsub_capture = self.context.socket(zmq.PAIR)
-        xpub_xsub_control = self.context.socket(zmq.REQ)  # using PAIR caused tests to hang on macos GHA
-        _ = xpub_xsub_capture.connect(self.proxy_capture_endpoint)
-        _ = xpub_xsub_control.connect(self.proxy_control_endpoint)
+        proxy_capture = self.context.socket(zmq.PAIR)
+        proxy_control = self.context.socket(zmq.REQ)  # using PAIR caused tests to hang on macos GHA
+        _ = proxy_capture.connect(self.proxy_capture_endpoint)
+        _ = proxy_control.connect(self.proxy_control_endpoint)
 
         self.poller = Poller()
         self.poller.register(self.router, zmq.POLLIN)
         self.poller.register(self.interrupter.receiver, zmq.POLLIN)
-        self.poller.register(xpub_xsub_capture, zmq.POLLIN)
+        self.poller.register(proxy_capture, zmq.POLLIN)
 
-        # must configure Authenticator and the ROUTER socket before binding the socket
+        # must configure Authenticator and the ROUTER socket before binding the ROUTER socket
         if addresses or curve or plain:
             self.auth = Authenticator(self.context)
             self.auth.log.setLevel(logging.WARNING)
@@ -304,8 +302,8 @@ class Broker:
 
         logger.info("Broker running on %s", self.endpoint[6:])
 
-        xpub_xsub_thread = Thread(target=self.xpub_xsub_proxy, args=(self.endpoint,), daemon=True)
-        xpub_xsub_thread.start()
+        proxy_thread = Thread(target=self.xpub_xsub_proxy, args=(self.endpoint,), daemon=True)
+        proxy_thread.start()
 
         with allow_interrupt(self.interrupter):
             self.poller_running = True
@@ -328,12 +326,12 @@ class Broker:
                         # Silently ignore all errors if the Client is no longer available
                         with suppress(zmq.error.ZMQError):
                             _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
-                elif event.get(xpub_xsub_capture):
+                elif event.get(proxy_capture):
                     # The multipart message length can be 1 or 2
                     # [b'\x00ServiceName'] when a subscriber disconnects or unsubscribes from a topic
                     # [b'\x01ServiceName'] when a subscriber connects or subscribes to a topic
                     # [b'ServiceName', b'<data>'] when a publisher publishes a message
-                    service_name, *data = await xpub_xsub_capture.recv_multipart()
+                    service_name, *data = await proxy_capture.recv_multipart()
                     if data:
                         logger.info("%r published a result", service_name)
                     elif service_name.startswith(b"\x01"):
@@ -347,18 +345,18 @@ class Broker:
                     m = await recv_monitor_message(monitor_socket)
                     logger.info("Monitor %r value=%d", m["event"], m["value"])
                 else:
-                    _ = await xpub_xsub_control.send(b"TERMINATE")
-                    _ = await xpub_xsub_control.recv()
+                    _ = await proxy_control.send(b"TERMINATE")
+                    _ = await proxy_control.recv()
                     break  # event must be from self.interrupter.receiver
 
         if monitor_socket is not None:
             self.router.disable_monitor()
             self.poller.unregister(monitor_socket)
 
-        self.poller.unregister(xpub_xsub_capture)
-        xpub_xsub_capture.close(linger=0)
-        xpub_xsub_control.close(linger=0)
-        xpub_xsub_thread.join()
+        self.poller.unregister(proxy_capture)
+        proxy_capture.close(linger=0)
+        proxy_control.close(linger=0)
+        proxy_thread.join()
         self.destroy()
 
     async def send_worker_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
