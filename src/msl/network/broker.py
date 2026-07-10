@@ -92,7 +92,7 @@ class Broker:
         xpub = self.context.socket(zmq.XPUB)
         xsub = self.context.socket(zmq.XSUB)
         capture = self.context.socket(zmq.PAIR)
-        control = self.context.socket(zmq.REP)
+        control = self.context.socket(zmq.REP)  # using PAIR caused tests to hang on macos GHA
 
         addr, port = endpoint.rsplit(":", maxsplit=1)
         xpub_port = int(port) + 1  # Link connects via SUBscribe: SUB -> XPUB
@@ -247,7 +247,7 @@ class Broker:
         self.router = self.context.socket(zmq.ROUTER)
 
         xpub_xsub_capture = self.context.socket(zmq.PAIR)
-        xpub_xsub_control = self.context.socket(zmq.REQ)
+        xpub_xsub_control = self.context.socket(zmq.REQ)  # using PAIR caused tests to hang on macos GHA
         _ = xpub_xsub_capture.connect(self.proxy_capture_endpoint)
         _ = xpub_xsub_control.connect(self.proxy_control_endpoint)
 

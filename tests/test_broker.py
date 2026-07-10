@@ -166,7 +166,7 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
 
     broker.stop()
 
-    assert caplog.record_tuples[:7] == [
+    assert caplog.record_tuples == [
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} created"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
@@ -174,9 +174,9 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
         ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
         ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} triggered"),
-        # ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
-        # ("msl.network", logging.DEBUG, f"{broker.interrupter_name} terminated"),
-        # ("msl.network", logging.DEBUG, "Broker terminated"),
+        ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
+        ("msl.network", logging.DEBUG, f"{broker.interrupter_name} terminated"),
+        ("msl.network", logging.DEBUG, "Broker terminated"),
     ]
 
 
@@ -351,9 +351,9 @@ def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> 
     assert records[5].levelname == "DEBUG"
     assert records[5].message == f"{broker.interrupter_name} triggered"
     assert records[6].levelname == "DEBUG"
-    # assert records[6].message == "XPUB/XSUB terminated"
+    assert records[6].message == "XPUB/XSUB terminated"
     assert records[7].levelname == "DEBUG"
-    # assert records[7].message == f"{broker.interrupter_name} terminated"
+    assert records[7].message == f"{broker.interrupter_name} terminated"
     assert records[8].levelname == "DEBUG"
     assert records[8].message == "Broker terminated"
 
