@@ -364,9 +364,9 @@ def test_broker_port_in_use(caplog: pytest.LogCaptureFixture) -> None:
     port = 18750
 
     s = socket.socket()
-    s.bind(("127.0.0.1", port))
+    s.bind(("0.0.0.0", port))
 
-    # main("start", "--verbose", "--port", str(port))
+    main("start", "--verbose", "--port", str(port))
 
     s.close()
 
