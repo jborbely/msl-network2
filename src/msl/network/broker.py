@@ -143,7 +143,6 @@ class Broker:
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""
-        self.poller_running = False
         if self.context.closed:
             return
 
@@ -348,6 +347,8 @@ class Broker:
                     _ = await proxy_control.send(b"TERMINATE")
                     _ = await proxy_control.recv()
                     break  # event must be from self.interrupter.receiver
+
+        self.poller_running = False
 
         if monitor_socket is not None:
             self.router.disable_monitor()
