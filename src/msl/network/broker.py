@@ -143,9 +143,10 @@ class Broker:
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""
-        self.poller_running = False
-        if not hasattr(self, "context") or self.context.closed:
+        if not self.poller_running:
             return
+
+        self.poller_running = False
 
         if self.auth is not None:
             self.poller.unregister(self.auth.zap_socket)  # pyright: ignore[reportUnknownMemberType]
