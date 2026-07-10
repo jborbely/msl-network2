@@ -361,7 +361,7 @@ def test_no_destination_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> 
 def test_broker_port_in_use(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level("DEBUG")
 
-    port = 18750
+    port = 1875
 
     s = socket.socket()
     s.bind(("127.0.0.1", port))
