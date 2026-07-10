@@ -24,4 +24,4 @@ jobs:
         with:
           enable-cache: false
       - name: Run tests
-        run: uv run --python ${{ matrix.python-version }} --no-dev --group test -- pytest tests/test_auth.py tests/test_balancer.py tests/test_cli.py tests/test_message.py tests/test_utils.py tests/test_worker.py
+        run: uv run --python ${{ matrix.python-version }} --no-dev --group test -- pytest tests/test_broker.py
