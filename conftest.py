@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+import zmq.asyncio
 
 # MSL_NETWORK_HOME must be defined before importing msl.network
 home = Path(tempfile.gettempdir()) / ".msl"
@@ -49,6 +50,16 @@ class Broker:
         port = int(self.broker.endpoint.rsplit(":", 1)[1])
         return port, self.broker.xpub_port, self.broker.xsub_port
 
+    def run_proxy(self, mocked_broker_port: int) -> tuple[int, int]:
+        """Only run the XPUB/XSUB proxy."""
+        endpoint = f"tcp://127.0.0.1:{mocked_broker_port}"
+        self.broker.context = zmq.asyncio.Context()
+        self.thread = threading.Thread(target=self.broker.xpub_xsub_proxy, daemon=True, args=(endpoint,))
+        self.thread.start()
+        while not self.broker.proxy_running:
+            continue
+        return self.broker.xpub_port, self.broker.xsub_port
+
     def stop(self) -> None:
         """Stop the broker."""
         if self.thread is None:
@@ -60,6 +71,10 @@ class Broker:
 
         # okay to call again
         self.broker.destroy()
+
+    def kill_proxy(self) -> None:
+        """Abruptly destroys the Context that the proxy is using."""
+        self.broker.context.destroy()
 
 
 @pytest.fixture

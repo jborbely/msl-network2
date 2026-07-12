@@ -382,3 +382,45 @@ def test_broker_port_in_use(caplog: pytest.LogCaptureFixture) -> None:
     assert r[2].message.endswith("terminated")
     assert r[3].levelname == "DEBUG"
     assert r[3].message == "Broker terminated"
+
+
+def test_xpub_port_in_use(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    mocked_broker_port = 9371
+
+    s = socket.socket()
+    s.bind(("127.0.0.1", mocked_broker_port + 1))
+
+    xpub, xsub = broker.run_proxy(mocked_broker_port)
+    broker.kill_proxy()
+
+    assert xpub != mocked_broker_port + 1
+    assert xsub == mocked_broker_port + 2
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub} [ATTENTION! using non-default ports]"),
+        ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
+    ]
+
+    s.close()
+
+
+def test_xsub_port_in_use(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    mocked_broker_port = 47482
+
+    s = socket.socket()
+    s.bind(("127.0.0.1", mocked_broker_port + 2))
+
+    xpub, xsub = broker.run_proxy(mocked_broker_port)
+    broker.kill_proxy()
+
+    assert xpub == mocked_broker_port + 1
+    assert xsub != mocked_broker_port + 2
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"XPUB/XSUB bound to ports {xpub}/{xsub} [ATTENTION! using non-default ports]"),
+        ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
+    ]
+
+    s.close()
