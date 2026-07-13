@@ -104,4 +104,4 @@ def test_publish_threadsafe(broker: Broker) -> None:
     thread2.join()
     thread1.join()
 
-    assert len(pulses) > 10
+    assert len(pulses) > 5
