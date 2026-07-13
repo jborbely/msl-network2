@@ -182,7 +182,7 @@ def run_event_loop(coroutine: Coroutine[Any, Any, None]) -> None:
 
     if less_than_3_12 and sys.platform == "win32":
         # PyZMQ requires a SelectorEventLoop to have the `add_reader` method available
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore[attr-defined]  # pyright: ignore[reportDeprecated]
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # pyright: ignore[reportDeprecated]
 
     kwargs = {} if less_than_3_12 else {"loop_factory": asyncio.SelectorEventLoop}
     return asyncio.run(coroutine, debug=False, **kwargs)
