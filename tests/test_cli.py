@@ -23,8 +23,7 @@ if TYPE_CHECKING:
 def test_cli_start(capfd: pytest.CaptureFixture[str]) -> None:
     command = ["msl-network", "start", "--verbose"]
 
-    is_windows = sys.platform == "win32"
-    if is_windows:
+    if sys.platform == "win32":
         sig = signal.CTRL_BREAK_EVENT
         p = subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)  # noqa: S603
     else:
@@ -39,7 +38,7 @@ def test_cli_start(capfd: pytest.CaptureFixture[str]) -> None:
     assert not out
 
     lines = err.splitlines()
-    if is_windows:
+    if sys.platform == "win32":
         assert len(lines) == 3
         assert "Interrupter" in lines[0]
         assert "created" in lines[0]
