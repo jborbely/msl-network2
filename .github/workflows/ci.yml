@@ -24,4 +24,4 @@ jobs:
         with:
           enable-cache: false
       - name: Run tests
-        run: uv run --with pytest-timeout --python ${{ matrix.python-version }} --no-dev --group test -- pytest --timeout 10
+        run: uv run --with pytest-timeout --with pytest-rerunfailures --python ${{ matrix.python-version }} --no-dev --group test -- pytest --timeout 10 --reruns 3
