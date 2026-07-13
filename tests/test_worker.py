@@ -293,3 +293,11 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     assert r[8] == f"{interrupter.name} terminated"
     assert r[9] == "Worker disconnected"
     assert r[10] == "Worker event loop closed"
+
+
+def test_publish_no_event_loop() -> None:
+    w = Worker()
+    with pytest.raises(RuntimeError, match=r"Event loop not running, cannot publish result"):
+        w.publish("hi")
+
+    w.disconnect()  # should be okay to be called

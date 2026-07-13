@@ -63,6 +63,9 @@ class Worker:
                 [ignore_attributes][msl.network.worker.Worker.ignore_attributes]
                 for more details.
         """
+        self.connected: asyncio.Event = asyncio.Event()
+        """An [Event][asyncio.Event] object that represents whether the Worker is connected to the [Broker][]."""
+
         self.flag: Flag = flag
         """The serialisation and compression algorithms to apply to a response before sending the byte stream."""
 
@@ -79,10 +82,11 @@ class Worker:
         self._plain: AuthPlain | None = plain
         self._tasks: list[Awaitable[None]] = []
         self._loop_thread_id: int = -1
-        self._loop: asyncio.AbstractEventLoop
         self._xsub_port: int = xsub_port or port + 2  # Worker connects with PUBlish: PUB -> XSUB
-
         self._pub_queue: asyncio.Queue[bytes] | None = None
+
+        # Just define type annotation
+        self._loop: asyncio.AbstractEventLoop
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
@@ -91,6 +95,7 @@ class Worker:
         self._ignore_attributes: set[str] = {
             "add_tasks",
             "connect",
+            "connected",
             "disconnect",
             "flag",
             "flag_at",
@@ -136,8 +141,9 @@ class Worker:
 
         Unregister from the poller, close the interrupter and close the socket.
         """
-        if self._pub_queue is not None:
-            self._pub_queue.put_nowait(b"")
+        self.connected.clear()
+        if self._pub_queue is not None and self._interrupter is not None:
+            self._interrupter()
 
         if self._interrupter is None or self._socket is None or self._monitor_socket is None:
             return
@@ -304,12 +310,12 @@ class Worker:
                 break
             _ = await pub_socket.send_multipart([name, data])  # pyright: ignore[reportUnknownMemberType]
             self._pub_queue.task_done()
-            logger.debug("%s published data", self._service_name)
+            logger.debug("%s published message", self._service_name)
 
         pub_socket.close(linger=0)
         logger.debug("%s publisher done", self._service_name)
 
-    async def _handle_requests(self) -> None:  # noqa: C901, PLR0915
+    async def _handle_requests(self) -> None:  # noqa: C901, PLR0912, PLR0915
         self._interrupter = Interrupter()
         self._socket = self._context.socket(zmq.DEALER)
         self._socket.setsockopt(zmq.ROUTING_ID, self._worker_id)
@@ -351,6 +357,10 @@ class Worker:
                 event = dict(await self._poller.poll())
                 if event.get(self._monitor_socket):
                     m = await recv_monitor_message(self._monitor_socket)
+                    if m["event"] == zmq.EVENT_CONNECTED:
+                        self.connected.set()
+                    elif m["event"] == zmq.EVENT_DISCONNECTED:
+                        self.connected.clear()
                     logger.debug("Monitor %r value=%d", m["event"], m["value"])
                     continue
 

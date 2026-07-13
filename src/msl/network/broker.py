@@ -332,7 +332,7 @@ class Broker:
                     # [b'ServiceName', b'<data>'] when a publisher publishes a message
                     service_name, *data = await proxy_capture.recv_multipart()
                     if data:
-                        logger.info("%r published a result", service_name)
+                        logger.info("%r published message", service_name)
                     elif service_name.startswith(b"\x01"):
                         logger.debug("%r has been subscribed to", service_name[1:])
                     else:
