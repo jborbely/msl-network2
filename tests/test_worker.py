@@ -299,5 +299,9 @@ def test_publish_no_event_loop() -> None:
     w = Worker()
     with pytest.raises(RuntimeError, match=r"Event loop not running, cannot publish result"):
         w.publish("hi")
+    w.disconnect()
 
-    w.disconnect()  # should be okay to be called
+
+def test_create_destroy() -> None:
+    w = Worker()
+    w.disconnect()

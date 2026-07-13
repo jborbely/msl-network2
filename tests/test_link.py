@@ -85,7 +85,7 @@ def test_publish_threadsafe(broker: Broker) -> None:
     thread1 = Thread(target=h.connect, daemon=True)
     thread1.start()
 
-    while not h.connected.is_set():
+    while not hasattr(h, "connected") or not h.connected.is_set():
         sleep(0.01)
 
     thread2 = Thread(target=h.pulse, daemon=True)

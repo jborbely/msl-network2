@@ -63,9 +63,6 @@ class Worker:
                 [ignore_attributes][msl.network.worker.Worker.ignore_attributes]
                 for more details.
         """
-        self.connected: asyncio.Event = asyncio.Event()
-        """An [Event][asyncio.Event] object that represents whether the Worker is connected to the [Broker][]."""
-
         self.flag: Flag = flag
         """The serialisation and compression algorithms to apply to a response before sending the byte stream."""
 
@@ -85,8 +82,12 @@ class Worker:
         self._xsub_port: int = xsub_port or port + 2  # Worker connects with PUBlish: PUB -> XSUB
         self._pub_queue: asyncio.Queue[bytes] | None = None
 
-        # Just define type annotation
+        # Just define type annotations
         self._loop: asyncio.AbstractEventLoop
+
+        # Python 3.8 and 3.9 require an asyncio event loop to be running to create an asyncio.Event instance
+        self.connected: asyncio.Event
+        """An [Event][asyncio.Event] object that represents whether the Worker is connected to the [Broker][]."""
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
@@ -141,13 +142,13 @@ class Worker:
 
         Unregister from the poller, close the interrupter and close the socket.
         """
-        self.connected.clear()
         if self._pub_queue is not None and self._interrupter is not None:
             self._interrupter()
 
         if self._interrupter is None or self._socket is None or self._monitor_socket is None:
             return
 
+        self.connected.clear()
         self._poller.unregister(self._socket)
         self._poller.unregister(self._interrupter.receiver)
         self._poller.unregister(self._monitor_socket)
@@ -293,15 +294,16 @@ class Worker:
         logger.debug("%s unregistered", self._service_name)
 
     async def _handle_publishing(self) -> None:
-        name = self._service_name.encode()
+        self.connected = asyncio.Event()
         self._pub_queue = asyncio.Queue()
-        self._loop_thread_id = get_ident()
         self._loop = asyncio.get_running_loop()
+        self._loop_thread_id = get_ident()
 
         host, _ = self._host_port
         pub_socket = self._context.socket(zmq.PUB)
         _ = pub_socket.connect(f"tcp://{host}:{self._xsub_port}")
 
+        name = self._service_name.encode()
         logger.debug("%s publisher ready", self._service_name)
         while True:
             data = await self._pub_queue.get()
