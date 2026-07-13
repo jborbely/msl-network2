@@ -44,14 +44,13 @@ def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
     assert r[0] == "Worker publisher ready"
     assert r[1] == f"{interrupter.name} created"
-    assert r[2] == "Worker registered"
-    assert r[3] == "Worker polling..."
-    assert r[4] == f"{interrupter.name} triggered"
-    assert r[5] == "Worker publisher done"
-    assert r[6] == "Worker unregistered"
-    assert r[7] == f"{interrupter.name} terminated"
-    assert r[8] == "Worker disconnected"
-    assert r[9] == "Worker event loop closed"
+    assert r[2] == "Worker polling..."
+    assert r[3] == f"{interrupter.name} triggered"
+    assert r[4] == "Worker publisher done"
+    assert r[5] == "Worker unregistered"
+    assert r[6] == f"{interrupter.name} terminated"
+    assert r[7] == "Worker disconnected"
+    assert r[8] == "Worker event loop closed"
 
     thread.join()
 
@@ -251,14 +250,13 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     assert r[0] == "Worker publisher ready"
     assert r[1] == f"{interrupter.name} created"
     assert r[2] == "Using PLAIN authentication [domain:*]"
-    assert r[3] == "Worker registered"
-    assert r[4] == "Worker polling..."
-    assert r[5] == f"{interrupter.name} triggered"
-    assert r[6] == "Worker publisher done"
-    assert r[7] == "Worker unregistered"
-    assert r[8] == f"{interrupter.name} terminated"
-    assert r[9] == "Worker disconnected"
-    assert r[10] == "Worker event loop closed"
+    assert r[3] == "Worker polling..."
+    assert r[4] == f"{interrupter.name} triggered"
+    assert r[5] == "Worker publisher done"
+    assert r[6] == "Worker unregistered"
+    assert r[7] == f"{interrupter.name} terminated"
+    assert r[8] == "Worker disconnected"
+    assert r[9] == "Worker event loop closed"
 
 
 def test_curve(caplog: pytest.LogCaptureFixture) -> None:
@@ -285,14 +283,13 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     assert r[0] == "Worker publisher ready"
     assert r[1] == f"{interrupter.name} created"
     assert r[2] == "Using CURVE authentication [domain:*]"
-    assert r[3] == "Worker registered"
-    assert r[4] == "Worker polling..."
-    assert r[5] == f"{interrupter.name} triggered"
-    assert r[6] == "Worker publisher done"
-    assert r[7] == "Worker unregistered"
-    assert r[8] == f"{interrupter.name} terminated"
-    assert r[9] == "Worker disconnected"
-    assert r[10] == "Worker event loop closed"
+    assert r[3] == "Worker polling..."
+    assert r[4] == f"{interrupter.name} triggered"
+    assert r[5] == "Worker publisher done"
+    assert r[6] == "Worker unregistered"
+    assert r[7] == f"{interrupter.name} terminated"
+    assert r[8] == "Worker disconnected"
+    assert r[9] == "Worker event loop closed"
 
 
 def test_publish_no_event_loop() -> None:

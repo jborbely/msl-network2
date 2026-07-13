@@ -1,4 +1,4 @@
-"""A Worker handles requests from a Client."""
+"""A Worker handles requests from a Client and publishes messages."""
 
 from __future__ import annotations
 
@@ -343,16 +343,6 @@ class Worker:
         host, port = self._host_port
         _ = self._socket.connect(f"tcp://{host}:{port}")
 
-        # Register the service_name for this Worker with the Broker. DEALER
-        # sockets add messages to a queue and deliver the message when the
-        # destination socket is available. The Broker will receive this
-        # service-name registration now or when the Broker runs later. Sending
-        # this message now does not wait for the Broker to be ready to receive
-        # it and is non-blocking.
-        r = Request(id=0, service=self._service_name, attribute="WORKER_READY", args=[], kwargs={})
-        _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
-        logger.debug("%s registered", self._service_name)
-
         with allow_interrupt(self._interrupter):
             logger.debug("%s polling...", self._service_name)
             while True:
@@ -360,7 +350,10 @@ class Worker:
                 if event.get(self._monitor_socket):
                     m = await recv_monitor_message(self._monitor_socket)
                     if m["event"] == zmq.EVENT_CONNECTED:
+                        r = Request(id=0, service=self._service_name, attribute="WORKER_READY", args=[], kwargs={})
+                        _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                         self.connected.set()
+                        logger.debug("%s registered", self._service_name)
                     elif m["event"] == zmq.EVENT_DISCONNECTED:
                         self.connected.clear()
                     logger.debug("Monitor %r value=%d", m["event"], m["value"])
