@@ -72,8 +72,8 @@ class Worker:
         self._context: Context = Context()
         self._poller: Poller = Poller()
         self._interrupter: Interrupter | None = None
-        self._socket: Socket | None = None
-        self._monitor_socket: Socket | None = None
+        self._dealer: Socket | None = None
+        self._monitor: Socket | None = None
         self._domain: bytes = domain.encode()
         self._curve: AuthCurve | None = curve
         self._plain: AuthPlain | None = plain
@@ -145,19 +145,19 @@ class Worker:
         if self._pub_queue is not None and self._interrupter is not None:
             self._interrupter()
 
-        if self._interrupter is None or self._socket is None or self._monitor_socket is None:
+        if self._interrupter is None or self._dealer is None or self._monitor is None:
             return
 
         self.connected.clear()
-        self._poller.unregister(self._socket)
+        self._poller.unregister(self._dealer)
         self._poller.unregister(self._interrupter.receiver)
-        self._poller.unregister(self._monitor_socket)
+        self._poller.unregister(self._monitor)
         self._interrupter.close()
-        self._socket.disable_monitor()
-        self._socket.close(linger=0)
+        self._dealer.disable_monitor()
+        self._dealer.close(linger=0)
         self._interrupter = None
-        self._socket = None
-        self._monitor_socket = None
+        self._dealer = None
+        self._monitor = None
         logger.debug("%s disconnected", self._service_name)
 
     @contextmanager
@@ -286,11 +286,11 @@ class Worker:
 
     async def _handle_disconnect(self) -> None:
         """Notify the Broker that this Worker is disconnecting."""
-        if self._socket is None:
+        if self._dealer is None:
             return
 
         r = Request(id=0, service=self._service_name, attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
-        _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+        _ = await self._dealer.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
 
     async def _handle_publishing(self) -> None:
@@ -319,78 +319,78 @@ class Worker:
 
     async def _handle_requests(self) -> None:  # noqa: C901, PLR0912, PLR0915
         self._interrupter = Interrupter()
-        self._socket = self._context.socket(zmq.DEALER)
-        self._socket.setsockopt(zmq.ROUTING_ID, self._worker_id)
+        self._dealer = self._context.socket(zmq.DEALER)
+        self._dealer.setsockopt(zmq.ROUTING_ID, self._worker_id)
 
         if self._curve is not None:
-            self._socket.setsockopt(zmq.CURVE_PUBLICKEY, self._curve.public_key)
-            self._socket.setsockopt(zmq.CURVE_SECRETKEY, self._curve.secret_key)
-            self._socket.setsockopt(zmq.CURVE_SERVERKEY, self._curve.broker_key)
-            self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
+            self._dealer.setsockopt(zmq.CURVE_PUBLICKEY, self._curve.public_key)
+            self._dealer.setsockopt(zmq.CURVE_SECRETKEY, self._curve.secret_key)
+            self._dealer.setsockopt(zmq.CURVE_SERVERKEY, self._curve.broker_key)
+            self._dealer.setsockopt(zmq.ZAP_DOMAIN, self._domain)
             logger.debug("Using CURVE authentication [domain:%s]", self._domain.decode())
         elif self._plain is not None:
-            self._socket.setsockopt(zmq.PLAIN_USERNAME, self._plain.username)
-            self._socket.setsockopt(zmq.PLAIN_PASSWORD, self._plain.password)
-            self._socket.setsockopt(zmq.ZAP_DOMAIN, self._domain)
+            self._dealer.setsockopt(zmq.PLAIN_USERNAME, self._plain.username)
+            self._dealer.setsockopt(zmq.PLAIN_PASSWORD, self._plain.password)
+            self._dealer.setsockopt(zmq.ZAP_DOMAIN, self._domain)
             logger.debug("Using PLAIN authentication [domain:%s]", self._domain.decode())
 
-        self._monitor_socket = self._socket.get_monitor_socket()
+        self._monitor = self._dealer.get_monitor_socket()
 
-        self._poller.register(self._socket, zmq.POLLIN)
+        self._poller.register(self._dealer, zmq.POLLIN)
         self._poller.register(self._interrupter.receiver, zmq.POLLIN)
-        self._poller.register(self._monitor_socket, zmq.POLLIN)
+        self._poller.register(self._monitor, zmq.POLLIN)
 
         host, port = self._host_port
-        _ = self._socket.connect(f"tcp://{host}:{port}")
+        _ = self._dealer.connect(f"tcp://{host}:{port}")
 
         with allow_interrupt(self._interrupter):
             logger.debug("%s polling...", self._service_name)
             while True:
                 event = dict(await self._poller.poll())
-                if event.get(self._monitor_socket):
-                    m = await recv_monitor_message(self._monitor_socket)
+                if event.get(self._dealer):
+                    sender_id, message = await self._dealer.recv_multipart()
+                    logger.debug("Request from %r", sender_id)
+
+                    request = Request.from_bytes(message)
+                    if request.attribute.startswith("_"):
+                        result = "PermissionError: Cannot request a private attribute"
+                        response = Response(id=request.id, ok=False, result=result)
+                        _ = await self._dealer.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+                        continue
+
+                    try:
+                        attribute = getattr(self, request.attribute)
+                    except AttributeError as e:
+                        response = Response(id=request.id, ok=False, result=str(e))
+                        _ = await self._dealer.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+                        continue
+
+                    if callable(attribute):
+                        try:
+                            result = attribute(*request.args, **request.kwargs)
+                        except Exception:  # noqa: BLE001
+                            response = Response(id=request.id, ok=False, result=traceback.format_exc())
+                        else:
+                            response = Response(id=request.id, ok=True, result=result)
+                    else:
+                        response = Response(id=request.id, ok=True, result=attribute)
+
+                    _ = await self._dealer.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+
+                elif event.get(self._monitor):
+                    m = await recv_monitor_message(self._monitor)
                     if m["event"] == zmq.EVENT_CONNECTED:
                         r = Request(id=0, service=self._service_name, attribute="WORKER_READY", args=[], kwargs={})
-                        _ = await self._socket.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+                        _ = await self._dealer.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                         self.connected.set()
                         logger.debug("%s registered", self._service_name)
                     elif m["event"] == zmq.EVENT_DISCONNECTED:
                         self.connected.clear()
                     logger.debug("Monitor %r value=%d", m["event"], m["value"])
-                    continue
 
-                if event.get(self._interrupter.receiver):
+                else:  # Interrupter
                     if self._pub_queue is not None:
                         self._pub_queue.put_nowait(b"")
                         await self._pub_queue.join()
                         self._pub_queue = None
                     break
-
-                sender_id, message = await self._socket.recv_multipart()
-                logger.debug("Request from %r", sender_id)
-
-                request = Request.from_bytes(message)
-                if request.attribute.startswith("_"):
-                    result = "PermissionError: Cannot request a private attribute"
-                    response = Response(id=request.id, ok=False, result=result)
-                    _ = await self._socket.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
-                    continue
-
-                try:
-                    attribute = getattr(self, request.attribute)
-                except AttributeError as e:
-                    response = Response(id=request.id, ok=False, result=str(e))
-                    _ = await self._socket.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
-                    continue
-
-                if callable(attribute):
-                    try:
-                        result = attribute(*request.args, **request.kwargs)
-                    except Exception:  # noqa: BLE001
-                        response = Response(id=request.id, ok=False, result=traceback.format_exc())
-                    else:
-                        response = Response(id=request.id, ok=True, result=result)
-                else:
-                    response = Response(id=request.id, ok=True, result=attribute)
-
-                _ = await self._socket.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
