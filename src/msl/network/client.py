@@ -289,6 +289,7 @@ class Link:
     def unlink(self) -> None:
         """Unlink from the service."""
         if self._link_subscriber.interrupter is not None:
+            self.unsubscribe()
             self._link_subscriber.interrupter()
             self._client._links.remove(self)  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
             self._thread.join()
