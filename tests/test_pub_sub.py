@@ -25,7 +25,12 @@ def test_publish(broker: Broker) -> None:
             _ = await self.connected.wait()
             while self.connected.is_set():
                 self.counter += 1
-                self.publish(self.counter)
+                try:
+                    self.publish(self.counter)
+                except RuntimeError:
+                    # ignore race condition between checking if self.connected.is_set() being True
+                    # and the event loop has actually stopped when self.publish() is called
+                    break
                 await asyncio.sleep(0.05)
 
     c = Client(port=port, xpub_port=xpub)
@@ -74,7 +79,12 @@ def test_publish_threadsafe(broker: Broker) -> None:
         def pulse(self) -> None:
             while self.run:
                 self.counter += 1
-                self.publish(self.counter)
+                try:
+                    self.publish(self.counter)
+                except RuntimeError:
+                    # ignore race condition between checking if self.run being True
+                    # and the event loop has actually stopped when self.publish() is called
+                    break
                 sleep(0.05)
 
     c = Client(port=port, xpub_port=xpub)
