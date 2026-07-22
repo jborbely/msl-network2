@@ -235,6 +235,9 @@ class Link:
         )
         self._thread.start()
 
+        while self._link_subscriber.sub_socket is None:
+            continue
+
     def __repr__(self) -> str:  # pyright: ignore[reportImplicitOverride]
         """Returns a string representation of the Link."""
         return f"Link[{self.service_name}]"
@@ -270,11 +273,18 @@ class Link:
             callback: The callback function to receive the published *result*. The callback
                 receives a single argument, the published *result*, and the returned value is ignored.
         """
+        if self._link_subscriber.sub_socket is None:
+            msg = f"Cannot subscribe to {self.service_name!r}, unlinked from the service"
+            raise RuntimeError(msg)
+
+        self._link_subscriber.sub_socket.setsockopt(zmq.SUBSCRIBE, self.service_name.encode())
         self._link_subscriber.callback = callback
 
     def unsubscribe(self) -> None:
         """Unsubscribe from receiving publications from the linked service."""
         self._link_subscriber.callback = None
+        if self._link_subscriber.sub_socket is not None:
+            self._link_subscriber.sub_socket.setsockopt(zmq.UNSUBSCRIBE, self.service_name.encode())
 
     def unlink(self) -> None:
         """Unlink from the service."""
@@ -424,6 +434,7 @@ class _LinkSubscriber:
         self.service_name: str = service_name
         self.endpoint: str = f"tcp://{host}:{xpub_port}"
         self.interrupter: Interrupter | None = None
+        self.sub_socket: Socket | None = None
 
     async def handle_publications(self) -> None:
         """Poll for publications from a Worker."""
@@ -432,32 +443,32 @@ class _LinkSubscriber:
         # For Ctrl+C to work on Windows and to signal the while loop below to break
         self.interrupter = Interrupter()
 
-        sub_socket: Socket = context.socket(zmq.SUB)
-        sub_socket.setsockopt(zmq.SUBSCRIBE, self.service_name.encode())
-        _ = sub_socket.connect(self.endpoint)
+        self.sub_socket = context.socket(zmq.SUB)
+        _ = self.sub_socket.connect(self.endpoint)
 
         # Polls for events on the asyncio event loop
         poller: Poller = Poller()
-        poller.register(sub_socket, zmq.POLLIN)
+        poller.register(self.sub_socket, zmq.POLLIN)
         poller.register(self.interrupter.receiver, zmq.POLLIN)
 
-        logger.debug("Link[%s] polling...", self.service_name)
+        logger.debug("Link[%s] publication polling...", self.service_name)
         while True:
             event = dict(await poller.poll())
-            if event.get(sub_socket):  # Publication received
-                _, data = await sub_socket.recv_multipart()
+            if event.get(self.sub_socket):  # Publication received
+                _, data = await self.sub_socket.recv_multipart()
                 if self.callback is not None:
                     self.callback(Response.from_bytes(data).result)
             else:  # Interrupter
                 break
 
-        poller.unregister(sub_socket)
+        poller.unregister(self.sub_socket)
         poller.unregister(self.interrupter.receiver)
-        sub_socket.close(linger=0)
+        self.sub_socket.close(linger=0)
         self.interrupter.close()
         self.interrupter = None
+        self.sub_socket = None
         context.destroy()
-        logger.debug("Link[%s] stopped polling", self.service_name)
+        logger.debug("Link[%s] stopped publication polling", self.service_name)
 
 
 async def _create_async_client(

@@ -5,6 +5,8 @@ from threading import Thread
 from time import sleep
 from typing import TYPE_CHECKING
 
+import pytest
+
 from msl.network import Client, Worker
 
 if TYPE_CHECKING:
@@ -54,6 +56,10 @@ def test_publish(broker: Broker) -> None:
     thread.join()
 
     assert len(pulses) > 5
+
+    with pytest.raises(RuntimeError, match=r"Cannot subscribe to 'Heartbeat', unlinked from the service"):
+        link.subscribe(append_pulse)
+    link.unsubscribe()
 
 
 def test_publish_threadsafe(broker: Broker) -> None:
