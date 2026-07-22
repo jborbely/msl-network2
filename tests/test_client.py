@@ -2,16 +2,19 @@
 from __future__ import annotations
 
 import logging
+import sys
 import time
+import typing
 from concurrent import futures
-from typing import TYPE_CHECKING
+from threading import Thread
+from time import sleep
 
 import pytest
 import zmq
 
-from msl.network import AuthCurve, AuthPlain, Client, Flag
+from msl.network import AuthCurve, AuthPlain, Client, Flag, Worker
 
-if TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from conftest import Broker
 
 
@@ -169,3 +172,58 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     assert r[3] == f"{interrupter_name} triggered"
     assert r[4] == f"{interrupter_name} terminated"
     assert r[5] == f"{c} disconnected"
+
+
+def test_link_echo(broker: Broker) -> None:
+    port, xpub, xsub = broker.run()
+
+    class Echo(Worker):
+        def echo(self, *args: typing.Any, **kwargs: typing.Any) -> tuple[tuple[typing.Any, ...], dict[str, typing.Any]]:
+            return args, kwargs
+
+    e = Echo(port=port, xsub_port=xsub)
+    thread = Thread(target=e.connect, daemon=True)
+    thread.start()
+
+    sleep(0.1)
+
+    c = Client(port=port, xpub_port=xpub)
+    link = c.link("Echo")
+
+    assert c.services() == ["Echo"]
+
+    # Synchronous (sync=True by default)
+    reply = link.echo(1, None, b"data", 8.654e3, 3 + 8j, [1, "2"], {"a": 0}, one=1, complexer=8j, whatever="text")
+    assert reply == (
+        (1, None, b"data", 8.654e3, 3 + 8j, [1, "2"], {"a": 0}),
+        {"one": 1, "complexer": 8j, "whatever": "text"},
+    )
+    if sys.version_info >= (3, 11):
+        typing.assert_type(reply, typing.Any)
+
+    # Synchronous (sync=True explicit)
+    reply2 = link.echo(
+        1, None, b"data", 8.654e3, 3 + 8j, [1, "2"], {"a": 0}, one=1, complexer=8j, sync=True, whatever="text"
+    )
+    assert reply2 == (
+        (1, None, b"data", 8.654e3, 3 + 8j, [1, "2"], {"a": 0}),
+        {"one": 1, "complexer": 8j, "whatever": "text"},
+    )
+    if sys.version_info >= (3, 11):
+        typing.assert_type(reply2, typing.Any)
+
+    # Asynchronous (sync=False explicit)
+    future = link.echo(
+        1, None, b"data", 8.654e3, 3 + 8j, [1, "2"], {"a": 0}, one=1, complexer=8j, whatever="text", sync=False
+    )
+    assert future.result() == (
+        (1, None, b"data", 8.654e3, 3 + 8j, [1, "2"], {"a": 0}),
+        {"one": 1, "complexer": 8j, "whatever": "text"},
+    )
+    if sys.version_info >= (3, 11):
+        _ = typing.assert_type(future, futures.Future[typing.Any])
+
+    c.disconnect()
+    e.disconnect()
+    broker.stop()
+    thread.join()

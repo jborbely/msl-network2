@@ -24,12 +24,8 @@ def add_parser_start(parser: _SubParsersAction[ArgumentParser]) -> None:
     """Add the `start` command to the `parser`."""
     p = parser.add_parser(
         "start",
-        help="Start the broker.",
-        description=(
-            "Start a broker that allows for multiple clients and services to connect to it and "
-            "it links a client's request to the appropriate service to handle the "
-            "request and then sends the response from the service back to the client."
-        ),
+        help="Start the Broker as a message proxy.",
+        description="Start the Broker as a message proxy.",
     )
     _ = p.add_argument(
         "--auth-curve",
@@ -38,20 +34,21 @@ def add_parser_start(parser: _SubParsersAction[ArgumentParser]) -> None:
         metavar="KEYS_DIR",
         help=(
             "Use authentication based on public and private CURVE keys. Specifying a value "
-            "after this flag will use the files in the specified directory to load the key "
-            "files. Specifying this flag without a value will use the default directory. "
+            "after this flag will use the specified directory to load the key files. "
+            "Specifying this flag without a value will use default directories. "
             "See `msl-network curve` for more details."
         ),
     )
     _ = p.add_argument(
         "--auth-curve-allow-any",
         action="store_true",
-        help="Allow CURVE keys from any device. Enabled by default if no *.key files are found.",
+        help="Allow CURVE keys from any device. Enabled by default if no public key files are found.",
     )
     _ = p.add_argument(
         "--auth-domain",
         default="*",
-        help="The domain to use for PLAIN and CURVE authentication. Default is '*'.",
+        metavar="DOMAIN",
+        help="The domain to use for PLAIN or CURVE authentication. Default is '*'.",
     )
     _ = p.add_argument(
         "--auth-device",
@@ -59,7 +56,7 @@ def add_parser_start(parser: _SubParsersAction[ArgumentParser]) -> None:
         metavar="DEVICE",
         help=(
             "Use authentication based on the IP address (or hostname) of devices that are "
-            "allowed to connect. Specifying this flag without one or more values will use the"
+            "allowed to connect. Specifying this flag without one or more values will use the "
             "values stored in the default file. See `msl-network device` for more details."
         ),
     )

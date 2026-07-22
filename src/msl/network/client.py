@@ -65,7 +65,7 @@ class Client:
                 Typically, this value is `port + 1` and does not need to be specified.
         """
         self.flag: Flag = flag
-        """The serialisation and compression algorithms to apply to a request before sending the byte stream."""
+        """The serialisation and compression algorithms to apply to a request before sending the message."""
 
         self._host_port: tuple[str, int] = (host, port)
         self._xpub_port: int = xpub_port or port + 1  # Link connects via SUBscribe: SUB -> XPUB
@@ -109,7 +109,7 @@ class Client:
         """Returns the string representation with only the ID."""
         return f"{self.__class__.__name__}[{self._id}]"
 
-    def _create_future(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
+    def _request(self, service_name: str, attr: str, *args: Any, **kwargs: Any) -> Future[Any]:
         if self._async_client is None:
             msg = "Event loop not running, cannot send request"
             raise RuntimeError(msg)
@@ -182,6 +182,9 @@ class Client:
 
         Args:
             service_name: The name of a service to create a [Link][msl.network.client.Link] with.
+
+        Returns:
+            The [Link][msl.network.client.Link] instance.
         """
         link = Link(self, service_name)
         self._links.append(link)
@@ -195,18 +198,23 @@ class Client:
                 If `None`, there is no limit on the wait time.
 
         Returns:
-            The names of the services that are available to be [Link][msl.network.client.Link]ed with.
+            The names of the services that are available to be [link][..link]ed with.
         """
-        return sorted(self._create_future("Broker", "SERVICES").result(timeout))
+        return sorted(self._request("Broker", "SERVICES").result(timeout))
 
 
 class Link:
     """A link with a service."""
 
     def __init__(self, client: Client, service_name: str) -> None:
-        """A link with a service."""
+        """A link with a service.
+
+        !!! warning
+            Do not instantiate directly. Use the [link][Client.link] method
+            to create a [Link][] instance.
+        """
         self.flag_at: Callable[[Flag], AbstractContextManager[None]] = client.flag_at
-        """Reference to [flag_at][msl.network.client.Client.flag_at]."""
+        """Reference to [flag_at][Client.flag_at]."""
 
         self.service_name: str = service_name
         """[str][] &mdash; The name of the service that the link is with."""
@@ -217,7 +225,7 @@ class Link:
         The value is always `None` for new links, which means that there is no limit on the wait time.
         """
 
-        self._create_future: Callable[[str, str, Any, Any], Future[Any]] = client._create_future  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        self._request: Callable[[str, str, Any, Any], Future[Any]] = client._request  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
         host, _ = client._host_port  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
         self._link_subscriber: _LinkSubscriber = _LinkSubscriber(service_name, host, client._xpub_port)  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
         self._client: Client = client
@@ -232,11 +240,23 @@ class Link:
         return f"Link[{self.service_name}]"
 
     def __getattr__(self, attr: str) -> FutureOrResult:
-        """Send a request to the linked service."""
+        """All undefined attributes are sent to the linked service to process.
+
+        The internal wrapper function that is returned is essentially
+
+        ```python
+        def wrapper(*args: Any, sync: bool = True, **kwargs: Any) -> Any | Future[Any]:
+            future = request(self.service_name, attr, *args, **kwargs)
+            if sync:
+                return future.result(self.timeout)
+            return future
+        return wrapper
+        ```
+        """
 
         def wrapper(*args: Any, sync: bool = True, **kwargs: Any) -> Any | Future[Any]:
             """Returns the result, if `sync=True`, otherwise a future that will eventually contain the result."""
-            future = self._create_future(self.service_name, attr, *args, **kwargs)
+            future = self._request(self.service_name, attr, *args, **kwargs)
             if sync:
                 return future.result(self.timeout)
             return future

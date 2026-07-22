@@ -19,8 +19,8 @@ def add_parser_plain(parser: _SubParsersAction[ArgumentParser]) -> None:
     """Add the `plain` command to the `parser`."""
     p = parser.add_parser(
         "plain",
-        help="Edit username:password for PLAIN authentication.",
-        description="Edit username:password for PLAIN authentication.",
+        help="Edit usernames and passwords for PLAIN authentication.",
+        description="Edit usernames and passwords for PLAIN authentication.",
     )
     _ = p.add_argument("action", choices=["add", "remove", "reset", "list"], help="The action to perform.")
     _ = p.add_argument("-u", "--username", help="The username to action.")

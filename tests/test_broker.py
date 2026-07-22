@@ -97,7 +97,7 @@ def test_session(broker: Broker) -> None:
         _ = link.add(1, 2)
 
     with pytest.raises(RuntimeError, match=r"Unsupported broker request: 'WHATEVER'"):
-        _ = client._create_future("Broker", "WHATEVER").result()  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        _ = client._request("Broker", "WHATEVER").result()  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
 
     client.disconnect()
 

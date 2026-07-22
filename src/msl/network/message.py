@@ -106,12 +106,12 @@ class Response(NamedTuple):
 class Flag(IntFlag):
     """Message flags for compression and serialisation.
 
-    You may use a single flag or take a bitwise union of one (de)serialisation
-    flag with one (de)compression flag, e.g.,
+    You may use a single flag or take a bitwise union of one serialisation
+    flag with one compression flag, e.g.,
 
-    * `Flag.JSON` &mdash; JSON (de)serialisation, no (de)compression
-    * `Flag.ZLIB` &mdash; No (de)serialisation, ZLIB (de)compression
-    * `Flag.PICKLE | Flag.ZSTD` &mdash; Pickle (de)serialisation, ZSTD (de)compression
+    * `Flag.JSON` &mdash; JSON serialisation, no compression
+    * `Flag.ZLIB` &mdash; No serialisation, ZLIB compression
+    * `Flag.PICKLE | Flag.ZSTD` &mdash; Pickle serialisation, ZSTD compression
 
     A [KeyError][] will be raised when you use a flag that is a union of more than
     one serialisation flag or more than one compression flag when a *request* or a
@@ -120,16 +120,16 @@ class Flag(IntFlag):
     Attributes:
         NONE (int): Do not apply (de)serialisation nor (de)compression. This flag
             is only useful if a method of a [Worker][msl.network.worker.Worker]
-            returns an object that supports the [buffer protocol][buffer-protocol].
+            returns an object that supports the [buffer protocol][bufferobjects].
             As such, this flag is only applicable for a *response* and cannot be
             used for a *request*.
-        BZ2 (int): bz2 (de)compression using the [bz2][module-bz2] module.
-        LZMA (int): lzma (de)compression using the [lzma][module-lzma] module.
-        ZLIB (int): zlib (de)compression using the [zlib][module-zlib] module.
-        ZSTD (int): zstd (de)compression using the [zstd][module-compression.zstd] module.
+        BZ2 (int): (De)compression using the [bz2][] module.
+        LZMA (int): (De)compression using the [lzma][] module.
+        ZLIB (int): (De)compression using the [zlib][] module.
+        ZSTD (int): (De)compression using the [zstd][compression.zstd] module.
         PICKLE (int): (De)serialisation using the [pickle][] module.
         JSON (int): (De)serialisation using the builtin [json][] module.
-        ORJSON (int): (De)serialisation using the [orjson][https://pypi.org/project/orjson/]
+        ORJSON (int): (De)serialisation using the [orjson](https://pypi.org/project/orjson/)
             package. Includes the option `OPT_SERIALIZE_NUMPY` when serialising.
     """
 

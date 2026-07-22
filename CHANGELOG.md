@@ -7,8 +7,8 @@
 ***Added:***
 
 - support for Python 3.12, 3.13 and 3.14
-- the [Service.request][msl.network.service.Service.request] property
-- `loads_kwargs` and `dumps_kwargs` keyword arguments to [use][msl.network.json.use]
+- the `Service.request` property
+- `loads_kwargs` and `dumps_kwargs` keyword arguments to `msl.network.json.use`
 
 ***Fixed:***
 
@@ -22,46 +22,46 @@
 
 ***Added:***
 
-- a [Link][msl.network.client.Link] can create an exclusive or shared lock with a [Service][msl.network.service.Service]
-- add [service_max_clients][msl.network.client.Link.service_max_clients] property to a [Link][msl.network.client.Link] and [LinkedClient][msl.network.client.LinkedClient]
-- the [loop_thread_id][msl.network.network.Device.loop_thread_id] property for a [Service][msl.network.service.Service] and a [Client][msl.network.client.Client]
-- the [emit_notification_threadsafe][msl.network.service.Service.emit_notification_threadsafe] method for a [Service][msl.network.service.Service]
-- ability to specify the `host` to use when starting a [Manager][msl.network.manager.Manager]
+- a `Link` can create an exclusive or shared lock with a `Service`
+- add `service_max_clients` property to a `Link` and `LinkedClient`
+- the `loop_thread_id` property for a `Service` and a `Client`
+- the `emit_notification_threadsafe` method for a `Service`
+- ability to specify the `host` to use when starting a `Manager`
 - support for Python 3.9, 3.10 and 3.11
-- [set_logging_level][msl.network.network.Network.set_logging_level] to be able to set the logging level at runtime
-- ability to add tasks to the event loop via the [add_tasks][msl.network.network.Device.add_tasks] method
-- the [shutdown_handler][msl.network.network.Device.shutdown_handler] method is called after the connection to the [Manager][msl.network.manager.Manager] is lost but before the event loop stops
-- ability to use all [Database][msl.network.database.Database] classes as a context manager (i.e., using the `with` statement)
+- `set_logging_level` to be able to set the logging level at runtime
+- ability to add tasks to the event loop via the `Device.add_tasks` method
+- the `Device.shutdown_handler` method is called after the connection to the `Manager` is lost but before the event loop stops
+- ability to use all `Database` classes as a context manager (i.e., using the `with` statement)
 - the `--log-level` flag to the `start` command
 - the `delete` command-line argument to delete files that are created by msl-network
-- [orjson](https://pypi.org/project/orjson/) as a JSON backend to [Package][msl.network.json.Package]
-- `JSON`, `UJSON`, `RAPIDJSON` and `SIMPLEJSON` are aliases for the JSON backends in [Package][msl.network.json.Package]
-- the `read_limit` keyword arguments to [connect][msl.network.client.connect] and [start][msl.network.service.Service.start]
-- the `auto_save` keyword argument to [connect][msl.network.client.connect] and [get_ssl_context][msl.network.cryptography.get_ssl_context]
-- the `digest_size` keyword argument to [generate_certificate][msl.network.cryptography.generate_certificate] and [get_fingerprint][msl.network.cryptography.get_fingerprint]
-- the `name` and `extensions` keyword arguments to [generate_certificate][msl.network.cryptography.generate_certificate]
-- `**kwargs` to [get_ssl_context][msl.network.cryptography.get_ssl_context]
+- [orjson](https://pypi.org/project/orjson/) as a JSON backend to `Package`
+- `JSON`, `UJSON`, `RAPIDJSON` and `SIMPLEJSON` are aliases for the JSON backends in `Package`
+- the `read_limit` keyword arguments to `connect` and `start`
+- the `auto_save` keyword argument to `connect` and `get_ssl_context`
+- the `digest_size` keyword argument to `generate_certificate` and `get_fingerprint`
+- the `name` and `extensions` keyword arguments to `generate_certificate`
+- `**kwargs` to `get_ssl_context`
 
 ***Changed:***
 
-- the `result` object that is returned by a [Service][msl.network.service.Service] response can implement a callable `to_json()` method
-- the value of the `algorithm` keyword argument in [get_fingerprint][msl.network.cryptography.get_fingerprint] can now also be of type [str][]
+- the `result` object that is returned by a `Service` response can implement a callable `to_json()` method
+- the value of the `algorithm` keyword argument in `get_fingerprint` can now be of type [str][]
 - renamed `uuid` to be `uid` in the JSON format
-- making an asynchronous request now returns a [Future][concurrent.futures.Future] instance instead of an [Future][asyncio.Future] instance
-- [Client][msl.network.client.Client] and [Service][msl.network.service.Service] are subclasses of [Device][msl.network.network.Device]
-- move the `utils.localhost_aliases` function to be defined as [LOCALHOST_ALIASES][msl.network.constants.LOCALHOST_ALIASES]
-- renamed the `Client.manager` method to [identities][msl.network.client.Client.identities]
-- renamed `certfile` to `cert_file` in [connect][msl.network.client.connect], [start][msl.network.service.Service.start] and [get_ssl_context][msl.network.cryptography.get_ssl_context]
-- can now change which JSON backend to use during runtime by calling the [use][msl.network.json.use] function
-- moved the `msl.network.constants.JSONPackage` class to [Package][msl.network.json.Package]
+- making an asynchronous request now returns a [concurrent.futures.Future][] instance instead of an [asyncio.Future][] instance
+- `Client` and `Service` are subclasses of `Device`
+- move the `utils.localhost_aliases` function to be defined as `LOCALHOST_ALIASES`
+- renamed the `Client.manager` method to `Client.identities`
+- renamed `certfile` to `cert_file` in `connect`, `start` and `get_ssl_context`
+- can now change which JSON backend to use during runtime by calling the `msl.network.json.use` function
+- moved the `msl.network.constants.JSONPackage` class to `Package`
 - renamed the command line arguments `--certfile` to `--cert-file`, `--keyfile` to `--key-file`, `--keyfile-password` to `--key-file-password`, and `--logfile` to `--log-file` for the `start` command
-- use `T` as the separator between the date and time in a [ConnectionsTable][msl.network.database.ConnectionsTable]
-- rename the keyword arguments `timestamp1` to `start` and `timestamp2` to `end` in [connections][msl.network.database.ConnectionsTable.connections]
+- use `T` as the separator between the date and time in a `ConnectionsTable`
+- rename the keyword arguments `timestamp1` to `start` and `timestamp2` to `end` in `ConnectionsTable.connections`
 - the default filename for the certificate and key files now use `'localhost'` instead of the value of `HOSTNAME`
 
 ***Fixed:***
 
-- an `AttributeError` could be raised when generating the identity of a [Service][msl.network.service.Service]
+- an `AttributeError` could be raised when generating the identity of a `Service`
 - can now handle multiple requests/replies contained within the same network packet
 
 ***Removed:***
@@ -69,8 +69,8 @@
 - support for Python 3.5
 - the `MSLNetworkError` exception class (a [RuntimeError][] is raised instead)
 - the `Service.set_debug` method
-- the `termination` and `encoding` class attributes of [Network][msl.network.network.Network]
-- the `send_pending_requests`, `raise_latest_error` and `wait` methods of a [Client][msl.network.client.Client]
+- the `termination` and `encoding` class attributes of `Network`
+- the `send_pending_requests`, `raise_latest_error` and `wait` methods of a `Client`
 - the `--debug` flag from the `start` command
 - the `utils.new_selector_event_loop` function
 - the `constants.JSON` attribute

@@ -33,10 +33,10 @@ def load_certificate(path: PathLike) -> tuple[bytes, bytes | None]:
 
 
 class AuthPlain:
-    """PLAIN authentication credentials to connect to a [Broker][]."""
+    """[PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials to connect to a [Broker][]."""
 
     def __init__(self, username: str | bytes, password: str | bytes) -> None:
-        """PLAIN authentication credentials to connect to a [Broker][].
+        """[PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials to connect to a [Broker][].
 
         Args:
             username: The username registered with the [Broker][].
@@ -47,7 +47,7 @@ class AuthPlain:
 
     @staticmethod
     def load(path: PathLike | None = None, sep: str | None = None) -> AuthPlain:
-        """Load PLAIN authentication credentials from a file.
+        """Load [PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials from a file.
 
         Args:
             path: The path to load the credentials from. If the path has the `.json`
@@ -58,7 +58,7 @@ class AuthPlain:
                 first line in the file to get the `username, password` value.
 
         Returns:
-            The PLAIN credentials.
+            The [PLAIN](https://rfc.zeromq.org/spec/24/) credentials.
         """
         default = MSL_NETWORK_HOME / "plain.json"
         file = default if path is None else Path(os.fsdecode(path))
@@ -94,10 +94,10 @@ class AuthPlain:
 
 
 class AuthCurve:
-    """CURVE authentication credentials to connect to a [Broker][]."""
+    """[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][]."""
 
     def __init__(self, public_key: bytes, secret_key: bytes, broker_key: bytes) -> None:
-        """CURVE authentication credentials to connect to a [Broker][].
+        """[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].
 
         Args:
             public_key: The public key of the [Client][] or [Worker][].
@@ -110,7 +110,7 @@ class AuthCurve:
 
     @staticmethod
     def load(broker: PathLike, own: PathLike | None = None) -> AuthCurve:
-        """Load CURVE authentication credentials from files.
+        """Load [CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials from files.
 
         Args:
             broker: The path to the file that contains the [Broker][]'s public key.
@@ -119,7 +119,7 @@ class AuthCurve:
                 credentials that were created by running the `msl-network curve` command.
 
         Returns:
-            The CURVE credentials.
+            The [CURVE](https://rfc.zeromq.org/spec/26/) credentials.
         """
         broker_public, _ = load_certificate(broker)
 

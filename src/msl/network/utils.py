@@ -19,13 +19,13 @@ if TYPE_CHECKING:
     from typing import Any, Final
 
 
-logger: Final[Logger] = logging.getLogger(__package__)
+logger: Final[Logger] = logging.getLogger("msl.network")
 
 BROKER_PORT: Final[int] = 1875
 
 USER_DIR: Final[Path] = Path("~" + os.getenv("SUDO_USER", "")).expanduser()
 
-MSL_NETWORK_HOME: Final[Path] = Path(os.getenv("MSL_NETWORK_HOME", default=USER_DIR / ".msl" / "network"))
+MSL_NETWORK_HOME: Final[Path] = Path(os.getenv("MSL_NETWORK_HOME", USER_DIR / ".msl" / "network"))
 
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 

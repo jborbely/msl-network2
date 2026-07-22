@@ -46,7 +46,7 @@ class Worker:
 
         Args:
             name: The name of the service that a [Client][msl.network.client.Client] would use
-                to [Link][msl.network.client.Link] with the [Worker][msl.network.client.Worker].
+                to [link][msl.network.client.Client.link] with the [Worker][msl.network.worker.Worker].
                 If not specified, the class name is used.
             host: The hostname (or IP address) that the [Broker][] is running on.
             port: The network port that the [Broker][] is running on.
@@ -59,8 +59,7 @@ class Worker:
             xsub_port: The port on the [Broker][] that is subscribed to publications.
                 Typically, this value is `port + 2` and does not need to be specified.
             ignore_attributes: The names of the attributes to not include in the
-                [signatures][msl.network.worker.Worker.signatures]. See
-                [ignore_attributes][msl.network.worker.Worker.ignore_attributes]
+                [signatures][..signatures]. See [ignore_attributes][..ignore_attributes]
                 for more details.
         """
         self.flag: Flag = flag
@@ -117,12 +116,10 @@ class Worker:
         self._context.destroy(linger=0)
 
     def add_tasks(self, *aws: Awaitable[None]) -> None:
-        """Additional tasks to run in the event loop.
-
-        !!! note "Added in version 1.0"
+        """Add tasks to run in the [event loop][asyncio-event-loop].
 
         Args:
-            aws: Awaitables that will run in the event loop.
+            aws: Awaitables that will run in the [event loop][asyncio-event-loop].
         """
         self._tasks.extend(aws)
 
@@ -138,10 +135,7 @@ class Worker:
             logger.debug("%s event loop closed", self._service_name)
 
     def disconnect(self) -> None:
-        """Disconnect from the [Broker][].
-
-        Unregister from the poller, close the interrupter and close the socket.
-        """
+        """Disconnect from the [Broker][]."""
         if self._pub_queue is not None and self._interrupter is not None:
             self._interrupter()
 
@@ -203,24 +197,22 @@ class Worker:
             self.flag = original
 
     def ignore_attributes(self, *names: str) -> None:
-        """Ignore attributes from being added to the [signature][msl.network.worker.Worker.signatures].
+        """Ignore attributes from being added to the [signature][..signatures].
 
         There are a few reasons why you may want to call this method:
 
         * If you see warnings that the signature of an attribute cannot be found and you
-          prefer not to see the warnings.
+          prefer not to see the warnings (primarily results from multiple inheritance).
         * If you do not want an attribute to be made publicly known that it exists; however,
           a [Client][msl.network.client.Client] can still access ignored attributes.
 
         Private attributes (i.e., attributes that start with an underscore) are automatically
         ignored and cannot be accessed from a [Client][msl.network.client.Client] on the network.
 
-        If you want to ignore any attributes then you must call this method before calling
-        [connect][msl.network.worker.Worker.connect].
+        If you want to ignore attributes, you must call this method before calling [connect][..connect].
 
         Args:
-            names: The names of the attributes to exclude from the
-                [signatures][msl.network.worker.Worker.signatures] map.
+            names: The names of the attributes to exclude from the [signatures][..signatures] map.
         """
         self._ignore_attributes.update(names)
 
