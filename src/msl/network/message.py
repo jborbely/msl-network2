@@ -65,8 +65,8 @@ class Request(NamedTuple):
     def from_bytes(cls, data: bytes) -> Request:
         """Create a request from bytes."""
         (flag,) = unpack("<H", data[:2])
-        data = decompress[flag & DECOMPRESS](data[2:])
-        return Request(*deserialize[flag & DESERIALIZE](data))
+        data = decompress[flag & DECOMPRESS](data[2:])  # pyright: ignore[reportArgumentType]
+        return Request(*deserialize[flag & DESERIALIZE](data))  # pyright: ignore[reportArgumentType]
 
 
 class Response(NamedTuple):
@@ -99,8 +99,8 @@ class Response(NamedTuple):
     def from_bytes(cls, data: bytes) -> Response:
         """Create a response from bytes."""
         flag, _id, ok = unpack("<HQ?", data[:11])
-        data = decompress[flag & DECOMPRESS](data[11:])
-        return Response(id=_id, ok=ok, result=deserialize[flag & DESERIALIZE](data))
+        data = decompress[flag & DECOMPRESS](data[11:])  # pyright: ignore[reportArgumentType]
+        return Response(id=_id, ok=ok, result=deserialize[flag & DESERIALIZE](data))  # pyright: ignore[reportArgumentType]
 
 
 class Flag(IntFlag):
