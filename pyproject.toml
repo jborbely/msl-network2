@@ -182,6 +182,7 @@ ignore = [
     "COM812", # missing-trailing-comma
     "ISC001", # single-line-implicit-string-concatenation
     "ANN401", # any-type
+    "CPY001", # missing-copyright-notice
 ]
 
 [tool.ruff.lint.per-file-ignores]
