@@ -56,4 +56,16 @@
          <loc>https://github.com/MSLNZ/msl-network/dev/cli/start/</loc>
          <lastmod>2026-08-25</lastmod>
     </url>
+    <url>
+         <loc>https://github.com/MSLNZ/msl-network/dev/examples/</loc>
+         <lastmod>2026-08-25</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/MSLNZ/msl-network/dev/examples/echo/</loc>
+         <lastmod>2026-08-25</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/MSLNZ/msl-network/dev/examples/heartbeat/</loc>
+         <lastmod>2026-08-25</lastmod>
+    </url>
 </urlset>

@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://github.com/MSLNZ/msl-network/dev/install/">
+        <link rel="canonical" href="https://github.com/MSLNZ/msl-network/dev/examples/heartbeat/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../echo/">
       
       
-        <link rel="next" href="../release-notes/">
+        <link rel="next" href="../../api/client/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.ico">
+      <link rel="icon" href="../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Install - MSL-Network</title>
+        <title>Heartbeat - MSL-Network</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,11 +53,11 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#install" class="md-skip">
+        <a href="#heartbeat" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="MSL-Network" class="md-header__button md-logo" aria-label="MSL-Network" data-md-component="logo">
+    <a href="../.." title="MSL-Network" class="md-header__button md-logo" aria-label="MSL-Network" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -122,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Install
+              Heartbeat
             
           </span>
         </div>
@@ -237,13 +237,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href=".." class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
           
   
   
@@ -261,11 +259,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../examples/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -287,7 +287,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../api/client/" class="md-tabs__link">
+        <a href="../../api/client/" class="md-tabs__link">
           
   
   
@@ -309,7 +309,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../cli/curve/" class="md-tabs__link">
+        <a href="../../cli/curve/" class="md-tabs__link">
           
   
   
@@ -351,7 +351,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="MSL-Network" class="md-nav__button md-logo" aria-label="MSL-Network" data-md-component="logo">
+    <a href="../.." title="MSL-Network" class="md-nav__button md-logo" aria-label="MSL-Network" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -378,8 +378,6 @@
       
   
   
-    
-  
   
   
     
@@ -399,21 +397,18 @@
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href=".." class="md-nav__link ">
+            <a href="../.." class="md-nav__link ">
               
   
   
@@ -431,13 +426,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="">
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -454,37 +449,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Install
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
         
   
   
@@ -500,37 +468,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dependencies
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -543,7 +480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../release-notes/" class="md-nav__link">
+      <a href="../../release-notes/" class="md-nav__link">
         
   
   
@@ -571,7 +508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../license/" class="md-nav__link">
+      <a href="../../license/" class="md-nav__link">
         
   
   
@@ -603,6 +540,8 @@
       
   
   
+    
+  
   
   
     
@@ -620,18 +559,21 @@
     
     
       
+        
+        
+      
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../examples/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -649,13 +591,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -675,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/echo/" class="md-nav__link">
+      <a href="../echo/" class="md-nav__link">
         
   
   
@@ -700,10 +642,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../examples/heartbeat/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heartbeat
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -719,6 +688,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#heartbeat-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start the Broker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heartbeat-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start the Heartbeat service
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heartbeat-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the Client
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -802,7 +824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/client/" class="md-nav__link">
+      <a href="../../api/client/" class="md-nav__link">
         
   
   
@@ -830,7 +852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/message/" class="md-nav__link">
+      <a href="../../api/message/" class="md-nav__link">
         
   
   
@@ -858,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/link/" class="md-nav__link">
+      <a href="../../api/link/" class="md-nav__link">
         
   
   
@@ -886,7 +908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/worker/" class="md-nav__link">
+      <a href="../../api/worker/" class="md-nav__link">
         
   
   
@@ -914,7 +936,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/auth/" class="md-nav__link">
+      <a href="../../api/auth/" class="md-nav__link">
         
   
   
@@ -942,7 +964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/typing/" class="md-nav__link">
+      <a href="../../api/typing/" class="md-nav__link">
         
   
   
@@ -1037,7 +1059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli/curve/" class="md-nav__link">
+      <a href="../../cli/curve/" class="md-nav__link">
         
   
   
@@ -1065,7 +1087,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli/device/" class="md-nav__link">
+      <a href="../../cli/device/" class="md-nav__link">
         
   
   
@@ -1093,7 +1115,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli/plain/" class="md-nav__link">
+      <a href="../../cli/plain/" class="md-nav__link">
         
   
   
@@ -1121,7 +1143,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli/start/" class="md-nav__link">
+      <a href="../../cli/start/" class="md-nav__link">
         
   
   
@@ -1176,10 +1198,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
+  <a href="#heartbeat-broker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dependencies
+        Start the Broker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heartbeat-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start the Heartbeat service
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heartbeat-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the Client
       
     </span>
   </a>
@@ -1206,33 +1250,93 @@
   
 
 
-<h1 id="install">Install<a class="headerlink" href="#install" title="Permanent link">¤</a></h1>
-<p><code>msl-network</code> is available for installation via the <a href="https://pypi.org/project/msl-network/" target="_blank">Python Package Index</a>. It can be installed using a variety of package managers.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">pip</label><label for="__tabbed_1_2">uv</label><label for="__tabbed_1_3">poetry</label><label for="__tabbed_1_4">pdm</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="go">pip install msl-network</span>
+<h1 id="heartbeat">Heartbeat<a class="headerlink" href="#heartbeat" title="Permanent link">¤</a></h1>
+<p>Example service that publishes data to all subscribed Clients.</p>
+<p>This example also shows how to add a task to the event loop of the service.</p>
+<!-- fmt: off -->
+<div class="highlight"><pre><span></span><code><span class="sd">"""Example service that publishes data to all subscribed Clients.</span>
+
+<span class="sd">This example also shows how to add a task to the event loop of the service.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Worker</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Heartbeat</span><span class="p">(</span><span class="n">Worker</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A service that publishes a counter value."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A service that publishes a counter value."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sleep</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Reset the heartbeat counter."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_heart_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beats_per_second</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Change the rate that the value of the counter is published."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sleep</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">beats_per_second</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""This coroutine is also run in the event loop."""</span>
+        <span class="c1"># Wait for the connection to the Broker to be established</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># Loop while connected to the Broker</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_counter</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sleep</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">heartbeat</span> <span class="o">=</span> <span class="n">Heartbeat</span><span class="p">()</span>
+
+    <span class="c1"># Add a task to the event loop of the service</span>
+    <span class="n">heartbeat</span><span class="o">.</span><span class="n">add_tasks</span><span class="p">(</span><span class="n">heartbeat</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+
+    <span class="c1"># Connect the service to the Broker</span>
+    <span class="n">heartbeat</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 </code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="go">uv add msl-network</span>
+<!-- fmt: on -->
+
+<h2 id="heartbeat-broker">Start the <code>Broker</code><a class="headerlink" href="#heartbeat-broker" title="Permanent link">¤</a></h2>
+<p>Start the Broker by running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
 </code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="go">poetry add msl-network</span>
+<h2 id="heartbeat-connect">Start the <code>Heartbeat</code> service<a class="headerlink" href="#heartbeat-connect" title="Permanent link">¤</a></h2>
+<p>Open another terminal and start the service running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Heartbeat; h = Heartbeat(); h.add_tasks(h.emit()); h.connect()"</span>
 </code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="go">pdm add msl-network</span>
+<h2 id="heartbeat-client">Run the <code>Client</code><a class="headerlink" href="#heartbeat-client" title="Permanent link">¤</a></h2>
+<p>Connect to the Manager as a Client, link with the Heartbeat service, handle publications from the service and also send requests to the service.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">heartbeat_handler</span><span class="p">(</span><span class="n">counter</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Handles published data from the Heartbeat service</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Heartbeat </span><span class="si">{</span><span class="n">counter</span><span class="si">=}</span><span class="s2"> (Press ENTER to perform the next task)"</span><span class="p">)</span>
+
+
+<span class="k">with</span> <span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Heartbeat"</span><span class="p">)</span>
+    <span class="n">link</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">heartbeat_handler</span><span class="p">)</span>
+
+    <span class="c1"># Wait until ENTER is pressed to reset the counter</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+    <span class="n">link</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="c1"># Wait until ENTER is pressed to change the rate that data is published</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+    <span class="n">link</span><span class="o">.</span><span class="n">set_heart_rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="c1"># Wait until ENTER is pressed to end the script</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
 </code></pre></div>
-</div>
-</div>
-</div>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">¤</a></h2>
-<ul>
-<li>Python 3.8+</li>
-<li><a href="https://pyzmq.readthedocs.io/en/latest/" target="_blank">PyZMQ</a></li>
-</ul>
 
 
 
@@ -1268,7 +1372,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+          <a href="../echo/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Echo">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1278,20 +1382,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Overview
+                Echo
               </div>
             </div>
           </a>
         
         
           
-          <a href="../release-notes/" class="md-footer__link md-footer__link--next" aria-label="Next: Release Notes">
+          <a href="../../api/client/" class="md-footer__link md-footer__link--next" aria-label="Next: Client">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Release Notes
+                Client
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1359,10 +1463,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
