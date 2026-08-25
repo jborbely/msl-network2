@@ -87,14 +87,14 @@ def test_session() -> None:  # noqa: PLR0915
 
     # Request private attribute
     request = Request(id=1, service="ServiceName", attribute="_socket", args=(), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))  # pyright: ignore[reportUnknownMemberType]
+    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     response = Response.from_bytes(message)
     assert response.result == "PermissionError: Cannot request a private attribute"
 
     # Request invalid attribute
     request = Request(id=2, service="ServiceName", attribute="missing", args=(), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))  # pyright: ignore[reportUnknownMemberType]
+    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     response = Response.from_bytes(message)
     assert response.id == 2
@@ -103,7 +103,7 @@ def test_session() -> None:  # noqa: PLR0915
 
     # Request non-callable attribute
     request = Request(id=3, service="ServiceName", attribute="flag", args=(), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))  # pyright: ignore[reportUnknownMemberType]
+    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     response = Response.from_bytes(message)
     assert response.id == 3
@@ -112,7 +112,7 @@ def test_session() -> None:  # noqa: PLR0915
 
     # Request valid callable attribute
     request = Request(id=4, service="ServiceName", attribute="division", args=(10, 2), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))  # pyright: ignore[reportUnknownMemberType]
+    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     response = Response.from_bytes(message)
     assert response.id == 4
@@ -121,7 +121,7 @@ def test_session() -> None:  # noqa: PLR0915
 
     # Request valid callable attribute raises
     request = Request(id=5, service="ServiceName", attribute="division", args=(10, 0), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))  # pyright: ignore[reportUnknownMemberType]
+    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     response = Response.from_bytes(message)
     assert response.id == 5

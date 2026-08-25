@@ -155,10 +155,10 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
     _ = worker.connect(f"tcp://localhost:{port}")
 
     r = Request(id=0, service="ignored", attribute="gets_logged", args=[], kwargs={})
-    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])  # pyright: ignore[reportUnknownMemberType]
+    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
 
     r = Request(id=0, service="UnknownServiceName", attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
-    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])  # pyright: ignore[reportUnknownMemberType]
+    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
     time.sleep(0.1)
 
     worker.close()
