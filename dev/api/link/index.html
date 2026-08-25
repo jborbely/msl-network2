@@ -1285,23 +1285,23 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="normal">237</span>
 <span class="normal">238</span>
 <span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">Client</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A link with a service.</span>
+<span class="w">    </span><span class="sd">"""A link with a service.</span>
 
 <span class="sd">    !!! warning</span>
 <span class="sd">        Do not instantiate directly. Use the [link][Client.link] method</span>
 <span class="sd">        to create a [Link][] instance.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag_at</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Flag</span><span class="p">],</span> <span class="n">AbstractContextManager</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">flag_at</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reference to [flag_at][Client.flag_at].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Reference to [flag_at][Client.flag_at]."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">service_name</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[str][] &amp;mdash; The name of the service that the link is with.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[str][] &amp;mdash; The name of the service that the link is with."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[float][] or `None` &amp;mdash; The number of seconds to wait for a response from a *synchronous* request.</span>
+<span class="w">    </span><span class="sd">"""[float][] or `None` &amp;mdash; The number of seconds to wait for a response from a *synchronous* request.</span>
 
 <span class="sd">    The value is always `None` for new links, which means that there is no limit on the wait time.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">_request</span>  <span class="c1"># pyright: ignore[reportPrivateUsage]  # noqa: SLF001</span>
     <span class="n">host</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">_host_port</span>  <span class="c1"># pyright: ignore[reportPrivateUsage]  # noqa: SLF001</span>
@@ -1453,7 +1453,7 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="normal">265</span>
 <span class="normal">266</span>
 <span class="normal">267</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FutureOrResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;All undefined attributes are sent to the linked service to process.</span>
+<span class="w">    </span><span class="sd">"""All undefined attributes are sent to the linked service to process.</span>
 
 <span class="sd">    The internal wrapper function that is returned is essentially</span>
 
@@ -1465,10 +1465,10 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="sd">        return future</span>
 <span class="sd">    return wrapper</span>
 <span class="sd">    ```</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sync</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span> <span class="o">|</span> <span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the result, if `sync=True`, otherwise a future that will eventually contain the result.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Returns the result, if `sync=True`, otherwise a future that will eventually contain the result."""</span>
         <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sync</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
@@ -1544,14 +1544,14 @@ receives a single argument, the published <em>result</em>, and the returned valu
 <span class="normal">279</span>
 <span class="normal">280</span>
 <span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subscribe to publications from the linked service.</span>
+<span class="w">    </span><span class="sd">"""Subscribe to publications from the linked service.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        callback: The callback function to receive the published *result*. The callback</span>
 <span class="sd">            receives a single argument, the published *result*, and the returned value is ignored.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot subscribe to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="si">!r}</span><span class="s2">, unlinked from the service&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Cannot subscribe to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="si">!r}</span><span class="s2">, unlinked from the service"</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUBSCRIBE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
@@ -1588,13 +1588,13 @@ receives a single argument, the published <em>result</em>, and the returned valu
 <span class="normal">294</span>
 <span class="normal">295</span>
 <span class="normal">296</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unlink</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unlink from the service.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Unlink from the service."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">interrupter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">interrupter</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">_links</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportPrivateUsage]  # noqa: SLF001</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> unlinked&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> unlinked"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1624,7 +1624,7 @@ receives a single argument, the published <em>result</em>, and the returned valu
 <span class="normal">285</span>
 <span class="normal">286</span>
 <span class="normal">287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unsubscribe from receiving publications from the linked service.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Unsubscribe from receiving publications from the linked service."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">UNSUBSCRIBE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>

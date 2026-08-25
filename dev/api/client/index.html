@@ -1210,10 +1210,10 @@
 <a href="#msl.network.client.Client" class="headerlink" title="Permanent link">¤</a></h2>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">Client</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">host</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">host</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">"127.0.0.1"</span><span class="p">,</span>
     <span class="n">port</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="n"><span title="msl.network.utils.BROKER_PORT">BROKER_PORT</span></span><span class="p">,</span>
     <span class="n">flag</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Flag (msl.network.message.Flag)" href="../message/#msl.network.message.Flag">Flag</a></span> <span class="o">=</span> <span class="n"><span title="msl.network.message.Flag.PICKLE">PICKLE</span></span><span class="p">,</span>
-    <span class="n">domain</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">domain</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">"*"</span><span class="p">,</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            AuthCurve (msl.network.auth.AuthCurve)" href="../auth/#msl.network.auth.AuthCurve">AuthCurve</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            AuthPlain (msl.network.auth.AuthPlain)" href="../auth/#msl.network.auth.AuthPlain">AuthPlain</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">xpub_port</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1415,15 +1415,15 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"127.0.0.1"</span><span class="p">,</span>
     <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">BROKER_PORT</span><span class="p">,</span>
     <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">=</span> <span class="n">Flag</span><span class="o">.</span><span class="n">PICKLE</span><span class="p">,</span>
-    <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"*"</span><span class="p">,</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n">AuthCurve</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="n">AuthPlain</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">xpub_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A Client.</span>
+<span class="w">    </span><span class="sd">"""A Client.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        host: The hostname (or IP address) that the [Broker][] is running on.</span>
@@ -1436,9 +1436,9 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="sd">        plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.</span>
 <span class="sd">        xpub_port: The port on the [Broker][] that is publishing messages.</span>
 <span class="sd">            Typically, this value is `port + 1` and does not need to be specified.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">=</span> <span class="n">flag</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The serialisation and compression algorithms to apply to a request before sending the message.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The serialisation and compression algorithms to apply to a request before sending the message."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_host_port</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_xpub_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">xpub_port</span> <span class="ow">or</span> <span class="n">port</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># Link connects via SUBscribe: SUB -&gt; XPUB</span>
@@ -1449,7 +1449,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
     <span class="bp">self</span><span class="o">.</span><span class="n">_links</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="n">curve</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">plain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="p">:</span> <span class="n">Thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
@@ -1554,7 +1554,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Close the connection.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Close the connection."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_async_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -1565,7 +1565,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
     <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_async_client</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> disconnected&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> disconnected"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1596,7 +1596,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">Flag</span>
 
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="n">Flag</span><span class="o">.</span><span class="n">PICKLE</span><span class="p">)</span>
-<span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">&quot;Something&quot;</span><span class="p">)</span>
+<span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Something"</span><span class="p">)</span>
 
 <span class="c1"># uses PICKLE to serialise the request</span>
 <span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
@@ -1678,14 +1678,14 @@ context exits, the value is set to the original value.</p>
 <span class="normal">172</span>
 <span class="normal">173</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">flag_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use as a context manager to temporarily change the [flag][..flag] value.</span>
+<span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [flag][..flag] value.</span>
 
 <span class="sd">    !!! example</span>
 <span class="sd">        ```python</span>
 <span class="sd">        from msl.network import Client, Flag</span>
 
 <span class="sd">        client = Client(flag=Flag.PICKLE)</span>
-<span class="sd">        link = client.link(&quot;Something&quot;)</span>
+<span class="sd">        link = client.link("Something")</span>
 
 <span class="sd">        # uses PICKLE to serialise the request</span>
 <span class="sd">        link.do_something()</span>
@@ -1701,7 +1701,7 @@ context exits, the value is set to the original value.</p>
 <span class="sd">    Args:</span>
 <span class="sd">        flag: The temporary flag to use while within the context. Once the</span>
 <span class="sd">            context exits, the value is set to the original value.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span>
     <span class="k">try</span><span class="p">:</span>
@@ -1798,14 +1798,14 @@ context exits, the value is set to the original value.</p>
 <span class="normal">189</span>
 <span class="normal">190</span>
 <span class="normal">191</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Link</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Link with a service.</span>
+<span class="w">    </span><span class="sd">"""Link with a service.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        service_name: The name of a service to create a [Link][msl.network.client.Link] with.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The [Link][msl.network.client.Link] instance.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">link</span> <span class="o">=</span> <span class="n">Link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">link</span>
@@ -1899,7 +1899,7 @@ If <code>None</code>, there is no limit on the wait time.</p>
 <span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">services</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Request the names of the services that are available.</span>
+<span class="w">    </span><span class="sd">"""Request the names of the services that are available.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        timeout: The maximum number of seconds to wait for the result.</span>
@@ -1907,8 +1907,8 @@ If <code>None</code>, there is no limit on the wait time.</p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The names of the services that are available to be [link][..link]ed with.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s2">&quot;Broker&quot;</span><span class="p">,</span> <span class="s2">&quot;SERVICES&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">(</span><span class="n">timeout</span><span class="p">))</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s2">"Broker"</span><span class="p">,</span> <span class="s2">"SERVICES"</span><span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">(</span><span class="n">timeout</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

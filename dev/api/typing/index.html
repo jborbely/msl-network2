@@ -1277,7 +1277,7 @@ result (<code>sync=True</code>) for a synchronous request or a <a class="autoref
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sync</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span> <span class="o">|</span> <span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Call a method of a [Worker][].</span>
+<span class="w">    </span><span class="sd">"""Call a method of a [Worker][].</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        *args: The arguments that the method of the [Worker][] requires.</span>
@@ -1289,7 +1289,7 @@ result (<code>sync=True</code>) for a synchronous request or a <a class="autoref
 <span class="sd">            result (`sync=True`) for a synchronous request or a [Future][concurrent.futures.Future]</span>
 <span class="sd">            (`sync=False`) for an asynchronous request, which will eventually contain the</span>
 <span class="sd">            [result][concurrent.futures.Future.result] of the request that the future represents.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

@@ -1265,17 +1265,17 @@
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_certificate</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load public and secret keys from a ZeroMQ certificate file.</span>
+<span class="w">    </span><span class="sd">"""Load public and secret keys from a ZeroMQ certificate file.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        path: The path to a certificate file.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The `(public, secret)` keys. The `secret` key can be `None` if it is not defined in the file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">fsdecode</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File not found: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># prefer FileNotFoundError instead of pyzmq exception</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"File not found: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># prefer FileNotFoundError instead of pyzmq exception</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">certs</span><span class="o">.</span><span class="n">load_certificate</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportUnknownMemberType]</span>
@@ -1387,13 +1387,13 @@
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">public_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">broker_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].</span>
+<span class="w">    </span><span class="sd">"""[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        public_key: The public key of the [Client][] or [Worker][].</span>
 <span class="sd">        secret_key: The secret key of the [Client][] or [Worker][].</span>
 <span class="sd">        broker_key: The public key of the [Broker][].</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">public_key</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">public_key</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">secret_key</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">broker_key</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">broker_key</span>
@@ -1551,24 +1551,24 @@ credentials that were created by running the <code>msl-network curve</code> comm
 <span class="normal">132</span>
 <span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">broker</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">own</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthCurve</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load [CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials from files.</span>
+<span class="w">    </span><span class="sd">"""Load [CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials from files.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        broker: The path to the file that contains the [Broker][]&#39;s public key.</span>
+<span class="sd">        broker: The path to the file that contains the [Broker][]'s public key.</span>
 <span class="sd">        own: The path to the file that contains the public and secret keys of the</span>
 <span class="sd">            client or worker that connects to the [Broker][]. If `None`, loads the</span>
 <span class="sd">            credentials that were created by running the `msl-network curve` command.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The [CURVE](https://rfc.zeromq.org/spec/26/) credentials.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">broker_public</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_certificate</span><span class="p">(</span><span class="n">broker</span><span class="p">)</span>
 
-    <span class="n">default</span> <span class="o">=</span> <span class="n">MSL_NETWORK_HOME</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span><span class="si">}</span><span class="s2">.key_secret&quot;</span>
+    <span class="n">default</span> <span class="o">=</span> <span class="n">MSL_NETWORK_HOME</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span><span class="si">}</span><span class="s2">.key_secret"</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">default</span> <span class="k">if</span> <span class="n">own</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">fsdecode</span><span class="p">(</span><span class="n">own</span><span class="p">)</span>
     <span class="n">own_public</span><span class="p">,</span> <span class="n">own_secret</span> <span class="o">=</span> <span class="n">load_certificate</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">own_secret</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No secret key found in </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"No secret key found in </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">AuthCurve</span><span class="p">(</span><span class="n">public_key</span><span class="o">=</span><span class="n">own_public</span><span class="p">,</span> <span class="n">secret_key</span><span class="o">=</span><span class="n">own_secret</span><span class="p">,</span> <span class="n">broker_key</span><span class="o">=</span><span class="n">broker_public</span><span class="p">)</span>
@@ -1670,12 +1670,12 @@ credentials that were created by running the <code>msl-network curve</code> comm
 <span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials to connect to a [Broker][].</span>
+<span class="w">    </span><span class="sd">"""[PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials to connect to a [Broker][].</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        username: The username registered with the [Broker][].</span>
 <span class="sd">        password: The password registered with the [Broker][].</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">username</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">username</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">password</span>
 </code></pre></div></td></tr></table></div>
@@ -1847,7 +1847,7 @@ first line in the file to get the <code>username, password</code> value.</p>
 <span class="normal">92</span>
 <span class="normal">93</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthPlain</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load [PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials from a file.</span>
+<span class="w">    </span><span class="sd">"""Load [PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials from a file.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        path: The path to load the credentials from. If the path has the `.json`</span>
@@ -1859,27 +1859,27 @@ first line in the file to get the <code>username, password</code> value.</p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The [PLAIN](https://rfc.zeromq.org/spec/24/) credentials.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">default</span> <span class="o">=</span> <span class="n">MSL_NETWORK_HOME</span> <span class="o">/</span> <span class="s2">&quot;plain.json&quot;</span>
+<span class="sd">    """</span>
+    <span class="n">default</span> <span class="o">=</span> <span class="n">MSL_NETWORK_HOME</span> <span class="o">/</span> <span class="s2">"plain.json"</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">default</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">fsdecode</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No such file: &#39;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"No such file: '</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">'"</span>
         <span class="k">if</span> <span class="n">file</span> <span class="o">==</span> <span class="n">default</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;, run `msl-network plain add` in a terminal&quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">", run `msl-network plain add` in a terminal"</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".json"</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">auth</span> <span class="o">=</span> <span class="n">load_plain</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">auth</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No PLAIN credentials found&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"No PLAIN credentials found"</span>
             <span class="k">if</span> <span class="n">file</span> <span class="o">==</span> <span class="n">default</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;, run `msl-network plain add` in a terminal&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">", run `msl-network plain add` in a terminal"</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">auth</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Too many PLAIN credentials found, run `msl-network plain remove` in a &quot;</span>
-                <span class="s2">&quot;terminal or specify a different file&quot;</span>
+                <span class="s2">"Too many PLAIN credentials found, run `msl-network plain remove` in a "</span>
+                <span class="s2">"terminal or specify a different file"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 

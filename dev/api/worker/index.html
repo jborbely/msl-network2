@@ -1277,10 +1277,10 @@
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">Worker</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">host</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">host</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">"127.0.0.1"</span><span class="p">,</span>
     <span class="n">port</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="n"><span title="msl.network.utils.BROKER_PORT">BROKER_PORT</span></span><span class="p">,</span>
     <span class="n">flag</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Flag (msl.network.message.Flag)" href="../message/#msl.network.message.Flag">Flag</a></span> <span class="o">=</span> <span class="n"><span title="msl.network.message.Flag.PICKLE">PICKLE</span></span><span class="p">,</span>
-    <span class="n">domain</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">domain</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">"*"</span><span class="p">,</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            AuthCurve (msl.network.auth.AuthCurve)" href="../auth/#msl.network.auth.AuthCurve">AuthCurve</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            AuthPlain (msl.network.auth.AuthPlain)" href="../auth/#msl.network.auth.AuthPlain">AuthPlain</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">xsub_port</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1553,16 +1553,16 @@ for more details.</p>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"127.0.0.1"</span><span class="p">,</span>
     <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">BROKER_PORT</span><span class="p">,</span>
     <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">=</span> <span class="n">Flag</span><span class="o">.</span><span class="n">PICKLE</span><span class="p">,</span>
-    <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"*"</span><span class="p">,</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n">AuthCurve</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="n">AuthPlain</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">xsub_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ignore_attributes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for a Worker.</span>
+<span class="w">    </span><span class="sd">"""Base class for a Worker.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: The name of the service that a [Client][msl.network.client.Client] would use</span>
@@ -1581,11 +1581,11 @@ for more details.</p>
 <span class="sd">        ignore_attributes: The names of the attributes to not include in the</span>
 <span class="sd">            [signatures][..signatures]. See [ignore_attributes][..ignore_attributes]</span>
 <span class="sd">            for more details.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">=</span> <span class="n">flag</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The serialisation and compression algorithms to apply to a response before sending the byte stream.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The serialisation and compression algorithms to apply to a response before sending the byte stream."""</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">_worker_id</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Worker[</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_worker_id</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Worker[</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">]"</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_host_port</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="n">Context</span><span class="p">()</span>
@@ -1606,22 +1606,22 @@ for more details.</p>
 
     <span class="c1"># Python 3.8 and 3.9 require an asyncio event loop to be running to create an asyncio.Event instance</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">connected</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;An [Event][asyncio.Event] object that represents whether the Worker is connected to the [Broker][].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""An [Event][asyncio.Event] object that represents whether the Worker is connected to the [Broker][]."""</span>
 
     <span class="k">if</span> <span class="n">curve</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">plain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_attributes</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;add_tasks&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;connect&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;connected&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;disconnect&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;flag&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;flag_at&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;ignore_attributes&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;publish&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;signatures&quot;</span><span class="p">,</span>
+        <span class="s2">"add_tasks"</span><span class="p">,</span>
+        <span class="s2">"connect"</span><span class="p">,</span>
+        <span class="s2">"connected"</span><span class="p">,</span>
+        <span class="s2">"disconnect"</span><span class="p">,</span>
+        <span class="s2">"flag"</span><span class="p">,</span>
+        <span class="s2">"flag_at"</span><span class="p">,</span>
+        <span class="s2">"ignore_attributes"</span><span class="p">,</span>
+        <span class="s2">"publish"</span><span class="p">,</span>
+        <span class="s2">"signatures"</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="k">if</span> <span class="n">ignore_attributes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1749,11 +1749,11 @@ for more details.</p>
 <span class="normal">122</span>
 <span class="normal">123</span>
 <span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">aws</span><span class="p">:</span> <span class="n">Awaitable</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add tasks to run in the [event loop][asyncio-event-loop].</span>
+<span class="w">    </span><span class="sd">"""Add tasks to run in the [event loop][asyncio-event-loop].</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        aws: Awaitables that will run in the [event loop][asyncio-event-loop].</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">aws</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1789,7 +1789,7 @@ for more details.</p>
 <span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connect (or reconnect) to the [Broker][].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Connect (or reconnect) to the [Broker][]."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">run_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gather</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
@@ -1797,7 +1797,7 @@ for more details.</p>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">run_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_disconnect</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> event loop closed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> event loop closed"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1841,7 +1841,7 @@ for more details.</p>
 <span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Disconnect from the [Broker][].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Disconnect from the [Broker][]."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pub_queue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span><span class="p">()</span>
 
@@ -1858,7 +1858,7 @@ for more details.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_dealer</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_monitor</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> disconnected&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> disconnected"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1891,21 +1891,21 @@ for more details.</p>
 <span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">Worker</span><span class="p">):</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;By default, use JSON to serialise all responses (no compression).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""By default, use JSON to serialise all responses (no compression)."""</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="n">Flag</span><span class="o">.</span><span class="n">JSON</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the (width, height) of a captured image.</span>
+<span class="w">        </span><span class="sd">"""Returns the (width, height) of a captured image.</span>
 
 <span class="sd">        The response is serialised using JSON without compression.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="mi">1600</span><span class="p">,</span> <span class="mi">1200</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">capture</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Capture an image and return the image bytes.</span>
+<span class="w">        </span><span class="sd">"""Capture an image and return the image bytes.</span>
 
 <span class="sd">        In this method, compressed bytes without serialisation is returned.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">image</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># capture an image from the camera</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">ZLIB</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">image</span>
@@ -1989,7 +1989,7 @@ context exits, the value is set to the original value.</p>
 <span class="normal">196</span>
 <span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">flag_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use as a context manager to temporarily change the [flag][..flag] value.</span>
+<span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [flag][..flag] value.</span>
 
 <span class="sd">    !!! example</span>
 <span class="sd">        ```python</span>
@@ -1998,21 +1998,21 @@ context exits, the value is set to the original value.</p>
 <span class="sd">        class Camera(Worker):</span>
 
 <span class="sd">            def __init__(self) -&gt; None:</span>
-<span class="sd">                \&quot;\&quot;\&quot;By default, use JSON to serialise all responses (no compression).\&quot;\&quot;\&quot;</span>
+<span class="sd">                \"\"\"By default, use JSON to serialise all responses (no compression).\"\"\"</span>
 <span class="sd">                super().__init__(flag=Flag.JSON)</span>
 
 <span class="sd">            def resolution(self) -&gt; tuple[int, int]:</span>
-<span class="sd">                \&quot;\&quot;\&quot;Returns the (width, height) of a captured image.</span>
+<span class="sd">                \"\"\"Returns the (width, height) of a captured image.</span>
 
 <span class="sd">                The response is serialised using JSON without compression.</span>
-<span class="sd">                \&quot;\&quot;\&quot;</span>
+<span class="sd">                \"\"\"</span>
 <span class="sd">                return 1600, 1200</span>
 
 <span class="sd">            def capture(self) -&gt; bytes:</span>
-<span class="sd">                \&quot;\&quot;\&quot;Capture an image and return the image bytes.</span>
+<span class="sd">                \"\"\"Capture an image and return the image bytes.</span>
 
 <span class="sd">                In this method, compressed bytes without serialisation is returned.</span>
-<span class="sd">                \&quot;\&quot;\&quot;</span>
+<span class="sd">                \"\"\"</span>
 <span class="sd">                image: bytes = ...  # capture an image from the camera</span>
 <span class="sd">                with self.flag_at(Flag.ZLIB):</span>
 <span class="sd">                    return image</span>
@@ -2021,7 +2021,7 @@ context exits, the value is set to the original value.</p>
 <span class="sd">    Args:</span>
 <span class="sd">        flag: The temporary flag to use while within the context. Once the</span>
 <span class="sd">            context exits, the value is set to the original value.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span>
     <span class="k">try</span><span class="p">:</span>
@@ -2112,7 +2112,7 @@ ignored and cannot be accessed from a <a class="autorefs autorefs-internal" titl
 <span class="normal">215</span>
 <span class="normal">216</span>
 <span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">ignore_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ignore attributes from being added to the [signature][..signatures].</span>
+<span class="w">    </span><span class="sd">"""Ignore attributes from being added to the [signature][..signatures].</span>
 
 <span class="sd">    There are a few reasons why you may want to call this method:</span>
 
@@ -2128,7 +2128,7 @@ ignored and cannot be accessed from a <a class="autorefs autorefs-internal" titl
 
 <span class="sd">    Args:</span>
 <span class="sd">        names: The names of the attributes to exclude from the [signatures][..signatures] map.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_attributes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -2224,15 +2224,15 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
 <span class="normal">233</span>
 <span class="normal">234</span>
 <span class="normal">235</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Publish a message to all subscribers.</span>
+<span class="w">    </span><span class="sd">"""Publish a message to all subscribers.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        result: The result to publish.</span>
 <span class="sd">        flag: The flag to use to convert the message to bytes. If `None`, uses</span>
 <span class="sd">            the flag defined by [flag][..flag].</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pub_queue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Event loop not running, cannot publish result&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Event loop not running, cannot publish result"</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">)</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="n">flag</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">)</span>
@@ -2325,15 +2325,15 @@ function signature (attribute value).</p>
 <span class="normal">271</span>
 <span class="normal">272</span>
 <span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the function signatures that the service provides.</span>
+<span class="w">    </span><span class="sd">"""Get the function signatures that the service provides.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A mapping between the function (attribute) name and the</span>
 <span class="sd">            function signature (attribute value).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">signature_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_attributes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_attributes</span><span class="p">):</span>
             <span class="k">continue</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -2346,19 +2346,19 @@ function signature (attribute value).</p>
             <span class="c1"># and defines fget=None or if the getattr() function</span>
             <span class="c1"># executes code, like PiCamera.frame does, which raises</span>
             <span class="c1"># a custom exception if the camera is not running.</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [attribute=</span><span class="si">%r</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> [attribute=</span><span class="si">%r</span><span class="s2">]"</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">signature_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">attrib</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">signature_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">attrib</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="c1"># Then the attribute is not a callable object</span>
-            <span class="n">signature_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;() -&gt; </span><span class="si">{</span><span class="n">attrib</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">signature_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"() -&gt; </span><span class="si">{</span><span class="n">attrib</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Cannot get the signature of the callable object.</span>
             <span class="c1"># This can happen if the Worker is also a subclass of</span>
             <span class="c1"># some other object, for example a Qt class.</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [attribute=</span><span class="si">%r</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> [attribute=</span><span class="si">%r</span><span class="s2">]"</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">signature_map</span>
 </code></pre></div></td></tr></table></div>
