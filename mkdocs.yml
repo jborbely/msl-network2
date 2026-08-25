@@ -52,6 +52,10 @@ nav:
     - install.md
     - release-notes.md
     - license.md
+  - Examples:
+    - examples/index.md
+    - examples/echo.md
+    - examples/heartbeat.md
   - API:
     - api/client.md
     - api/message.md
