@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from zmq.auth import certs
@@ -27,7 +28,7 @@ def add_parser_curve(parser: _SubParsersAction[ArgumentParser]) -> None:
     _ = p.add_argument(
         "-d",
         "--dir",
-        help="The directory to save the certificate files to.",
+        help="The directory to save the certificate files to. Can use ~ as the user's $HOME directory.",
     )
     _ = p.add_argument(
         "-n",
@@ -50,15 +51,15 @@ def execute(ns: Namespace) -> None:
         key_dir = MSL_NETWORK_HOME
         key_dir.mkdir(parents=True, exist_ok=True)
     else:
-        key_dir = ns.dir
+        key_dir = Path(ns.dir).expanduser()
 
     name = socket.gethostname() if ns.name is None else ns.name
 
     try:
         public_file, secret_file = certs.create_certificates(key_dir=key_dir, name=name)  # pyright: ignore[reportUnknownMemberType]
     except OSError:
-        logger.error("Cannot create certificates, does '%s' directory exist?", key_dir)
+        logger.error("Cannot create certificates. Does the '%s' directory exist?", key_dir)
     else:
         logger.info("Created secret certificate %s", secret_file)
         logger.info("Created public certificate %s", public_file)
-        logger.info("Copy the public certificate to the $HOME/.curve directory on the computer running the broker")
+        logger.info("Copy the public certificate to the $HOME/.curve directory on another computer")

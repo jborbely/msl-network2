@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .cli_argparse import add_argument_quiet, add_argument_verbose
@@ -25,18 +26,28 @@ def add_parser_plain(parser: _SubParsersAction[ArgumentParser]) -> None:
     _ = p.add_argument("action", choices=["add", "remove", "reset", "list"], help="The action to perform.")
     _ = p.add_argument("-u", "--username", help="The username to action.")
     _ = p.add_argument("-p", "--password", help="The password.")
-    _ = p.add_argument("-f", "--file", help="The JSON file to use. If not specified, use the default file.")
+    _ = p.add_argument(
+        "-f",
+        "--file",
+        help="The JSON file to use. Can use ~ as the user's $HOME directory. If not specified, use the default file.",
+    )
     add_argument_quiet(p)
     add_argument_verbose(p)
     p.set_defaults(func=execute)
 
 
-def execute(ns: Namespace) -> None:  # noqa: C901
+def execute(ns: Namespace) -> None:  # noqa: C901, PLR0912
     """Edit the PLAIN authentication file."""
     logging.basicConfig(
         level=get_logging_level(quiet=ns.quiet, verbose=ns.verbose),
         format="%(message)s",
     )
+
+    if ns.action == "add" and ns.file:
+        file = Path(ns.file).expanduser()
+        if not file.exists():
+            file.parent.mkdir(parents=True, exist_ok=True)
+            _ = file.write_text("{}")
 
     path, auth = load_plain(ns.file)
     if auth is None:

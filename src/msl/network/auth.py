@@ -24,7 +24,7 @@ def load_certificate(path: PathLike) -> tuple[bytes, bytes | None]:
     Returns:
         The `(public, secret)` keys. The `secret` key can be `None` if it is not defined in the file.
     """
-    path = Path(os.fsdecode(path))
+    path = Path(os.fsdecode(path)).expanduser()
     if not path.is_file():
         msg = f"File not found: {path}"  # prefer FileNotFoundError instead of pyzmq exception
         raise FileNotFoundError(msg)
@@ -53,15 +53,17 @@ class AuthPlain:
             path: The path to load the credentials from. If the path has the `.json`
                 extension, the file must contain a single *username* to *password*
                 mapping. If `None`, loads the credentials that were created by running
-                the `msl-network plain add` command.
+                the `msl-network plain add` command. Can include `~` in the path, which
+                will expand the user's home directory.
             sep: If the `path` extension is not `.json`, the separator to use to split the
-                first line in the file to get the `username, password` value.
+                contents of the file to get the *username* and *password* values. The value
+                is passed to [str.split][].
 
         Returns:
             The [PLAIN](https://rfc.zeromq.org/spec/24/) credentials.
         """
         default = MSL_NETWORK_HOME / "plain.json"
-        file = default if path is None else Path(os.fsdecode(path))
+        file = default if path is None else Path(os.fsdecode(path)).expanduser()
         if not file.exists():
             msg = f"No such file: '{file}'"
             if file == default:
@@ -86,7 +88,7 @@ class AuthPlain:
             username = next(iter(auth))
             password = auth[username]
         else:
-            u, p = file.read_text().split(sep)
+            u, p = file.read_text().split(sep, maxsplit=1)
             username = u.strip()
             password = p.strip()
 
@@ -114,9 +116,11 @@ class AuthCurve:
 
         Args:
             broker: The path to the file that contains the [Broker][]'s public key.
+                Can include `~` in the path, which will expand the user's home directory.
             own: The path to the file that contains the public and secret keys of the
-                client or worker that connects to the [Broker][]. If `None`, loads the
+                [Client][] or [Worker][] that connects to the [Broker][]. If `None`, loads the
                 credentials that were created by running the `msl-network curve` command.
+                Can include `~` in the path, which will expand the user's home directory.
 
         Returns:
             The [CURVE](https://rfc.zeromq.org/spec/26/) credentials.
