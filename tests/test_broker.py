@@ -191,7 +191,7 @@ def test_allow_localhost(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
 
     assert caplog.record_tuples == [
         ("msl.network", logging.INFO, "ZAP allowed devices: localhost"),
-        ("msl.network", logging.INFO, "Using NULL authentication [domain:*]"),
+        ("msl.network", logging.INFO, "Using NULL authentication"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
@@ -207,7 +207,7 @@ def test_plain_ok(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     broker.stop()
 
     assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using PLAIN authentication for user msl [domain:*]"),
+        ("msl.network", logging.INFO, "Using PLAIN authentication for user msl"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
@@ -228,7 +228,7 @@ def test_curve_all_keys(broker: Broker, caplog: pytest.LogCaptureFixture) -> Non
     broker.stop()
 
     assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using CURVE authentication with all keys allowed [domain:*]"),
+        ("msl.network", logging.INFO, "Using CURVE authentication with all keys allowed"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
@@ -249,7 +249,7 @@ def test_curve_valid_key(broker: Broker, caplog: pytest.LogCaptureFixture) -> No
     broker.stop()
 
     assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using CURVE authentication with 1 key allowed [domain:*]"),
+        ("msl.network", logging.INFO, "Using CURVE authentication with 1 key allowed"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]
@@ -271,7 +271,7 @@ def test_curve_valid_multiple_keys(broker: Broker, caplog: pytest.LogCaptureFixt
     broker.stop()
 
     assert caplog.record_tuples == [
-        ("msl.network", logging.INFO, "Using CURVE authentication with 2 keys allowed [domain:*]"),
+        ("msl.network", logging.INFO, "Using CURVE authentication with 2 keys allowed"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
     ]

@@ -45,7 +45,6 @@ class Client:
         host: str = "127.0.0.1",
         port: int = BROKER_PORT,
         flag: Flag = Flag.PICKLE,
-        domain: str = "*",
         curve: AuthCurve | None = None,
         plain: AuthPlain | None = None,
         xpub_port: int | None = None,
@@ -57,8 +56,6 @@ class Client:
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a
                 request before sending the byte stream.
-            domain: The domain to use for [CURVE](https://rfc.zeromq.org/spec/26/) or
-                [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xpub_port: The port on the [Broker][] that is publishing messages.
@@ -80,7 +77,7 @@ class Client:
             raise ValueError(msg)
 
         self._thread: Thread = Thread(
-            target=run_event_loop, daemon=True, args=(_create_async_client(self, domain.encode(), curve, plain),)
+            target=run_event_loop, daemon=True, args=(_create_async_client(self, curve, plain),)
         )
         self._thread.start()
 
@@ -302,7 +299,6 @@ class _AsyncClient:
     def __init__(
         self,
         client: Client,
-        domain: bytes = b"*",
         curve: AuthCurve | None = None,
         plain: AuthPlain | None = None,
     ) -> None:
@@ -328,13 +324,11 @@ class _AsyncClient:
             self.dealer.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
             self.dealer.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
             self.dealer.setsockopt(zmq.CURVE_SERVERKEY, curve.broker_key)
-            self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
-            logger.debug("Using CURVE authentication [domain:%s]", domain.decode())
+            logger.debug("Using CURVE authentication")
         elif plain is not None:
             self.dealer.setsockopt(zmq.PLAIN_USERNAME, plain.username)
             self.dealer.setsockopt(zmq.PLAIN_PASSWORD, plain.password)
-            self.dealer.setsockopt(zmq.ZAP_DOMAIN, domain)
-            logger.debug("Using PLAIN authentication [domain:%s]", domain.decode())
+            logger.debug("Using PLAIN authentication")
 
         self.monitor_socket: Socket = self.dealer.get_monitor_socket()
 
@@ -472,14 +466,9 @@ class _LinkSubscriber:
         logger.debug("Link[%s] stopped publication polling", self.service_name)
 
 
-async def _create_async_client(
-    client: Client,
-    domain: bytes = b"*",
-    curve: AuthCurve | None = None,
-    plain: AuthPlain | None = None,
-) -> None:
+async def _create_async_client(client: Client, curve: AuthCurve | None = None, plain: AuthPlain | None = None) -> None:
     """Create the async client and run it in an event loop."""
-    async_client = _AsyncClient(client, domain, curve, plain)
+    async_client = _AsyncClient(client, curve, plain)
     client._async_client = async_client  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     _ = await asyncio.gather(async_client.handle_messages(), async_client.wakeup_event())
 

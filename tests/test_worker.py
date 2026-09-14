@@ -249,7 +249,7 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
     assert r[0] == "Worker publisher ready"
     assert r[1] == f"{interrupter.name} created"
-    assert r[2] == "Using PLAIN authentication [domain:*]"
+    assert r[2] == "Using PLAIN authentication"
     assert r[3] == "Worker polling..."
     assert r[4] == f"{interrupter.name} triggered"
     assert r[5] == "Worker publisher done"
@@ -282,7 +282,7 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
     assert r[0] == "Worker publisher ready"
     assert r[1] == f"{interrupter.name} created"
-    assert r[2] == "Using CURVE authentication [domain:*]"
+    assert r[2] == "Using CURVE authentication"
     assert r[3] == "Worker polling..."
     assert r[4] == f"{interrupter.name} triggered"
     assert r[5] == "Worker publisher done"

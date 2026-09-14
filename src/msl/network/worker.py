@@ -36,7 +36,6 @@ class Worker:
         host: str = "127.0.0.1",
         port: int = BROKER_PORT,
         flag: Flag = Flag.PICKLE,
-        domain: str = "*",
         curve: AuthCurve | None = None,
         plain: AuthPlain | None = None,
         xsub_port: int | None = None,
@@ -52,8 +51,6 @@ class Worker:
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a response before
                 sending the byte stream.
-            domain: The domain to use for [CURVE](https://rfc.zeromq.org/spec/26/) or
-                [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xsub_port: The port on the [Broker][] that is subscribed to publications.
@@ -73,7 +70,6 @@ class Worker:
         self._interrupter: Interrupter | None = None
         self._dealer: Socket | None = None
         self._monitor: Socket | None = None
-        self._domain: bytes = domain.encode()
         self._curve: AuthCurve | None = curve
         self._plain: AuthPlain | None = plain
         self._tasks: list[Awaitable[None]] = []
@@ -318,13 +314,11 @@ class Worker:
             self._dealer.setsockopt(zmq.CURVE_PUBLICKEY, self._curve.public_key)
             self._dealer.setsockopt(zmq.CURVE_SECRETKEY, self._curve.secret_key)
             self._dealer.setsockopt(zmq.CURVE_SERVERKEY, self._curve.broker_key)
-            self._dealer.setsockopt(zmq.ZAP_DOMAIN, self._domain)
-            logger.debug("Using CURVE authentication [domain:%s]", self._domain.decode())
+            logger.debug("Using CURVE authentication")
         elif self._plain is not None:
             self._dealer.setsockopt(zmq.PLAIN_USERNAME, self._plain.username)
             self._dealer.setsockopt(zmq.PLAIN_PASSWORD, self._plain.password)
-            self._dealer.setsockopt(zmq.ZAP_DOMAIN, self._domain)
-            logger.debug("Using PLAIN authentication [domain:%s]", self._domain.decode())
+            logger.debug("Using PLAIN authentication")
 
         self._monitor = self._dealer.get_monitor_socket()
 

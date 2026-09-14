@@ -143,7 +143,7 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
     assert r[0] == f"{interrupter_name} created"
-    assert r[1] == "Using PLAIN authentication [domain:*]"
+    assert r[1] == "Using PLAIN authentication"
     assert r[2] == f"{c} connecting..."
     assert r[3] == f"{interrupter_name} triggered"
     assert r[4] == f"{interrupter_name} terminated"
@@ -167,7 +167,7 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
     assert r[0] == f"{interrupter_name} created"
-    assert r[1] == "Using CURVE authentication [domain:*]"
+    assert r[1] == "Using CURVE authentication"
     assert r[2] == f"{c} connecting..."
     assert r[3] == f"{interrupter_name} triggered"
     assert r[4] == f"{interrupter_name} terminated"

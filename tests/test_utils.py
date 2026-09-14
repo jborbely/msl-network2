@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from zmq.auth import certs
 
-from msl.network.utils import USER_DIR, Curve, get_logging_level, load_curves, load_devices, load_plain
+from msl.network.utils import DOMAIN, USER_DIR, Curve, get_logging_level, load_curves, load_devices, load_plain
 
 
 @pytest.mark.parametrize(
@@ -55,23 +55,23 @@ def test_load_devices(tmp_path: Path) -> None:
 
 
 def test_curve_callback_invalid_domain() -> None:
-    curve = Curve(keys={b"1", b"2", b"3"}, domain="msl")
-    assert not curve.callback("*", b"1")
+    curve = Curve(keys={b"1", b"2", b"3"})
+    assert not curve.callback(DOMAIN + "X", b"1")
 
 
 def test_curve_callback_keys_empty() -> None:
     curve = Curve()
-    assert curve.callback(curve.domain, b"key ignored")
+    assert curve.callback(DOMAIN, b"key ignored")
 
 
 def test_curve_callback_invalid_key() -> None:
-    curve = Curve(keys={b"1", b"2", b"3"}, domain="msl")
-    assert not curve.callback(curve.domain, b"4")
+    curve = Curve(keys={b"1", b"2", b"3"})
+    assert not curve.callback(DOMAIN, b"4")
 
 
 def test_curve_callback_valid_key() -> None:
-    curve = Curve(keys={b"1", b"2", b"3"}, domain="*")
-    assert curve.callback(curve.domain, b"2")
+    curve = Curve(keys={b"1", b"2", b"3"})
+    assert curve.callback(DOMAIN, b"2")
 
 
 def test_load_plain_default_path(home_dir: Path) -> None:
@@ -188,11 +188,10 @@ def test_load_curve_default_path(home_dir: Path, caplog: pytest.LogCaptureFixtur
     assert curve.public_key == public_key
     assert secret_key is None
 
-    assert curve.domain == "*"
     assert len(curve.keys) == 0  # assumes there are no *.key files in $HOME/.curve
 
-    assert curve.callback("*", b"whatever")
-    assert not curve.callback("a", b"whatever")
+    assert curve.callback(DOMAIN, b"whatever")
+    assert not curve.callback(DOMAIN + "x", b"whatever")
 
     user_dir = USER_DIR / ".curve"
     assert not user_dir.exists()  # assumption for test

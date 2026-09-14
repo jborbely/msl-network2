@@ -16,7 +16,7 @@ from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
 from .message import Flag, Request, Response
-from .utils import logger
+from .utils import DOMAIN, logger
 
 if TYPE_CHECKING:
     from .utils import Curve
@@ -219,7 +219,6 @@ class Broker:
         addresses: dict[str, str] | None = None,
         curve: Curve | None = None,
         monitor: bool = False,
-        domain: str = "*",
         host: str = "*",
         plain: dict[str, str] | None = None,
         port: int = 0,
@@ -232,7 +231,6 @@ class Broker:
                 If not specified, all devices can connect to proceed to PLAIN or CURVE authentication (if used).
             curve: The information required for [CURVE](https://rfc.zeromq.org/spec/26/) authentication.
             monitor: Whether to allow ZeroMQ event monitoring (as INFO log messages).
-            domain: The domain to use for [ZAP](https://rfc.zeromq.org/spec/27/) authentication.
             host: The network interface to run the Broker on.
             plain: A username to password mapping to use for [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.
             port: The port number to run the Broker on. If `0`, use a random port.
@@ -253,6 +251,9 @@ class Broker:
         self.poller.register(self.interrupter.receiver, zmq.POLLIN)
         self.poller.register(proxy_capture, zmq.POLLIN)
 
+        self.router.setsockopt(zmq.ZAP_DOMAIN, DOMAIN.encode())
+        self.router.setsockopt(zmq.ROUTING_ID, b"Broker")
+
         # must configure Authenticator and the ROUTER socket before binding the ROUTER socket
         if addresses or curve or plain:
             self.auth = Authenticator(self.context)
@@ -262,21 +263,20 @@ class Broker:
                 logger.info("ZAP allowed devices: %s", ", ".join(addresses))
 
             if curve:
-                self.auth.configure_curve_callback(domain=domain, credentials_provider=curve)
+                self.auth.configure_curve_callback(domain=DOMAIN, credentials_provider=curve)
                 self.router.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
                 self.router.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
                 self.router.setsockopt(zmq.CURVE_SERVER, 1)
                 n = len(curve.keys)
                 text = {0: "all keys", 1: "1 key"}.get(n, f"{n} keys")
-                logger.info("Using CURVE authentication with %s allowed [domain:%s]", text, domain)
+                logger.info("Using CURVE authentication with %s allowed", text)
             elif plain:
-                self.auth.configure_plain(domain=domain, passwords=plain)
+                self.auth.configure_plain(domain=DOMAIN, passwords=plain)
                 self.router.setsockopt(zmq.PLAIN_SERVER, 1)
                 s = "" if len(plain) == 1 else "s"
-                logger.info("Using PLAIN authentication for user%s %s [domain:%s]", s, ", ".join(plain), domain)
+                logger.info("Using PLAIN authentication for user%s %s", s, ", ".join(plain))
             else:
-                self.router.setsockopt(zmq.ZAP_DOMAIN, domain.encode())
-                logger.info("Using NULL authentication [domain:%s]", domain)
+                logger.info("Using NULL authentication")
 
             self.auth.start()
             self.poller.register(self.auth.zap_socket, zmq.POLLIN)  # pyright: ignore[reportUnknownMemberType]

@@ -45,12 +45,6 @@ def add_parser_start(parser: _SubParsersAction[ArgumentParser]) -> None:
         help="Allow CURVE keys from any device. Enabled by default if no public key files are found.",
     )
     _ = p.add_argument(
-        "--auth-domain",
-        default="*",
-        metavar="DOMAIN",
-        help="The domain to use for PLAIN or CURVE authentication. Default is '*'.",
-    )
-    _ = p.add_argument(
         "--auth-device",
         nargs="*",
         metavar="DEVICE",
@@ -102,7 +96,6 @@ class RunKwargs(TypedDict):
     addresses: dict[str, str] | None
     curve: Curve | None
     monitor: bool
-    domain: str
     host: str
     plain: dict[str, str] | None
     port: int
@@ -133,14 +126,13 @@ def namespace_to_run_kwargs(ns: Namespace, *, debug: bool = False) -> RunKwargs:
     curve: Curve | None = None
     if ns.auth_curve is not None:
         home_dir = None if ns.auth_curve == CONST else Path(ns.auth_curve)
-        curve = load_curves(home_dir, domain=ns.auth_domain)
+        curve = load_curves(home_dir)
         if curve is not None and ns.auth_curve_allow_any:
             curve.keys.clear()
 
     return {
         "host": ns.host,
         "port": ns.port,
-        "domain": ns.auth_domain,
         "monitor": ns.monitor or debug,
         "addresses": addresses,
         "curve": curve,

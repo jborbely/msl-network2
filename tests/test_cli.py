@@ -1,6 +1,7 @@
 # cSpell: ignore creationflags capfd
 from __future__ import annotations
 
+import json
 import logging
 import signal
 import socket
@@ -139,7 +140,6 @@ def test_cli_start_args() -> None:
     assert ns.auth_plain is None  # do not use PLAIN authentication
     assert ns.auth_device is None  # do not use IP address authentication
     assert ns.auth_curve is None  # do not use CURVE authentication
-    assert ns.auth_domain == "*"
     assert ns.host == "*"
     assert ns.port == BROKER_PORT
     assert ns.quiet == 0
@@ -149,19 +149,16 @@ def test_cli_start_args() -> None:
     assert ns.auth_plain is None  # do not use PLAIN authentication
     assert ns.auth_device == []  # empty list means to load from file
     assert ns.auth_curve is None  # do not use CURVE authentication
-    assert ns.auth_domain == "*"
 
     ns = parse_args("start", "--auth-device", "a")
     assert ns.auth_plain is None  # do not use PLAIN authentication
     assert ns.auth_device == ["a"]  # a non-empty list takes precedence over the file
     assert ns.auth_curve is None  # do not use CURVE authentication
-    assert ns.auth_domain == "*"
 
-    ns = parse_args("start", "--auth-device", "a", "--port", "5555", "--auth-domain", "msl")
+    ns = parse_args("start", "--auth-device", "a", "--port", "5555")
     assert ns.auth_plain is None  # do not use PLAIN authentication
     assert ns.auth_device == ["a"]
     assert ns.auth_curve is None  # do not use CURVE authentication
-    assert ns.auth_domain == "msl"
     assert ns.port == 5555
 
     ns = parse_args(
@@ -196,7 +193,6 @@ def test_namespace_to_run_kwargs_debug(debug: bool) -> None:  # noqa: FBT001
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": debug,
         "monitor": debug,
         "addresses": None,
@@ -212,7 +208,6 @@ def test_namespace_to_run_kwargs_auth_device_default(home_dir: Path) -> None:
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": False,
         "monitor": False,
         "addresses": {"localhost": "127.0.0.1"},
@@ -227,7 +222,6 @@ def test_namespace_to_run_kwargs_auth_device_specified() -> None:
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": False,
         "monitor": False,
         "addresses": {"127.0.0.1": "127.0.0.1", "localhost": "127.0.0.1"},
@@ -244,7 +238,6 @@ def test_namespace_to_run_kwargs_auth_device_gaierror(caplog: pytest.LogCaptureF
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": False,
         "monitor": False,
         "addresses": {"localhost": "127.0.0.1"},
@@ -264,7 +257,6 @@ def test_namespace_to_run_kwargs_auth_plain_default(home_dir: Path) -> None:
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": False,
         "monitor": False,
         "addresses": None,
@@ -282,7 +274,6 @@ def test_namespace_to_run_kwargs_auth_plain_custom(tmp_path: Path) -> None:
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": False,
         "monitor": False,
         "addresses": None,
@@ -307,18 +298,17 @@ def test_namespace_to_run_kwargs_auth_curve_default(home_dir: Path) -> None:
     assert curve.public_key == public
     assert curve.secret_key == secret
     assert curve.keys == set()
-    assert curve.domain == "*"
 
 
 @pytest.mark.parametrize("allow_any", [False, True])
-def test_namespace_to_run_kwargs_auth_curve_domain_and_keys(tmp_path: Path, allow_any: bool) -> None:  # noqa: FBT001
+def test_namespace_to_run_kwargs_auth_curve_and_keys(tmp_path: Path, allow_any: bool) -> None:  # noqa: FBT001
     curves = tmp_path / "curves"
     curves.mkdir()
 
     _ = (curves / "a.key").write_text("public-key = abc")
     _ = (curves / "x.key").write_text("public-key = xyz")
 
-    args = ["start", "--auth-curve", str(tmp_path), "--auth-domain", "msl"]
+    args = ["start", "--auth-curve", str(tmp_path)]
     if allow_any:
         args.append("--auth-curve-allow-any")
 
@@ -333,7 +323,6 @@ def test_namespace_to_run_kwargs_auth_curve_domain_and_keys(tmp_path: Path, allo
     assert curve.public_key == public
     assert secret is not None
     assert curve.secret_key == secret
-    assert curve.domain == "msl"
 
     if allow_any:
         assert not curve.keys
@@ -347,7 +336,6 @@ def test_namespace_to_run_kwargs_monitor() -> None:
     assert kwargs == {
         "host": "*",
         "port": BROKER_PORT,
-        "domain": "*",
         "zap_debug": False,
         "monitor": True,
         "addresses": None,
@@ -356,7 +344,7 @@ def test_namespace_to_run_kwargs_monitor() -> None:
     }
 
 
-def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:  # noqa: PLR0915
+def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture, tmp_path: Path) -> None:  # noqa: PLR0915
     caplog.set_level("INFO")
 
     main("plain", "list")
@@ -369,8 +357,16 @@ def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:  #
     ]
     caplog.clear()
 
-    main("plain", "add", "--file", "missing.json")
-    assert caplog.record_tuples == [("msl.network", logging.ERROR, "File not found: missing.json")]
+    new = tmp_path / "a" / "b" / "new.json"
+    assert not new.exists()
+    main("plain", "add", "--file", str(new), "-u", "admin", "-p", "secret")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Added authentication for 'admin'")]
+    assert json.loads(new.read_bytes()) == {"admin": "secret"}
+    caplog.clear()
+
+    main("plain", "add", "--file", str(new), "--username", "x", "--password", "y")
+    assert caplog.record_tuples == [("msl.network", logging.INFO, "Added authentication for 'x'")]
+    assert json.loads(new.read_bytes()) == {"admin": "secret", "x": "y"}
     caplog.clear()
 
     main("plain", "add", "-u", "me", "-p", "safe")
@@ -385,12 +381,20 @@ def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:  #
     assert caplog.record_tuples == [("msl.network", logging.INFO, '{\n  "me": "safe",\n  "msl": "12345"\n}')]
     caplog.clear()
 
+    main("plain", "list", "--file", "missing.json")
+    assert caplog.record_tuples == [("msl.network", logging.ERROR, "File not found: missing.json")]
+    caplog.clear()
+
     main("plain", "remove")
     assert caplog.record_tuples == [("msl.network", logging.INFO, "Must specify --username to remove a user")]
     caplog.clear()
 
     main("plain", "remove", "-u", "msl")
     assert caplog.record_tuples == [("msl.network", logging.INFO, "Removed authentication for 'msl'")]
+    caplog.clear()
+
+    main("plain", "remove", "--file", "missing.json")
+    assert caplog.record_tuples == [("msl.network", logging.ERROR, "File not found: missing.json")]
     caplog.clear()
 
     main("plain", "list")
@@ -425,6 +429,10 @@ def test_cli_plain(home_dir: Path, caplog: pytest.LogCaptureFixture) -> None:  #
     assert caplog.record_tuples == [("msl.network", logging.INFO, "Reset authentication for only 'user'")]
     caplog.clear()
 
+    main("plain", "reset", "--file", "missing.json")
+    assert caplog.record_tuples == [("msl.network", logging.ERROR, "File not found: missing.json")]
+    caplog.clear()
+
     main("plain", "list")
     assert caplog.record_tuples == [("msl.network", logging.INFO, '{\n  "user": "text"\n}')]
     caplog.clear()
@@ -450,7 +458,7 @@ def test_cli_curve_default_dir(home_dir: Path, caplog: pytest.LogCaptureFixture)
         (
             "msl.network",
             logging.INFO,
-            "Copy the public certificate to the $HOME/.curve directory on the computer running the broker",
+            "Copy the public certificate to the $HOME/.curve directory on another computer",
         ),
     ]
     caplog.clear()
@@ -467,7 +475,7 @@ def test_cli_curve_custom_dir(tmp_path: Path, caplog: pytest.LogCaptureFixture) 
 
     main("curve", "-d", "missing")
     assert caplog.record_tuples == [
-        ("msl.network", logging.ERROR, "Cannot create certificates, does 'missing' directory exist?")
+        ("msl.network", logging.ERROR, "Cannot create certificates. Does the 'missing' directory exist?")
     ]
     caplog.clear()
 
@@ -482,7 +490,7 @@ def test_cli_curve_custom_dir(tmp_path: Path, caplog: pytest.LogCaptureFixture) 
         (
             "msl.network",
             logging.INFO,
-            "Copy the public certificate to the $HOME/.curve directory on the computer running the broker",
+            "Copy the public certificate to the $HOME/.curve directory on another computer",
         ),
     ]
     caplog.clear()

@@ -27,27 +27,25 @@ USER_DIR: Final[Path] = Path("~" + os.getenv("SUDO_USER", "")).expanduser()
 
 MSL_NETWORK_HOME: Final[Path] = Path(os.getenv("MSL_NETWORK_HOME", USER_DIR / ".msl" / "network"))
 
+DOMAIN = "MSL"
+
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 
 
 class Curve:
     """Information for CURVE authentication."""
 
-    def __init__(
-        self, *, public_key: bytes = b"", secret_key: bytes = b"", keys: set[bytes] | None = None, domain: str = "*"
-    ) -> None:
+    def __init__(self, *, public_key: bytes = b"", secret_key: bytes = b"", keys: set[bytes] | None = None) -> None:
         """Information for CURVE authentication.
 
         Args:
             public_key: Public key to use for the Broker.
             secret_key: Secret key to use for the Broker.
             keys: A set of public z85 keys of devices that are allowed to connect to the Broker.
-            domain: The ZAP domain that the Broker is using.
         """
         self.public_key: bytes = public_key
         self.secret_key: bytes = secret_key
         self.keys: set[bytes] = keys or set()
-        self.domain: str = domain
 
     def callback(self, domain: str, key: bytes) -> bool:
         """Called during ZAP authentication when a device connects to the Broker.
@@ -59,7 +57,7 @@ class Curve:
         Returns:
             Whether the device can connect.
         """
-        return (domain == self.domain) and ((not self.keys) or (key in self.keys))
+        return (domain == DOMAIN) and ((not self.keys) or (key in self.keys))
 
 
 def get_logging_level(*, quiet: int, verbose: int) -> int:
@@ -76,7 +74,7 @@ def get_logging_level(*, quiet: int, verbose: int) -> int:
     return max(10, min(level, 50))
 
 
-def load_curves(home_dir: Path | None = None, domain: str = "*") -> Curve | None:  # noqa: C901
+def load_curves(home_dir: Path | None = None) -> Curve | None:  # noqa: C901
     """Load the CURVE authentication certificates."""
     root = home_dir or MSL_NETWORK_HOME
 
@@ -122,7 +120,7 @@ def load_curves(home_dir: Path | None = None, domain: str = "*") -> Curve | None
             keys.update(loaded)
             logger.debug("Loaded %d CURVE certificates from '%s'", len(loaded), directory)
 
-    return Curve(public_key=public_key, secret_key=secret_key, keys=keys, domain=domain)
+    return Curve(public_key=public_key, secret_key=secret_key, keys=keys)
 
 
 def load_devices(home_dir: Path | None = None) -> tuple[Path, set[str]]:
