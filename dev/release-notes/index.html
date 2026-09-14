@@ -1403,7 +1403,7 @@
 <p><strong><em>Changed:</em></strong></p>
 <ul>
 <li>the <code>result</code> object that is returned by a <code>Service</code> response can implement a callable <code>to_json()</code> method</li>
-<li>the value of the <code>algorithm</code> keyword argument in <code>get_fingerprint</code> can now be of type <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></li>
+<li>the value of the <code>algorithm</code> keyword argument in <code>get_fingerprint</code> can now be of type <a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></li>
 <li>renamed <code>uuid</code> to be <code>uid</code> in the JSON format</li>
 <li>making an asynchronous request now returns a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future">concurrent.futures.Future</a> instance instead of an <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/asyncio-future.html#asyncio.Future">asyncio.Future</a> instance</li>
 <li><code>Client</code> and <code>Service</code> are subclasses of <code>Device</code></li>
@@ -1425,7 +1425,7 @@
 <p><strong><em>Removed:</em></strong></p>
 <ul>
 <li>support for Python 3.5</li>
-<li>the <code>MSLNetworkError</code> exception class (a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError">RuntimeError</a> is raised instead)</li>
+<li>the <code>MSLNetworkError</code> exception class (a <a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError">RuntimeError</a> is raised instead)</li>
 <li>the <code>Service.set_debug</code> method</li>
 <li>the <code>termination</code> and <code>encoding</code> class attributes of <code>Network</code></li>
 <li>the <code>send_pending_requests</code>, <code>raise_latest_error</code> and <code>wait</code> methods of a <code>Client</code></li>

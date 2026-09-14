@@ -1127,13 +1127,74 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#authentication" class="md-nav__link">
+  <a href="#security" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Authentication
+        Security
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Security">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#grasslands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grasslands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strawhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strawhouse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#woodhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Woodhouse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stonehouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stonehouse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ironhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ironhouse
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1159,7 +1220,148 @@
 
 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¤</a></h1>
 <h2 id="broker">Broker<a class="headerlink" href="#broker" title="Permanent link">¤</a></h2>
-<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">¤</a></h2>
+<h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">¤</a></h2>
+<p>There are five ways in which you can control the security of a device connecting to a <a class="autorefs autorefs-internal" href="#broker">Broker</a>. Since security is handle by ZeroMQ sockets, we use the same <a href="http://hintjens.com/blog:49">mnemonic names</a> commonly used by the ZeroMQ community to illustrate the different ways you can use security in your application. You may also want to read <a href="https://rfc.zeromq.org/spec/27/">background information</a> about the ZeroMQ Authentication Protocol.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: center;">Restrict IP addresses</th>
+<th style="text-align: center;">Username/Password Authentication</th>
+<th style="text-align: center;">CURVE Encryption</th>
+<th style="text-align: center;"><a class="autorefs autorefs-internal" href="#broker">Broker</a> Verified</th>
+<th style="text-align: center;"><a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> Verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#grasslands">Grasslands</a></td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a></td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#woodhouse">Woodhouse</a></td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x274C;</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#stonehouse">Stonehouse</a></td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x274C;</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#ironhouse">Ironhouse</a></td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x274C;</td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x2705;</td>
+<td style="text-align: center;">&#x2705;</td>
+</tr>
+</tbody>
+</table>
+<h3 id="grasslands">Grasslands<a class="headerlink" href="#grasslands" title="Permanent link">¤</a></h3>
+<p>No encryption. No security. This is the default mechanism.</p>
+<p>Start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> using,
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
+</code></pre></div></p>
+<p>and use the default parameters for <code>curve</code> and <code>plain</code> when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="strawhouse">Strawhouse<a class="headerlink" href="#strawhouse" title="Permanent link">¤</a></h3>
+<p>No encryption. The <a class="autorefs autorefs-internal" href="#broker">Broker</a> allows connections from only specific devices, based on the hostname or IP address of the device. This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-null-mechanism">NULL</a> mechanism.</p>
+<p>On the computer that you want to run the <a class="autorefs autorefs-internal" href="#broker">Broker</a> on, you can save the devices that are allowed to connect to the <a class="autorefs autorefs-internal" href="#broker">Broker</a> in a file,
+<div class="highlight"><pre><span></span><code><span class="go">msl-network device add 192.168.1.10 lab-computer</span>
+</code></pre></div></p>
+<p>and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the devices from the file.
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-device</span>
+</code></pre></div></p>
+<p>Alternatively, you can specify the devices directly when starting the <a class="autorefs autorefs-internal" href="#broker">Broker</a> (which will not read the devices from the file).
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-device 192.168.1.32</span>
+</code></pre></div></p>
+<p>Use the default parameters for <code>curve</code> and <code>plain</code> when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+</code></pre></div>
+<p>Run <code>msl-network device --help</code> for more details about managing authorised devices.</p>
+<h3 id="woodhouse">Woodhouse<a class="headerlink" href="#woodhouse" title="Permanent link">¤</a></h3>
+<p>No encryption. The <a class="autorefs autorefs-internal" href="#broker">Broker</a> requires a username and password for a device to connect. In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-plain-mechanism">PLAIN</a> mechanism.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>A username and password is sent in <em>plain</em> text through the network. Use this security mechanism only on trusted networks.</p>
+</div>
+<p>Save the usernames and passwords of authorised users to a file,
+<div class="highlight"><pre><span></span><code><span class="go">msl-network plain add --username me --password secret</span>
+<span class="go">msl-network plain add --username you --password danger</span>
+</code></pre></div></p>
+<p>and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the usernames and passwords from a file.
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-plain</span>
+</code></pre></div></p>
+<p>Specify the <code>plain</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthPlain</span><span class="p">,</span> <span class="n">Client</span>
+
+<span class="c1"># Either specify the values directly in your code</span>
+<span class="n">auth</span> <span class="o">=</span> <span class="n">AuthPlain</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">"me"</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">"secret"</span><span class="p">)</span>
+
+<span class="c1"># or you can load the values from a file</span>
+<span class="n">auth</span> <span class="o">=</span> <span class="n">AuthPlain</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"~/auth.txt"</span><span class="p">)</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">plain</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+</code></pre></div>
+<p>Run <code>msl-network plain --help</code> for more details about managing usernames and passwords.</p>
+<h3 id="stonehouse">Stonehouse<a class="headerlink" href="#stonehouse" title="Permanent link">¤</a></h3>
+<p>Messages are encrypted with <a href="https://rfc.zeromq.org/spec/26/">elliptic-curve</a> cryptography. A <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> verifies the public certificate of a <a class="autorefs autorefs-internal" href="#broker">Broker</a> (one-way verification). In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-curve-mechanism">CURVE</a> mechanism.</p>
+<p>Create CURVE certificates on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a>,
+<div class="highlight"><pre><span></span><code><span class="go">msl-network curve</span>
+</code></pre></div></p>
+<p>and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the certificates.
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-curve</span>
+</code></pre></div></p>
+<p>Copy the <a class="autorefs autorefs-internal" href="#broker">Broker</a>'s public certificate to a computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and specify the <code>curve</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthCurve</span><span class="p">,</span> <span class="n">Client</span>
+
+<span class="c1"># Load the public CURVE certificate of the Broker</span>
+<span class="n">auth</span> <span class="o">=</span> <span class="n">AuthCurve</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"~/.curve/broker.key"</span><span class="p">)</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">curve</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+</code></pre></div>
+<p>Run <code>msl-network curve --help</code> for more details about creating CURVE certificates.</p>
+<h3 id="ironhouse">Ironhouse<a class="headerlink" href="#ironhouse" title="Permanent link">¤</a></h3>
+<p>Messages are encrypted with <a href="https://rfc.zeromq.org/spec/26/">elliptic-curve</a> cryptography. The <a class="autorefs autorefs-internal" href="#broker">Broker</a> verifies the public certificate of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> verifies the public certificate of the <a class="autorefs autorefs-internal" href="#broker">Broker</a> (two-way verification). In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-curve-mechanism">CURVE</a> mechanism.</p>
+<p>Create CURVE certificates on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a> and also on the computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.
+<div class="highlight"><pre><span></span><code><span class="go">msl-network curve</span>
+</code></pre></div></p>
+<p>Copy a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>'s public certificate to the <code>$HOME/.curve</code> directory on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a> and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the certificates.
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-curve</span>
+</code></pre></div></p>
+<p>Copy the <a class="autorefs autorefs-internal" href="#broker">Broker</a>'s public certificate to a computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and specify the <code>curve</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthCurve</span><span class="p">,</span> <span class="n">Client</span>
+
+<span class="c1"># Load the public CURVE certificate of the Broker</span>
+<span class="n">auth</span> <span class="o">=</span> <span class="n">AuthCurve</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"~/.curve/broker.key"</span><span class="p">)</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">curve</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+</code></pre></div>
+<p>Run <code>msl-network curve --help</code> for more details about creating CURVE certificates.</p>
 
 
 
