@@ -27,6 +27,7 @@
         "bufferobjects",
         "caplog",
         "capsys",
+        "deserialised",
         "EHOSTUNREACH",
         "fdel",
         "gaierror",

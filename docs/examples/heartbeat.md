@@ -17,15 +17,15 @@ Start the Broker by running the following command.
 msl-network start
 ```
 
-## Start the `Heartbeat` service  {: #heartbeat-connect }
-Open another terminal and start the service running the following command.
+## Start the `Heartbeat` Worker  {: #heartbeat-worker }
+Open another terminal and start the service by running the following command.
 
 ```console
 python -c "from msl.examples.network import Heartbeat; h = Heartbeat(); h.add_tasks(h.emit()); h.connect()"
 ```
 
 ## Run the `Client` {: #heartbeat-client }
-Connect to the Manager as a Client, link with the Heartbeat service, handle publications from the service and also send requests to the service.
+Connect to the Broker as a Client, link with the Heartbeat service, subscribe to publications from the service and also send requests to the service.
 
 ```python
 from msl.network import Client

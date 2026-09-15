@@ -17,7 +17,7 @@ Start the Broker by running the following command.
 msl-network start
 ```
 
-## Start the `Echo` service  {: #echo-connect }
+## Start the `Echo` Worker  {: #echo-worker }
 Open another terminal and start the service by running the following command.
 
 ```console
@@ -25,7 +25,7 @@ python -c "from msl.examples.network import Echo; Echo().connect()"
 ```
 
 ## Run the `Client` {: #echo-client }
-Connect to the Manager as a Client, link with the Echo service and then send requests,
+Connect to the Broker as a Client, link with the Echo service and then send requests.
 
 ```python
 from msl.network import Client
