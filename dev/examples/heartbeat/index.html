@@ -716,10 +716,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#heartbeat-connect" class="md-nav__link">
+  <a href="#heartbeat-worker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Heartbeat service
+        Start the Heartbeat Worker
       
     </span>
   </a>
@@ -1209,10 +1209,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#heartbeat-connect" class="md-nav__link">
+  <a href="#heartbeat-worker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Heartbeat service
+        Start the Heartbeat Worker
       
     </span>
   </a>
@@ -1308,12 +1308,12 @@
 <p>Start the Broker by running the following command.</p>
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
 </code></pre></div>
-<h2 id="heartbeat-connect">Start the <code>Heartbeat</code> service<a class="headerlink" href="#heartbeat-connect" title="Permanent link">¤</a></h2>
-<p>Open another terminal and start the service running the following command.</p>
+<h2 id="heartbeat-worker">Start the <code>Heartbeat</code> Worker<a class="headerlink" href="#heartbeat-worker" title="Permanent link">¤</a></h2>
+<p>Open another terminal and start the service by running the following command.</p>
 <div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Heartbeat; h = Heartbeat(); h.add_tasks(h.emit()); h.connect()"</span>
 </code></pre></div>
 <h2 id="heartbeat-client">Run the <code>Client</code><a class="headerlink" href="#heartbeat-client" title="Permanent link">¤</a></h2>
-<p>Connect to the Manager as a Client, link with the Heartbeat service, handle publications from the service and also send requests to the service.</p>
+<p>Connect to the Broker as a Client, link with the Heartbeat service, subscribe to publications from the service and also send requests to the service.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 

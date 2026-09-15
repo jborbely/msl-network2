@@ -688,10 +688,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#echo-connect" class="md-nav__link">
+  <a href="#echo-worker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Echo service
+        Start the Echo Worker
       
     </span>
   </a>
@@ -1209,10 +1209,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#echo-connect" class="md-nav__link">
+  <a href="#echo-worker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Echo service
+        Start the Echo Worker
       
     </span>
   </a>
@@ -1287,12 +1287,12 @@
 <p>Start the Broker by running the following command.</p>
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
 </code></pre></div>
-<h2 id="echo-connect">Start the <code>Echo</code> service<a class="headerlink" href="#echo-connect" title="Permanent link">¤</a></h2>
+<h2 id="echo-worker">Start the <code>Echo</code> Worker<a class="headerlink" href="#echo-worker" title="Permanent link">¤</a></h2>
 <p>Open another terminal and start the service by running the following command.</p>
 <div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Echo; Echo().connect()"</span>
 </code></pre></div>
 <h2 id="echo-client">Run the <code>Client</code><a class="headerlink" href="#echo-client" title="Permanent link">¤</a></h2>
-<p>Connect to the Manager as a Client, link with the Echo service and then send requests,</p>
+<p>Connect to the Broker as a Client, link with the Echo service and then send requests.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 <span class="k">with</span> <span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
