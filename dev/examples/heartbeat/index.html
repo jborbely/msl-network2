@@ -716,10 +716,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#heartbeat-worker" class="md-nav__link">
+  <a href="#heartbeat-service" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Heartbeat Worker
+        Start the Heartbeat Service
       
     </span>
   </a>
@@ -908,14 +908,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/worker/" class="md-nav__link">
+      <a href="../../api/service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1209,10 +1209,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#heartbeat-worker" class="md-nav__link">
+  <a href="#heartbeat-service" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Heartbeat Worker
+        Start the Heartbeat Service
       
     </span>
   </a>
@@ -1251,8 +1251,17 @@
 
 
 <h1 id="heartbeat">Heartbeat<a class="headerlink" href="#heartbeat" title="Permanent link">¤</a></h1>
-<p>Example service that publishes data to all subscribed Clients.</p>
-<p>This example also shows how to add a task to the event loop of the service.</p>
+<p>Example Service that publishes data to all subscribed Clients.</p>
+<p>This example also shows how to add a task to the event loop of the Service.</p>
+<h2 id="heartbeat-broker">Start the <code>Broker</code><a class="headerlink" href="#heartbeat-broker" title="Permanent link">¤</a></h2>
+<p>Start the Broker by running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
+</code></pre></div>
+<h2 id="heartbeat-service">Start the <code>Heartbeat</code> Service<a class="headerlink" href="#heartbeat-service" title="Permanent link">¤</a></h2>
+<p>Open another terminal and start the service by running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Heartbeat; h = Heartbeat(); h.add_tasks(h.emit()); h.connect()"</span>
+</code></pre></div>
+<p>The source code is:</p>
 <!-- fmt: off -->
 <div class="highlight"><pre><span></span><code><span class="sd">"""Example service that publishes data to all subscribed Clients.</span>
 
@@ -1261,10 +1270,10 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Worker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Service</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Heartbeat</span><span class="p">(</span><span class="n">Worker</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Heartbeat</span><span class="p">(</span><span class="n">Service</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A service that publishes a counter value."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1304,14 +1313,6 @@
 </code></pre></div>
 <!-- fmt: on -->
 
-<h2 id="heartbeat-broker">Start the <code>Broker</code><a class="headerlink" href="#heartbeat-broker" title="Permanent link">¤</a></h2>
-<p>Start the Broker by running the following command.</p>
-<div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
-</code></pre></div>
-<h2 id="heartbeat-worker">Start the <code>Heartbeat</code> Worker<a class="headerlink" href="#heartbeat-worker" title="Permanent link">¤</a></h2>
-<p>Open another terminal and start the service by running the following command.</p>
-<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Heartbeat; h = Heartbeat(); h.add_tasks(h.emit()); h.connect()"</span>
-</code></pre></div>
 <h2 id="heartbeat-client">Run the <code>Client</code><a class="headerlink" href="#heartbeat-client" title="Permanent link">¤</a></h2>
 <p>Connect to the Broker as a Client, link with the Heartbeat service, subscribe to publications from the service and also send requests to the service.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
@@ -1324,6 +1325,11 @@
 
 <span class="k">with</span> <span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
     <span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Heartbeat"</span><span class="p">)</span>
+
+    <span class="c1"># You can also request what functions are available from the linked Service</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">signatures</span><span class="p">())</span>
+
+    <span class="c1"># Subscribe to publications with a function that will be called with the published data</span>
     <span class="n">link</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">heartbeat_handler</span><span class="p">)</span>
 
     <span class="c1"># Wait until ENTER is pressed to reset the counter</span>

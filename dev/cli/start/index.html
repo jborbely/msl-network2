@@ -821,14 +821,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/worker/" class="md-nav__link">
+      <a href="../../api/service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1166,17 +1166,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#start-auth-domain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --auth-domain DOMAIN
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#start-auth-device" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1357,17 +1346,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#start-auth-domain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --auth-domain DOMAIN
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#start-auth-device" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1483,7 +1461,7 @@
 <h1 id="msl-network-start">msl-network start<a class="headerlink" href="#msl-network-start" title="Permanent link">¤</a></h1>
 <p>Start the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a> as a message proxy.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">¤</a></h2>
-<div class="highlight"><pre><span></span><code><span class="go">msl-network start [--auth-curve [KEYS_DIR]] [--auth-curve-allow-any] [--auth-domain DOMAIN] [--auth-device [DEVICE ...]] [--auth-plain [JSON_FILE]] [-H HOST] [-p PORT] [-m] [-h] [-q] [-v]</span>
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start [--auth-curve [KEYS_DIR]] [--auth-curve-allow-any] [--auth-device [DEVICE ...]] [--auth-plain [JSON_FILE]] [-H HOST] [-p PORT] [-m] [-h] [-q] [-v]</span>
 </code></pre></div>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">¤</a></h2>
 <h3 class="cli-header" id="start-auth-curve">--auth-curve [KEYS_DIR]<a class="headerlink" href="#start-auth-curve" title="Permanent link">¤</a></h3>
@@ -1497,15 +1475,14 @@
 <p>See <a class="autorefs autorefs-internal" href="../curve/#msl-network-curve">msl-network curve</a> for more details.</p>
 <h3 class="cli-header" id="start-auth-curve-allow-any">--auth-curve-allow-any<a class="headerlink" href="#start-auth-curve-allow-any" title="Permanent link">¤</a></h3>
 <p>Allow <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> keys from any device. Enabled by default if no public key files are found.</p>
-<h3 class="cli-header" id="start-auth-domain">--auth-domain DOMAIN<a class="headerlink" href="#start-auth-domain" title="Permanent link">¤</a></h3>
-<p>The domain to use for <a href="https://rfc.zeromq.org/spec/24/">PLAIN</a> or <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> authentication. Default is <code>*</code>.</p>
+<p>If you have public keys of devices stored in the <code>~/.curve</code> or <code>~/.msl/network/curves</code> directories, then only devices that send a valid key during authentication are allowed to connect. You can ignore the stored keys by specifying this flag so that a <a class="autorefs autorefs-internal" href="../../#broker">Broker</a> does not validate the key of a connecting device (the connecting device still validates the key of the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>).</p>
 <h3 class="cli-header" id="start-auth-device">--auth-device [DEVICE ...]<a class="headerlink" href="#start-auth-device" title="Permanent link">¤</a></h3>
 <p>Use authentication based on the IP address (or hostname) of devices that are allowed to connect.</p>
 <p>Specifying this flag without additional values will use the devices stored in the default file. See <a class="autorefs autorefs-internal" href="../device/#msl-network-device">msl-network device</a> for more details.
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-device</span>
 </code></pre></div></p>
 <p>Specifying this flag with one or more values will use the specified devices and ignore the list of devices stored in the default file.
-<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-device 10.9.102.80 msl-lab-computer</span>
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-device 10.9.102.80 lab-computer</span>
 </code></pre></div></p>
 <h3 class="cli-header" id="start-auth-plain">--auth-plain [JSON_FILE]<a class="headerlink" href="#start-auth-plain" title="Permanent link">¤</a></h3>
 <p>Use authentication based on usernames and passwords.</p>

@@ -826,14 +826,14 @@
   
   
     <li class="md-nav__item">
-      <a href="api/worker/" class="md-nav__link">
+      <a href="api/service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1149,10 +1149,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#worker-load-balancing" class="md-nav__link">
+  <a href="#service-load-balancing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Worker Load Balancing
+        Service Load Balancing
       
     </span>
   </a>
@@ -1252,48 +1252,49 @@
 
 
 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¤</a></h1>
-<p><code>msl-network</code> uses concurrency and asynchronous programming to transfer messages across a network and it is composed of three objects &mdash; a <a class="autorefs autorefs-internal" href="#broker">Broker</a>, <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>s and <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>s.</p>
+<p><code>msl-network</code> uses concurrency and asynchronous programming to transfer messages across a network and it is composed of three objects &mdash; a <a class="autorefs autorefs-internal" href="#broker">Broker</a>, <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>s and <a class="autorefs autorefs-internal" href="api/service/#service">Service</a>s.</p>
 <ul>
 <li>
 <p><strong><em>Broker</em></strong></p>
 <ul>
 <li>Central node in the network.</li>
-<li>Clients and Workers connect to it.</li>
-<li>Routes messages to the appropriate recipient (Client or Worker).</li>
+<li>Clients and Services connect to it.</li>
+<li>Routes messages to the appropriate recipient (Client or Service).</li>
 </ul>
 </li>
 <li>
 <p><strong><em>Client</em></strong></p>
 <ul>
 <li>Connects to a Broker.</li>
-<li>Creates a Link with a specific Worker.</li>
-<li>Sends requests to the Worker (asynchronously or synchronously) and receives the reply.</li>
-<li>Subscribes to messages published by a Worker.</li>
+<li>Creates a Link with a Service (a single Client can create multiple links).</li>
+<li>Sends requests to the Service and receives the reply.</li>
+<li>Subscribes to messages that are published by the Service.</li>
 </ul>
 </li>
 <li>
-<p><strong><em>Worker</em></strong> (<em>a.k.a</em> <strong><em>Service</em></strong>)</p>
+<p><strong><em>Service</em></strong></p>
 <ul>
 <li>Connects to a Broker.</li>
-<li>Handles requests from a Client and sends the reply.</li>
-<li>Publishes messages to all subscribed Links.</li>
+<li>Processes requests from a Client and sends the reply.</li>
+<li>Publishes messages to all subscribed Clients.</li>
 </ul>
 </li>
 </ul>
-<p>Messages are transferred using <a href="https://zeromq.org/">ZeroMQ</a> sockets. As such, the order in which you run a Broker, Client or Worker does not matter. A Worker can connect to a Broker that has not started yet and when the Broker does start running it will register the Worker as a service that is available for Clients to interact with. When a Worker disconnects, the Broker unregisters it.</p>
-<p>Any programming language that has <a href="https://zeromq.org/get-started/">ZeroMQ bindings</a> available can be used to implement a Client or a Worker. So a Client written in Python could be requesting a Worker written in C++ to process the request (or vice versa).</p>
+<p><img alt="links.png" src="assets/images/links.png" /></p>
+<p>Messages are transferred using <a href="https://zeromq.org/">ZeroMQ</a> sockets. As such, the order in which you run a Broker, Client or Service does not matter. A Service can connect to a Broker that has not started yet and when the Broker does start running it will register the Service as a service that is available for Clients to interact with. When a Service disconnects, the Broker unregisters it.</p>
+<p>Any programming language that has ZeroMQ <a href="https://zeromq.org/get-started/">bindings</a> available can be used to implement a Client or a Service. So a Client written in Python could be requesting a Service written in C++ to process the request (or vice versa).</p>
 <h2 id="broker">Broker<a class="headerlink" href="#broker" title="Permanent link">¤</a></h2>
-<p>A Broker is the central node in the network. Running a single Broker instance can support many <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>s and <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>s connected to it simultaneously. The Broker routes a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>'s request to the appropriate <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and sends a <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>'s reply back to the <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> (ZeroMQ REQ-REP pattern). A Broker also broadcasts a message published by a <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> to all <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>'s that are subscribed (ZeroMQ PUB-SUB pattern).</p>
+<p>A Broker is the central node in the network. Running a single Broker instance can support many <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>s and <a class="autorefs autorefs-internal" href="api/service/#service">Service</a>s connected to it simultaneously. The Broker routes a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>'s request to the appropriate <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> and sends a <a class="autorefs autorefs-internal" href="api/service/#service">Service</a>'s reply back to the <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> (ZeroMQ REQ-REP pattern). A Broker also broadcasts a message published by a <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> to all <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>'s that are subscribed (ZeroMQ PUB-SUB pattern).</p>
 <p>There are a few runnable <a class="autorefs autorefs-internal" title="Examples" href="examples/#examples">examples</a> that are available when <code>msl-network</code> is installed. The <a class="autorefs autorefs-internal" href="examples/echo/#echo">Echo</a> example illustrates the ZeroMQ REQ-REP pattern and the <a class="autorefs autorefs-internal" href="examples/heartbeat/#heartbeat">Heartbeat</a> example illustrates the ZeroMQ PUB-SUB pattern.</p>
 <h2 id="message-format">Message Format<a class="headerlink" href="#message-format" title="Permanent link">¤</a></h2>
-<p>A message (a request, reply or publication) is transferred as bytes, but a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> and <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> can control how data is serialised into bytes and whether compression is applied before the bytes are transferred. The compression/serialisation method is controlled by the <a class="autorefs autorefs-internal" href="api/message/#flag">Flag</a> enumeration value. When a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> receives a reply from a <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>, the reply is automatically decompressed and deserialised.</p>
-<p>The default serialisation method uses the <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/pickle.html#module-pickle">pickle</a> format with no compression. When using the <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/pickle.html#module-pickle">pickle</a> module to serialise data, it is important that you trust the <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>s and <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>s that you are sending messages to.</p>
-<p>You can also temporarily change the flag value before sending a request (see <a class="autorefs autorefs-internal" title="            flag_at" href="api/client/#msl.network.client.Client.flag_at">here</a>) or a reply (see <a class="autorefs autorefs-internal" title="            flag_at" href="api/worker/#msl.network.worker.Worker.flag_at">here</a>).</p>
+<p>A message (a request, reply or publication) is transferred as bytes, but a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> and <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> can control how data is serialised into bytes and whether compression is applied before the bytes are transferred. The serialisation/compression algorithm is controlled by the <a class="autorefs autorefs-internal" href="api/message/#flag">Flag</a> enumeration value. When a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> receives a reply from a <a class="autorefs autorefs-internal" href="api/service/#service">Service</a>, the reply is automatically decompressed and deserialised.</p>
+<p>The default serialisation method uses the <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/pickle.html#module-pickle">pickle</a> format with no compression. When using the <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/pickle.html#module-pickle">pickle</a> module to serialise data, it is important that you trust the <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>s and <a class="autorefs autorefs-internal" href="api/service/#service">Service</a>s that you are transferring messages to.</p>
+<p>You can also temporarily change the flag value before sending a request (see <a class="autorefs autorefs-internal" title="            flag_at" href="api/client/#msl.network.client.Client.flag_at">here</a>) or a reply (see <a class="autorefs autorefs-internal" title="            flag_at" href="api/service/#msl.network.service.Service.flag_at">here</a>).</p>
 <h2 id="asynchronous-requests">(A)synchronous Requests<a class="headerlink" href="#asynchronous-requests" title="Permanent link">¤</a></h2>
 <p>A <a class="autorefs autorefs-internal" href="api/client/#client">Client</a> can send requests either asynchronously or synchronously (the default). When an asynchronous request is sent a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future">Future</a> instance is returned that will eventually contain the reply to the request as the <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future.result">result</a>. When a synchronous request is sent, the reply is returned.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
-<p>See the <a class="autorefs autorefs-internal" href="examples/echo/#echo">Echo</a> example to <a class="autorefs autorefs-internal" title="Start the " href="examples/echo/#echo-broker">start the Broker</a> and <a class="autorefs autorefs-internal" title="Start the " href="examples/echo/#echo-worker">start the Worker</a> so that you can run the following script.</p>
+<p>See the <a class="autorefs autorefs-internal" href="examples/echo/#echo">Echo</a> example to <a class="autorefs autorefs-internal" title="Start the " href="examples/echo/#echo-broker">start the Broker</a> and <a class="autorefs autorefs-internal" title="Start the " href="examples/echo/#echo-service">start the Service</a> so that you can run the following example script.</p>
 </div>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
@@ -1319,10 +1320,10 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">future2</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">future3</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
 </code></pre></div>
-<h2 id="worker-load-balancing">Worker Load Balancing<a class="headerlink" href="#worker-load-balancing" title="Permanent link">¤</a></h2>
-<p>While a <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> is processing a request, it cannot receive another request. If a <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> is continuously busy processing requests you can start multiple instances of the <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and the <a class="autorefs autorefs-internal" href="#broker">Broker</a> will evenly distribute requests amongst the <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>s. You could run an instance of the <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> multiple times on the same computer or you could run the <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> on multiple computers (a Broker cannot tell the difference and does not care where a <a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> is connecting from).</p>
+<h2 id="service-load-balancing">Service Load Balancing<a class="headerlink" href="#service-load-balancing" title="Permanent link">¤</a></h2>
+<p>While a <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> is processing a request, it cannot receive another request. If a <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> is continuously busy processing requests you can run multiple instances of the <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> and the <a class="autorefs autorefs-internal" href="#broker">Broker</a> will evenly distribute requests amongst the <a class="autorefs autorefs-internal" href="api/service/#service">Service</a>s. You could run an instance of the <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> multiple times on the same computer or you could run the <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> on multiple computers (a Broker cannot tell the difference and does not care where a <a class="autorefs autorefs-internal" href="api/service/#service">Service</a> is connecting from).</p>
 <h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">¤</a></h2>
-<p>There are five ways in which you can control the security of a device connecting to a <a class="autorefs autorefs-internal" href="#broker">Broker</a>. Since security is handle by ZeroMQ sockets, we use the same <a href="http://hintjens.com/blog:49">mnemonic names</a> commonly used by the ZeroMQ community to illustrate the different ways you can use security in your application. You may also want to read <a href="https://rfc.zeromq.org/spec/27/">background information</a> about the ZeroMQ Authentication Protocol.</p>
+<p>There are five ways in which you can control the security of a device connecting to a <a class="autorefs autorefs-internal" href="#broker">Broker</a>. Since security is handled by ZeroMQ sockets, we use the same <a href="http://hintjens.com/blog:49">mnemonic names</a> commonly used by the ZeroMQ community to illustrate the different ways you can use security in your application. You may also want to read <a href="https://rfc.zeromq.org/spec/27/">background information</a> about the ZeroMQ Authentication Protocol.</p>
 <table>
 <thead>
 <tr>
@@ -1331,7 +1332,7 @@
 <th style="text-align: center;">Username/Password Authentication</th>
 <th style="text-align: center;">CURVE Encryption</th>
 <th style="text-align: center;"><a class="autorefs autorefs-internal" href="#broker">Broker</a> Verified</th>
-<th style="text-align: center;"><a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> Verified</th>
+<th style="text-align: center;"><a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a> Verified</th>
 </tr>
 </thead>
 <tbody>
@@ -1382,7 +1383,7 @@
 <p>Start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> using,
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
 </code></pre></div></p>
-<p>and use the default parameters for <code>curve</code> and <code>plain</code> when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<p>and use the default parameters for <code>curve</code> and <code>plain</code> when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
@@ -1398,7 +1399,7 @@
 <p>Alternatively, you can specify the devices directly when starting the <a class="autorefs autorefs-internal" href="#broker">Broker</a> (which will not read the devices from the file).
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-device 192.168.1.32</span>
 </code></pre></div></p>
-<p>Use the default parameters for <code>curve</code> and <code>plain</code> when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<p>Use the default parameters for <code>curve</code> and <code>plain</code> when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
@@ -1417,7 +1418,7 @@
 <p>and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the usernames and passwords from a file.
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-plain</span>
 </code></pre></div></p>
-<p>Specify the <code>plain</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<p>Specify the <code>plain</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthPlain</span><span class="p">,</span> <span class="n">Client</span>
 
 <span class="c1"># Either specify the values directly in your code</span>
@@ -1430,14 +1431,14 @@
 </code></pre></div>
 <p>Run <code>msl-network plain --help</code> for more details about managing usernames and passwords.</p>
 <h3 id="stonehouse">Stonehouse<a class="headerlink" href="#stonehouse" title="Permanent link">¤</a></h3>
-<p>Messages are encrypted with <a href="https://rfc.zeromq.org/spec/26/">elliptic-curve</a> cryptography. A <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> verifies the public certificate of a <a class="autorefs autorefs-internal" href="#broker">Broker</a> (one-way verification). In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-curve-mechanism">CURVE</a> mechanism.</p>
+<p>Messages are encrypted with <a href="https://rfc.zeromq.org/spec/26/">elliptic-curve</a> cryptography. A <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a> verifies the public certificate of a <a class="autorefs autorefs-internal" href="#broker">Broker</a> (one-way verification). In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-curve-mechanism">CURVE</a> mechanism.</p>
 <p>Create CURVE certificates on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a>,
 <div class="highlight"><pre><span></span><code><span class="go">msl-network curve</span>
 </code></pre></div></p>
 <p>and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the certificates.
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-curve</span>
 </code></pre></div></p>
-<p>Copy the <a class="autorefs autorefs-internal" href="#broker">Broker</a>'s public certificate to a computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and specify the <code>curve</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<p>Copy the <a class="autorefs autorefs-internal" href="#broker">Broker</a>'s public certificate to a computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a> and specify the <code>curve</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthCurve</span><span class="p">,</span> <span class="n">Client</span>
 
 <span class="c1"># Load the public CURVE certificate of the Broker</span>
@@ -1447,14 +1448,14 @@
 </code></pre></div>
 <p>Run <code>msl-network curve --help</code> for more details about creating CURVE certificates.</p>
 <h3 id="ironhouse">Ironhouse<a class="headerlink" href="#ironhouse" title="Permanent link">¤</a></h3>
-<p>Messages are encrypted with <a href="https://rfc.zeromq.org/spec/26/">elliptic-curve</a> cryptography. The <a class="autorefs autorefs-internal" href="#broker">Broker</a> verifies the public certificate of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> verifies the public certificate of the <a class="autorefs autorefs-internal" href="#broker">Broker</a> (two-way verification). In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-curve-mechanism">CURVE</a> mechanism.</p>
-<p>Create CURVE certificates on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a> and also on the computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.
+<p>Messages are encrypted with <a href="https://rfc.zeromq.org/spec/26/">elliptic-curve</a> cryptography. The <a class="autorefs autorefs-internal" href="#broker">Broker</a> verifies the public certificate of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a> and a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a> verifies the public certificate of the <a class="autorefs autorefs-internal" href="#broker">Broker</a> (two-way verification). In addition, a <a class="autorefs autorefs-internal" href="#broker">Broker</a> may also allow connections from only specific devices (see <a class="autorefs autorefs-internal" href="#strawhouse">Strawhouse</a>). This security layer is known as the <a href="https://rfc.zeromq.org/spec/27/#the-curve-mechanism">CURVE</a> mechanism.</p>
+<p>Create CURVE certificates on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a> and also on the computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>.
 <div class="highlight"><pre><span></span><code><span class="go">msl-network curve</span>
 </code></pre></div></p>
-<p>Copy a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>'s public certificate to the <code>$HOME/.curve</code> directory on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a> and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the certificates.
+<p>Copy a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>'s public certificate to the <code>$HOME/.curve</code> directory on the computer running the <a class="autorefs autorefs-internal" href="#broker">Broker</a> and start a <a class="autorefs autorefs-internal" href="#broker">Broker</a> by reading the certificates.
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-curve</span>
 </code></pre></div></p>
-<p>Copy the <a class="autorefs autorefs-internal" href="#broker">Broker</a>'s public certificate to a computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a> and specify the <code>curve</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/worker/#worker">Worker</a>.</p>
+<p>Copy the <a class="autorefs autorefs-internal" href="#broker">Broker</a>'s public certificate to a computer connecting as a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a> and specify the <code>curve</code> parameter when creating an instance of a <a class="autorefs autorefs-internal" href="api/client/#client">Client</a>/<a class="autorefs autorefs-internal" href="api/service/#service">Service</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthCurve</span><span class="p">,</span> <span class="n">Client</span>
 
 <span class="c1"># Load the public CURVE certificate of the Broker</span>

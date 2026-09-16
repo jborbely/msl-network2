@@ -886,14 +886,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../worker/" class="md-nav__link">
+      <a href="../service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1236,7 +1236,7 @@ flag with one compression flag, e.g.,</p>
 </ul>
 <p>A <a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError">KeyError</a> will be raised when you use a flag that is a union of more than
 one serialisation flag or more than one compression flag when a <em>request</em> or a
-<em>response</em> is sent.</p>
+<em>reply</em> is sent.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -1257,9 +1257,9 @@ one serialisation flag or more than one compression flag when a <em>request</em>
             <td>
               <div class="doc-md-description">
                 <p>Do not apply (de)serialisation nor (de)compression. This flag
-is only useful if a method of a <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a>
+is only useful if a method of a <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>
 returns an object that supports the <a class="autorefs autorefs-external" href="https://docs.python.org/3/c-api/buffer.html#bufferobjects">buffer protocol</a>.
-As such, this flag is only applicable for a <em>response</em> and cannot be
+As such, this flag is only applicable for a <em>reply</em> and cannot be
 used for a <em>request</em>.</p>
               </div>
             </td>

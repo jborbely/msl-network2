@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://github.com/MSLNZ/msl-network/dev/api/auth/">
       
       
-        <link rel="prev" href="../worker/">
+        <link rel="prev" href="../service/">
       
       
         <link rel="next" href="../typing/">
@@ -828,14 +828,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../worker/" class="md-nav__link">
+      <a href="../service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1368,7 +1368,8 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The path to a certificate file.</p>
+                <p>The path to a certificate file. Can include <code>~</code> in the path, which will expand the
+user's home directory.</p>
               </div>
             </td>
             <td>
@@ -1394,7 +1395,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <code>(public, secret)</code> keys. The <code>secret</code> key can be <code>None</code> if it is not defined in the file.</p>
+                <p>The <code>(public, secret)</code> keys. The <code>secret</code> key might be <code>None</code> if it is not defined in the file.</p>
               </div>
             </td>
           </tr>
@@ -1418,14 +1419,16 @@
 <span class="normal">29</span>
 <span class="normal">30</span>
 <span class="normal">31</span>
-<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_certificate</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="normal">32</span>
+<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_certificate</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Load public and secret keys from a ZeroMQ certificate file.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        path: The path to a certificate file.</span>
+<span class="sd">        path: The path to a certificate file. Can include `~` in the path, which will expand the</span>
+<span class="sd">            user's home directory.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        The `(public, secret)` keys. The `secret` key can be `None` if it is not defined in the file.</span>
+<span class="sd">        The `(public, secret)` keys. The `secret` key might be `None` if it is not defined in the file.</span>
 <span class="sd">    """</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">fsdecode</span><span class="p">(</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -1479,7 +1482,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The public key of the <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a>.</p>
+                <p>The public key of the <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
               </div>
             </td>
             <td>
@@ -1495,7 +1498,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The secret key of the <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a>.</p>
+                <p>The secret key of the <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
               </div>
             </td>
             <td>
@@ -1530,8 +1533,7 @@
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/msl/network/auth.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
-<span class="normal">102</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
@@ -1540,12 +1542,13 @@
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
-<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">public_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">broker_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">111</span>
+<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">public_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">broker_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        public_key: The public key of the [Client][] or [Worker][].</span>
-<span class="sd">        secret_key: The secret key of the [Client][] or [Worker][].</span>
+<span class="sd">        public_key: The public key of the [Client][] or [Service][].</span>
+<span class="sd">        secret_key: The secret key of the [Client][] or [Service][].</span>
 <span class="sd">        broker_key: The public key of the [Broker][].</span>
 <span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">public_key</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">public_key</span>
@@ -1645,7 +1648,7 @@ Can include <code>~</code> in the path, which will expand the user's home direct
             <td>
               <div class="doc-md-description">
                 <p>The path to the file that contains the public and secret keys of the
-<a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a> that connects to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>. If <code>None</code>, loads the
+<a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> that connects to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>. If <code>None</code>, loads the
 credentials that were created by running the <code>msl-network curve</code> command.
 Can include <code>~</code> in the path, which will expand the user's home directory.</p>
               </div>
@@ -1683,8 +1686,7 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/auth.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
-<span class="normal">114</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
 <span class="normal">117</span>
@@ -1707,7 +1709,8 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 <span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
-<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">137</span>
+<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">broker</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">own</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Load [CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials from files.</span>
 
@@ -1715,7 +1718,7 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 <span class="sd">        broker: The path to the file that contains the [Broker][]'s public key.</span>
 <span class="sd">            Can include `~` in the path, which will expand the user's home directory.</span>
 <span class="sd">        own: The path to the file that contains the public and secret keys of the</span>
-<span class="sd">            [Client][] or [Worker][] that connects to the [Broker][]. If `None`, loads the</span>
+<span class="sd">            [Client][] or [Service][] that connects to the [Broker][]. If `None`, loads the</span>
 <span class="sd">            credentials that were created by running the `msl-network curve` command.</span>
 <span class="sd">            Can include `~` in the path, which will expand the user's home directory.</span>
 
@@ -1821,15 +1824,15 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/msl/network/auth.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
-<span class="normal">39</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">39</span>
 <span class="normal">40</span>
 <span class="normal">41</span>
 <span class="normal">42</span>
 <span class="normal">43</span>
 <span class="normal">44</span>
 <span class="normal">45</span>
-<span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">46</span>
+<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""[PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials to connect to a [Broker][].</span>
 
 <span class="sd">    Args:</span>
@@ -1962,8 +1965,7 @@ is passed to <a class="autorefs autorefs-external" href="https://docs.python.org
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/auth.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
-<span class="normal">49</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
@@ -2009,7 +2011,8 @@ is passed to <a class="autorefs autorefs-external" href="https://docs.python.org
 <span class="normal">92</span>
 <span class="normal">93</span>
 <span class="normal">94</span>
-<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthPlain</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Load [PLAIN](https://rfc.zeromq.org/spec/24/) authentication credentials from a file.</span>
 
@@ -2105,7 +2108,7 @@ is passed to <a class="autorefs autorefs-external" href="https://docs.python.org
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../worker/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Worker">
+          <a href="../service/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Service">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2115,7 +2118,7 @@ is passed to <a class="autorefs autorefs-external" href="https://docs.python.org
                 Previous
               </span>
               <div class="md-ellipsis">
-                Worker
+                Service
               </div>
             </div>
           </a>

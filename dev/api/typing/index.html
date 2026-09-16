@@ -828,14 +828,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../worker/" class="md-nav__link">
+      <a href="../service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1283,7 +1283,7 @@
 
 
 
-        <p>The <em>response</em> from a <em>request</em>.</p>
+        <p>The <em>reply</em> from a <em>request</em>.</p>
 
 
 
@@ -1323,7 +1323,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Call a method of a <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a>.</p>
+        <p>Call a method of a <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1346,7 +1346,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The arguments that the method of the <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a> requires.</p>
+                <p>The arguments that the method of the <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> requires.</p>
               </div>
             </td>
             <td>
@@ -1378,7 +1378,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The keyword arguments that the method of the <a class="autorefs autorefs-internal" title="            Worker" href="../worker/#msl.network.worker.Worker">Worker</a> requires.</p>
+                <p>The keyword arguments that the method of the <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> requires.</p>
               </div>
             </td>
             <td>
@@ -1431,12 +1431,12 @@ result (<code>sync=True</code>) for a synchronous request or a <a class="autoref
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sync</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span> <span class="o">|</span> <span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Call a method of a [Worker][].</span>
+<span class="w">    </span><span class="sd">"""Call a method of a [Service][].</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        *args: The arguments that the method of the [Worker][] requires.</span>
+<span class="sd">        *args: The arguments that the method of the [Service][] requires.</span>
 <span class="sd">        sync: Whether to perform a synchronous request or an asynchronous request.</span>
-<span class="sd">        **kwargs: The keyword arguments that the method of the [Worker][] requires.</span>
+<span class="sd">        **kwargs: The keyword arguments that the method of the [Service][] requires.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Depending on the value of the `sync` keyword argument, the returned value is the</span>

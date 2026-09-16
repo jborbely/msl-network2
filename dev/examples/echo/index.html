@@ -688,10 +688,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#echo-worker" class="md-nav__link">
+  <a href="#echo-service" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Echo Worker
+        Start the Echo Service
       
     </span>
   </a>
@@ -908,14 +908,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/worker/" class="md-nav__link">
+      <a href="../../api/service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1209,10 +1209,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#echo-worker" class="md-nav__link">
+  <a href="#echo-service" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start the Echo Worker
+        Start the Echo Service
       
     </span>
   </a>
@@ -1251,8 +1251,17 @@
 
 
 <h1 id="echo">Echo<a class="headerlink" href="#echo" title="Permanent link">¤</a></h1>
-<p>Example echo service.</p>
-<p>The Echo service returns the arguments and keyword arguments that were sent from a Client.</p>
+<p>Example of an echo Service.</p>
+<p>The echo Service returns the arguments and keyword arguments that were sent from a Client.</p>
+<h2 id="echo-broker">Start the <code>Broker</code><a class="headerlink" href="#echo-broker" title="Permanent link">¤</a></h2>
+<p>Start the Broker by running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
+</code></pre></div>
+<h2 id="echo-service">Start the <code>Echo</code> Service<a class="headerlink" href="#echo-service" title="Permanent link">¤</a></h2>
+<p>Open another terminal and start the service by running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Echo; Echo().connect()"</span>
+</code></pre></div>
+<p>The source code is:</p>
 <!-- fmt: off -->
 <div class="highlight"><pre><span></span><code><span class="sd">"""Example echo service.</span>
 
@@ -1263,11 +1272,11 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Worker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Service</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Echo</span><span class="p">(</span><span class="n">Worker</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Example Worker that echos the arguments of the request."""</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Echo</span><span class="p">(</span><span class="n">Service</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Example Service that echos the arguments of the request."""</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">echo</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
@@ -1283,14 +1292,6 @@
 </code></pre></div>
 <!-- fmt: on -->
 
-<h2 id="echo-broker">Start the <code>Broker</code><a class="headerlink" href="#echo-broker" title="Permanent link">¤</a></h2>
-<p>Start the Broker by running the following command.</p>
-<div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
-</code></pre></div>
-<h2 id="echo-worker">Start the <code>Echo</code> Worker<a class="headerlink" href="#echo-worker" title="Permanent link">¤</a></h2>
-<p>Open another terminal and start the service by running the following command.</p>
-<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Echo; Echo().connect()"</span>
-</code></pre></div>
 <h2 id="echo-client">Run the <code>Client</code><a class="headerlink" href="#echo-client" title="Permanent link">¤</a></h2>
 <p>Connect to the Broker as a Client, link with the Echo service and then send requests.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
@@ -1298,6 +1299,9 @@
 <span class="k">with</span> <span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
     <span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Echo"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"hi"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">9.1</span><span class="p">))</span>
+
+    <span class="c1"># You can also request what functions are available from the linked Service</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">signatures</span><span class="p">())</span>
 </code></pre></div>
 
 

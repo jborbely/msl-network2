@@ -958,14 +958,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../worker/" class="md-nav__link">
+      <a href="../service/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Worker
+    Service
   
 
     
@@ -1733,7 +1733,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 
 <span class="k">with</span> <span class="n">link</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">JSON</span><span class="p">):</span>
     <span class="c1"># uses JSON to serialise the request</span>
-    <span class="n">link</span><span class="o">.</span><span class="n">do_something_else</span><span class="p">()</span>
+    <span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
 
 <span class="c1"># uses PICKLE to serialise the request</span>
 <span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
@@ -1822,7 +1822,7 @@ context exits, the value is set to the original value.</p>
 
 <span class="sd">        with link.flag_at(Flag.JSON):</span>
 <span class="sd">            # uses JSON to serialise the request</span>
-<span class="sd">            link.do_something_else()</span>
+<span class="sd">            link.do_something()</span>
 
 <span class="sd">        # uses PICKLE to serialise the request</span>
 <span class="sd">        link.do_something()</span>
