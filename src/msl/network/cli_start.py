@@ -151,6 +151,10 @@ def execute(ns: Namespace) -> None:
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
 
+    if ns.auth_plain is not None and ns.auth_curve is not None:
+        logger.error("Cannot enable both PLAIN and CURVE authentication simultaneously")
+        return
+
     broker = Broker()
     try:
         run_event_loop(broker.run(**namespace_to_run_kwargs(ns, debug=level == logging.DEBUG)))

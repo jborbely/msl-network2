@@ -1,4 +1,4 @@
-"""ZeroMQ broker to forward requests and responses."""
+"""ZeroMQ broker to forward requests, replies and publications."""
 
 from __future__ import annotations
 
@@ -15,56 +15,56 @@ from zmq.utils.monitor import recv_monitor_message
 from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
-from .message import Flag, Request, Response
+from .message import Flag, Reply, Request
 from .utils import DOMAIN, logger
 
 if TYPE_CHECKING:
     from .utils import Curve
 
 
-class WorkerBalancer:
-    """Evenly distribute requests to available Workers that have the same service name."""
+class ServiceBalancer:
+    """Evenly distribute requests to available Services that have the same name."""
 
     def __init__(self) -> None:
-        """Evenly distribute requests to available Workers that have the same service name."""
-        self._worker_ids: deque[bytes] = deque()  # Use a deque for fast pop/append
+        """Evenly distribute requests to available Services that have the same name."""
+        self._service_ids: deque[bytes] = deque()  # Use a deque for fast pop/append
         self._unique_set: set[bytes] = set()  # Use a set for fast __contains__
 
-    def __contains__(self, worker_id: bytes) -> bool:
-        """Checks if `worker_id` is in the balancer."""
-        return worker_id in self._unique_set
+    def __contains__(self, service_id: bytes) -> bool:
+        """Checks if `service_id` is in the balancer."""
+        return service_id in self._unique_set
 
     def __len__(self) -> int:
-        """Returns the number of Worker IDs in the balancer."""
-        return len(self._worker_ids)
+        """Returns the number of Service IDs in the balancer."""
+        return len(self._service_ids)
 
     def __next__(self) -> bytes:
-        """Get the next Worker ID that should get the request."""
-        item = self._worker_ids.pop()  # return and remove the rightmost item
-        self._worker_ids.appendleft(item)  # add item to the left side
+        """Get the next Service ID that should get the request."""
+        item = self._service_ids.pop()  # return and remove the rightmost item
+        self._service_ids.appendleft(item)  # add item to the left side
         return item
 
-    def append(self, worker_id: bytes) -> None:
-        """Maybe add `worker_id` to the right side of the deque.
+    def append(self, service_id: bytes) -> None:
+        """Maybe add `service_id` to the right side of the deque.
 
-        Checks if `worker_id` is not already in the deque, since a Worker
+        Checks if `service_id` is not already in the deque, since a Service
         might try to reconnect using the same ID.
         """
-        if worker_id not in self._unique_set:
-            self._worker_ids.append(worker_id)  # add item to the right side
-            self._unique_set.add(worker_id)
+        if service_id not in self._unique_set:
+            self._service_ids.append(service_id)  # add item to the right side
+            self._unique_set.add(service_id)
 
-    def remove(self, worker_id: bytes) -> None:
-        """Remove `worker_id` from the balancer."""
-        self._worker_ids.remove(worker_id)
-        self._unique_set.remove(worker_id)
+    def remove(self, service_id: bytes) -> None:
+        """Remove `service_id` from the balancer."""
+        self._service_ids.remove(service_id)
+        self._unique_set.remove(service_id)
 
 
 class Broker:
-    """ZeroMQ broker to forward requests and responses."""
+    """ZeroMQ broker to forward requests and replies."""
 
     def __init__(self) -> None:
-        """ZeroMQ broker to forward requests and responses."""
+        """ZeroMQ broker to forward requests and replies."""
         self.auth: Authenticator | None = None
         self.endpoint: str = ""
         self.poller_running: bool = False
@@ -75,7 +75,7 @@ class Broker:
         self.xsub_port: int = -1
 
         # key: service name
-        self.workers: dict[str, WorkerBalancer] = {}
+        self.services: dict[str, ServiceBalancer] = {}
 
         # Type annotations only. Initialized in run() while within asyncio thread.
         self.interrupter: Interrupter
@@ -96,7 +96,7 @@ class Broker:
 
         addr, port = endpoint.rsplit(":", maxsplit=1)
         xpub_port = int(port) + 1  # Link connects via SUBscribe: SUB -> XPUB
-        xsub_port = int(port) + 2  # Worker connects via PUBlish: PUB -> XSUB
+        xsub_port = int(port) + 2  # Service connects via PUBlish: PUB -> XSUB
 
         using_default_ports = True
 
@@ -133,13 +133,13 @@ class Broker:
             control.close(linger=0)
             logger.debug("XPUB/XSUB terminated")
 
-    def remove_worker(self, worker_id: bytes, service_name: str, balancer: WorkerBalancer) -> None:
-        """Worker is no longer available, remove it."""
-        logger.info("Unregistered %r with service name %r", worker_id, service_name)
-        balancer.remove(worker_id)
+    def remove_service(self, service_id: bytes, service_name: str, balancer: ServiceBalancer) -> None:
+        """Service is no longer available, remove it."""
+        logger.info("Unregistered %r with name %r", service_id, service_name)
+        balancer.remove(service_id)
         if len(balancer) == 0:
-            del self.workers[service_name]
-            logger.info("No Workers are available for service name %r", service_name)
+            del self.services[service_name]
+            logger.info("No Services are available for name %r", service_name)
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""
@@ -163,53 +163,53 @@ class Broker:
         """Process a request that is destined for the Broker.
 
         Args:
-            sender_id: Either starts with `Client` or `Worker`.
+            sender_id: Either starts with `Client` or `Service`.
             message: The message for the Broker.
         """
         request = Request.from_bytes(message)
         service_name, attribute = request.service, request.attribute
         if attribute == "SERVICES":
-            response = Response(id=request.id, ok=True, result=list(self.workers)).to_bytes(Flag.JSON)
-            _ = await self.router.send_multipart((sender_id, b"Broker", response))  # pyright: ignore[reportUnknownMemberType]
-        elif attribute == "WORKER_READY":
-            logger.info("Registered %r with service name %r", sender_id, service_name)
-            if service_name not in self.workers:
-                self.workers[service_name] = WorkerBalancer()
-            self.workers[service_name].append(sender_id)
-        elif attribute == "WORKER_UNAVAILABLE":
-            balancer = self.workers.get(service_name)
+            reply = Reply(id=request.id, ok=True, result=list(self.services)).to_bytes(Flag.JSON)
+            _ = await self.router.send_multipart((sender_id, b"Broker", reply))  # pyright: ignore[reportUnknownMemberType]
+        elif attribute == "SERVICE_READY":
+            logger.info("Registered %r with name %r", sender_id, service_name)
+            if service_name not in self.services:
+                self.services[service_name] = ServiceBalancer()
+            self.services[service_name].append(sender_id)
+        elif attribute == "SERVICE_UNAVAILABLE":
+            balancer = self.services.get(service_name)
             if balancer is not None:
-                self.remove_worker(sender_id, service_name, balancer)
+                self.remove_service(sender_id, service_name, balancer)
         elif sender_id.startswith(b"Client"):
-            response = Response(
+            reply = Reply(
                 id=request.id,
                 ok=False,
                 result=f"Unsupported broker request: {attribute!r}",
             ).to_bytes(Flag.JSON)
-            _ = await self.router.send_multipart((sender_id, b"Broker", response))  # pyright: ignore[reportUnknownMemberType]
+            _ = await self.router.send_multipart((sender_id, b"Broker", reply))  # pyright: ignore[reportUnknownMemberType]
         else:
             logger.error("Unsupported broker request %r from %r", attribute, sender_id)
 
-    async def request_for_worker(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
-        """Send a request from a Client to any Worker that is handling requests for the *service*.
+    async def request_for_service(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
+        """Send a request from a Client to any Service that is handling requests for the *service*.
 
         Args:
             sender_id: Client ID.
             service_name: The name of the service.
             message: Original client message.
         """
-        balancer = self.workers.get(service_name.decode())
+        balancer = self.services.get(service_name.decode())
         if balancer is None:
-            await self.send_worker_unavailable(sender_id, service_name, message)
+            await self.send_service_unavailable(sender_id, service_name, message)
             return
 
-        worker_id = next(balancer)
+        service_id = next(balancer)
         try:
-            _ = await self.router.send_multipart((worker_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
+            _ = await self.router.send_multipart((service_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
         except zmq.error.ZMQError as e:
             if e.errno == zmq.EHOSTUNREACH:
-                self.remove_worker(worker_id, service_name.decode(), balancer)
-                await self.send_worker_unavailable(sender_id, service_name, message)
+                self.remove_service(service_id, service_name.decode(), balancer)
+                await self.send_service_unavailable(sender_id, service_name, message)
             else:
                 logger.exception(e)
 
@@ -315,13 +315,13 @@ class Broker:
                         await self.request_for_broker(sender_id, message)
                     elif sender_id.startswith(b"Client"):
                         try:
-                            await self.request_for_worker(sender_id, destination_id, message)
+                            await self.request_for_service(sender_id, destination_id, message)
                         except:  # noqa: E722
                             logger.exception("Bad client request %r", message)
                     elif not destination_id:
                         logger.debug("Undefined destination ID, ignoring message %r", message)
                     else:
-                        # A response from a Worker to be sent to a Client
+                        # A reply from a Service to be sent to a Client
                         # Silently ignore all errors if the Client is no longer available
                         with suppress(zmq.error.ZMQError):
                             _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
@@ -360,8 +360,8 @@ class Broker:
         proxy_thread.join()
         self.destroy()
 
-    async def send_worker_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
-        """Send a response that there are no Workers available for the specified service.
+    async def send_service_unavailable(self, sender_id: bytes, service_name: bytes, message: bytes) -> None:
+        """Send a reply that there are no Services available for the specified service.
 
         Args:
             sender_id: Client ID.
@@ -369,9 +369,9 @@ class Broker:
             message: Original client message.
         """
         request = Request.from_bytes(message)
-        response = Response(
+        reply = Reply(
             id=request.id,
             ok=False,
             result=f"Service {request.service!r} is not available",
         ).to_bytes(Flag.JSON)
-        _ = await self.router.send_multipart([sender_id, service_name, response])  # pyright: ignore[reportUnknownMemberType]
+        _ = await self.router.send_multipart([sender_id, service_name, reply])  # pyright: ignore[reportUnknownMemberType]

@@ -1,4 +1,4 @@
-"""Request and response message structures."""
+"""Request and reply message structures."""
 
 from __future__ import annotations
 
@@ -36,21 +36,21 @@ class Request(NamedTuple):
     id: int
     """The message ID.
 
-    Used by a client to keep track of which response corresponds to which
-    request when sending asynchronous requests to multiple Workers.
+    Used by a client to keep track of which reply corresponds to which
+    request when sending asynchronous requests to multiple Services.
     """
 
     service: str
     """The name of the service to send the request to."""
 
     attribute: str
-    """The name of the attribute (method) on the Worker to call."""
+    """The name of the attribute (method) on the Service to call."""
 
     args: Sequence[Any]
-    """The arguments that the Worker's method requires."""
+    """The arguments that the Service's method requires."""
 
     kwargs: dict[str, Any]
-    """The keyword arguments that the Worker's method requires."""
+    """The keyword arguments that the Service's method requires."""
 
     def to_bytes(self, flag: Flag) -> bytes:
         """Convert the request to bytes.
@@ -69,14 +69,14 @@ class Request(NamedTuple):
         return Request(*deserialize[flag & DESERIALIZE](data))  # pyright: ignore[reportArgumentType]
 
 
-class Response(NamedTuple):
-    """A response."""
+class Reply(NamedTuple):
+    """A reply."""
 
     id: int
     """The message ID from the client (return unaltered)."""
 
     ok: bool
-    """Whether the result of a Worker processing the request was successful.
+    """Whether the result of a Service processing the request was successful.
 
     If `False`, the `result` is the exception traceback (as bytes).
     """
@@ -85,7 +85,7 @@ class Response(NamedTuple):
     """The result of the request."""
 
     def to_bytes(self, flag: Flag) -> bytes:
-        """Convert the response to bytes.
+        """Convert the reply to bytes.
 
         Only the `result` is used during serialisation and compression. The packed
         size of (id, ok) is only 9 bytes anyway, and flag cannot be compressed
@@ -96,11 +96,11 @@ class Response(NamedTuple):
         )
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Response:
-        """Create a response from bytes."""
+    def from_bytes(cls, data: bytes) -> Reply:
+        """Create a reply from bytes."""
         flag, _id, ok = unpack("<HQ?", data[:11])
         data = decompress[flag & DECOMPRESS](data[11:])  # pyright: ignore[reportArgumentType]
-        return Response(id=_id, ok=ok, result=deserialize[flag & DESERIALIZE](data))  # pyright: ignore[reportArgumentType]
+        return Reply(id=_id, ok=ok, result=deserialize[flag & DESERIALIZE](data))  # pyright: ignore[reportArgumentType]
 
 
 class Flag(IntFlag):
@@ -115,13 +115,13 @@ class Flag(IntFlag):
 
     A [KeyError][] will be raised when you use a flag that is a union of more than
     one serialisation flag or more than one compression flag when a *request* or a
-    *response* is sent.
+    *reply* is sent.
 
     Attributes:
         NONE (int): Do not apply (de)serialisation nor (de)compression. This flag
-            is only useful if a method of a [Worker][msl.network.worker.Worker]
+            is only useful if a method of a [Service][msl.network.service.Service]
             returns an object that supports the [buffer protocol][bufferobjects].
-            As such, this flag is only applicable for a *response* and cannot be
+            As such, this flag is only applicable for a *reply* and cannot be
             used for a *request*.
         BZ2 (int): (De)compression using the [bz2][] module.
         LZMA (int): (De)compression using the [lzma][] module.

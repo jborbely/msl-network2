@@ -1,4 +1,4 @@
-"""Authentication tools for [Client][]s and [Worker][]s to connect to a [Broker][]."""
+"""Authentication tools for [Client][]s and [Service][]s to connect to a [Broker][]."""
 
 from __future__ import annotations
 
@@ -19,10 +19,11 @@ def load_certificate(path: PathLike) -> tuple[bytes, bytes | None]:
     """Load public and secret keys from a ZeroMQ certificate file.
 
     Args:
-        path: The path to a certificate file.
+        path: The path to a certificate file. Can include `~` in the path, which will expand the
+            user's home directory.
 
     Returns:
-        The `(public, secret)` keys. The `secret` key can be `None` if it is not defined in the file.
+        The `(public, secret)` keys. The `secret` key might be `None` if it is not defined in the file.
     """
     path = Path(os.fsdecode(path)).expanduser()
     if not path.is_file():
@@ -102,8 +103,8 @@ class AuthCurve:
         """[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].
 
         Args:
-            public_key: The public key of the [Client][] or [Worker][].
-            secret_key: The secret key of the [Client][] or [Worker][].
+            public_key: The public key of the [Client][] or [Service][].
+            secret_key: The secret key of the [Client][] or [Service][].
             broker_key: The public key of the [Broker][].
         """
         self.public_key: bytes = public_key
@@ -118,7 +119,7 @@ class AuthCurve:
             broker: The path to the file that contains the [Broker][]'s public key.
                 Can include `~` in the path, which will expand the user's home directory.
             own: The path to the file that contains the public and secret keys of the
-                [Client][] or [Worker][] that connects to the [Broker][]. If `None`, loads the
+                [Client][] or [Service][] that connects to the [Broker][]. If `None`, loads the
                 credentials that were created by running the `msl-network curve` command.
                 Can include `~` in the path, which will expand the user's home directory.
 

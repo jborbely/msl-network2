@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from msl.network import Client, Worker
+from msl.network import Client, Service
 
 if TYPE_CHECKING:
     from conftest import Broker
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def test_publish(broker: Broker) -> None:
     port, xpub, xsub = broker.run()
 
-    class Heartbeat(Worker):
+    class Heartbeat(Service):
         def __init__(self) -> None:
             super().__init__(port=port, xsub_port=xsub)
             self.counter: int = 0
@@ -70,7 +70,7 @@ def test_publish(broker: Broker) -> None:
 def test_publish_threadsafe(broker: Broker) -> None:
     port, xpub, xsub = broker.run()
 
-    class Heartbeat(Worker):
+    class Heartbeat(Service):
         def __init__(self) -> None:
             super().__init__(port=port, xsub_port=xsub)
             self.counter: int = 0

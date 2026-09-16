@@ -60,7 +60,7 @@ nav:
     - api/client.md
     - api/message.md
     - api/link.md
-    - api/worker.md
+    - api/service.md
     - api/auth.md
     - api/typing.md
   - CLI:

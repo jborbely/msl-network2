@@ -1,6 +1,6 @@
 # Examples
 
-There are a few runnable examples that are included.
+There are a few runnable examples that are included when `msl-network` is installed.
 
-* [Echo][echo] &mdash; A service that returns the arguments that were sent in a request.
-* [Heartbeat][heartbeat] &mdash; A service that publishes data to all subscribed Clients.
+* [Echo][] &mdash; A service that returns the arguments that were sent in a request.
+* [Heartbeat][] &mdash; A service that publishes data to all subscribed clients.

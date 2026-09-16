@@ -14,7 +14,7 @@ from zmq.asyncio import Context, Poller, Socket
 from zmq.utils.monitor import recv_monitor_message
 
 from .interrupter import Interrupter
-from .message import Flag, Request, Response
+from .message import Flag, Reply, Request
 from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
@@ -152,7 +152,7 @@ class Client:
 
             with link.flag_at(Flag.JSON):
                 # uses JSON to serialise the request
-                link.do_something_else()
+                link.do_something()
 
             # uses PICKLE to serialise the request
             link.do_something()
@@ -219,7 +219,7 @@ class Link:
         self.timeout: float | None = None
         """[float][] or `None` &mdash; The number of seconds to wait for a response from a *synchronous* request.
 
-        The value is always `None` for new links, which means that there is no limit on the wait time.
+        The value is initially `None` for new links, which means that there is no limit on the wait time.
         """
 
         self._request: Callable[[str, str, Any, Any], Future[Any]] = client._request  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
@@ -276,6 +276,39 @@ class Link:
 
         self._link_subscriber.sub_socket.setsockopt(zmq.SUBSCRIBE, self.service_name.encode())
         self._link_subscriber.callback = callback
+
+    @contextmanager
+    def timeout_at(self, timeout: float | None) -> Generator[None, None, None]:
+        """Use as a context manager to temporarily change the [timeout][..timeout] value.
+
+        !!! example
+            ```python
+            from msl.network import Client
+
+            with Client() as c:
+                camera = c.link("Camera")
+                camera.timeout = 5  # use a timeout value of 5 seconds for most requests
+
+                # uses a timeout of 5 seconds
+                resolution = camera.resolution()
+
+                with camera.timeout_at(None):  # No timeout
+                    image = camera.capture()
+
+                # uses a timeout of 5 seconds
+                shutter_speed = camera.shutter_speed()
+            ```
+
+        Args:
+            timeout: The temporary timeout value to use while within the context. Once the
+                context exits, the value is set to the original value.
+        """
+        original = self.timeout
+        self.timeout = timeout
+        try:
+            yield
+        finally:
+            self.timeout = original
 
     def unsubscribe(self) -> None:
         """Unsubscribe from receiving publications from the linked service."""
@@ -372,13 +405,13 @@ class _AsyncClient:
         while True:
             event = dict(await self.poller.poll())
             if event.get(self.wakeup_receiver):  # Send request
-                worker_id, request = await self.wakeup_receiver.recv_multipart()
-                logger.debug("%s sent request to %r", self, worker_id)
-                _ = await self.dealer.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
+                service_id, request = await self.wakeup_receiver.recv_multipart()
+                logger.debug("%s sent request to %r", self, service_id)
+                _ = await self.dealer.send_multipart((service_id, request))  # pyright: ignore[reportUnknownMemberType]
             elif event.get(self.dealer):  # Handle reply
-                worker_id, response = await self.dealer.recv_multipart()
-                logger.debug("%s received response from %r", self, worker_id)
-                r = Response.from_bytes(response)
+                service_id, reply = await self.dealer.recv_multipart()
+                logger.debug("%s received reply from %r", self, service_id)
+                r = Reply.from_bytes(reply)
                 future = self.futures.pop(r.id)
                 if r.ok:
                     future.set_result(r.result)
@@ -406,19 +439,19 @@ class _AsyncClient:
     async def wakeup_event(self) -> None:
         """Wake up the Poller to handle a request."""
         while True:
-            worker_id, request = await self.queue.get()
+            service_id, request = await self.queue.get()
             if not request:
                 self.queue.task_done()
                 break
-            _ = await self.wakeup_sender.send_multipart((worker_id, request))  # pyright: ignore[reportUnknownMemberType]
+            _ = await self.wakeup_sender.send_multipart((service_id, request))  # pyright: ignore[reportUnknownMemberType]
             self.queue.task_done()
 
 
 class _LinkSubscriber:
-    """Handle publications from a Worker."""
+    """Handle publications from a Service."""
 
     def __init__(self, service_name: str, host: str, xpub_port: int) -> None:
-        """Handle publications from a Worker.
+        """Handle publications from a Service.
 
         Args:
             service_name: The name of the service that publishes messages.
@@ -432,7 +465,7 @@ class _LinkSubscriber:
         self.sub_socket: Socket | None = None
 
     async def handle_publications(self) -> None:
-        """Poll for publications from a Worker."""
+        """Poll for publications from a Service."""
         context: Context = Context()
 
         # For Ctrl+C to work on Windows and to signal the while loop below to break
@@ -452,7 +485,7 @@ class _LinkSubscriber:
             if event.get(self.sub_socket):  # Publication received
                 _, data = await self.sub_socket.recv_multipart()
                 if self.callback is not None:
-                    self.callback(Response.from_bytes(data).result)
+                    self.callback(Reply.from_bytes(data).result)
             else:  # Interrupter
                 break
 
@@ -476,3 +509,26 @@ async def _create_async_client(client: Client, curve: AuthCurve | None = None, p
 async def _create_async_subscriber(link_subscriber: _LinkSubscriber) -> None:
     """Create the async subscriber and run it in an event loop."""
     _ = await asyncio.gather(link_subscriber.handle_publications())
+
+
+def connect(  # noqa: PLR0913
+    *,
+    host: str = "127.0.0.1",
+    port: int = BROKER_PORT,
+    flag: Flag = Flag.PICKLE,
+    curve: AuthCurve | None = None,
+    plain: AuthPlain | None = None,
+    xpub_port: int | None = None,
+) -> Client:
+    """Connect to a Broker as a [Client][].
+
+    Kept for backwards compatibility. It is recommended to create an instance of a [Client][] directly.
+    """
+    return Client(
+        host=host,
+        port=port,
+        flag=flag,
+        curve=curve,
+        plain=plain,
+        xpub_port=xpub_port,
+    )

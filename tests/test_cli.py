@@ -497,3 +497,11 @@ def test_cli_curve_custom_dir(tmp_path: Path, caplog: pytest.LogCaptureFixture) 
 
     assert secret.is_file()
     assert public.is_file()
+
+
+def test_cli_start_curve_and_plain(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("INFO")
+    main("start", "--auth-curve", "--auth-plain")
+    assert caplog.record_tuples == [
+        ("msl.network", logging.ERROR, "Cannot enable both PLAIN and CURVE authentication simultaneously")
+    ]

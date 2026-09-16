@@ -51,7 +51,7 @@ class Curve:
         """Called during ZAP authentication when a device connects to the Broker.
 
         Args:
-            domain: The domain specified by the device during ZAP.
+            domain: The domain specified by the Broker during ZAP.
             key: The z85 key of the connecting device.
 
         Returns:

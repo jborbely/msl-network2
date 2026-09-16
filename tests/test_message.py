@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from msl.network import Flag
-from msl.network.message import Request, Response, compress, decompress, deserialize, serialize
+from msl.network.message import Reply, Request, compress, decompress, deserialize, serialize
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -117,39 +117,39 @@ def test_request_pickle() -> None:
     assert np.array_equal(r.kwargs["b"], r2.kwargs["b"])
 
 
-def test_response_raw() -> None:
-    r = Response(id=1, ok=False, result=b"data")
+def test_reply_raw() -> None:
+    r = Reply(id=1, ok=False, result=b"data")
     raw = r.to_bytes(Flag.NONE)
     assert raw == b"\x00\x00" + b"\x01\x00\x00\x00\x00\x00\x00\x00" + b"\x00" + b"data"
-    assert r == Response.from_bytes(raw)
+    assert r == Reply.from_bytes(raw)
 
 
-def test_response_raw_invalid() -> None:
-    r = Response(id=1, ok=False, result="data")
+def test_reply_raw_invalid() -> None:
+    r = Reply(id=1, ok=False, result="data")
     with pytest.raises(TypeError, match=r"memoryview"):
         _ = r.to_bytes(Flag.NONE)
 
 
-def test_response_json() -> None:
-    r = Response(id=9, ok=True, result=[1, 2.3, None, True, "foo", [-1, 0, 1]])
+def test_reply_json() -> None:
+    r = Reply(id=9, ok=True, result=[1, 2.3, None, True, "foo", [-1, 0, 1]])
     serialised = r.to_bytes(Flag.JSON)
     assert serialised == (
         b"\x00\x02" + b"\x09\x00\x00\x00\x00\x00\x00\x00" + b"\x01" + b'[1,2.3,null,true,"foo",[-1,0,1]]'
     )
-    assert r == Response.from_bytes(serialised)
+    assert r == Reply.from_bytes(serialised)
 
 
-def test_response_orjson() -> None:
-    r = Response(id=9, ok=True, result=[1, 2.3, None, True, "foo", [-1, 0, 1]])
+def test_reply_orjson() -> None:
+    r = Reply(id=9, ok=True, result=[1, 2.3, None, True, "foo", [-1, 0, 1]])
     serialised = r.to_bytes(Flag.ORJSON)
     assert serialised == (
         b"\x00\x04" + b"\x09\x00\x00\x00\x00\x00\x00\x00" + b"\x01" + b'[1,2.3,null,true,"foo",[-1,0,1]]'
     )
-    assert r == Response.from_bytes(serialised)
+    assert r == Reply.from_bytes(serialised)
 
 
-def test_response_pickle() -> None:
-    r = Response(id=2, ok=True, result=(1, 2.3, None, True, b"foo", {-1, 0, 1}))
+def test_reply_pickle() -> None:
+    r = Reply(id=2, ok=True, result=(1, 2.3, None, True, b"foo", {-1, 0, 1}))
     serialised = r.to_bytes(Flag.PICKLE)
     assert serialised == (
         b"\x00\x01"
@@ -157,11 +157,11 @@ def test_response_pickle() -> None:
         b"\x01"
         b"\x80\x05\x95$\x00\x00\x00\x00\x00\x00\x00(K\x01G@\x02ffffffN\x88C\x03foo\x94\x8f\x94(K\x00K\x01J\xff\xff\xff\xff\x90t\x94."
     )
-    assert r == Response.from_bytes(serialised)
+    assert r == Reply.from_bytes(serialised)
 
 
-def test_response_json_bz2() -> None:
-    r = Response(id=1, ok=False, result="X" * 50)
+def test_reply_json_bz2() -> None:
+    r = Reply(id=1, ok=False, result="X" * 50)
     data = r.to_bytes(Flag.JSON | Flag.BZ2)
     assert data == (
         b"\x01\x02"
@@ -169,11 +169,11 @@ def test_response_json_bz2() -> None:
         b"\x00"
         b"BZh91AY&SY\xa95\xcaR\x00\x00\x00\x92\x00\x10\x01\x00@ \x000\xcc\t4\xcb\xc1\x85\xdc\x91N\x14$*Mr\x94\x80"
     )
-    assert r == Response.from_bytes(data)
+    assert r == Reply.from_bytes(data)
 
 
-def test_response_json_lzma() -> None:
-    r = Response(id=10, ok=True, result="X" * 50)
+def test_reply_json_lzma() -> None:
+    r = Reply(id=10, ok=True, result="X" * 50)
     data = r.to_bytes(Flag.JSON | Flag.LZMA)
     assert data == (
         b"\x02\x02"
@@ -183,7 +183,7 @@ def test_response_json_lzma() -> None:
         b"3\x00\t]\x00\x11\x163\x1f\x11\x00\x00\x00\x00\x00\x00\x00\x00\xea\x8c\xe2\xde\xdf"
         b'R\xff"\x00\x01%4y\x91\xc1\xe9\x1f\xb6\xf3}\x01\x00\x00\x00\x00\x04YZ'
     )
-    assert r == Response.from_bytes(data)
+    assert r == Reply.from_bytes(data)
 
 
 def test_request_json_bz2() -> None:
@@ -209,7 +209,7 @@ def test_request_pickle_zlib() -> None:
 
 @pytest.mark.skipif(sys.version_info < (3, 14), reason="zstd added in Python 3.14")
 def test_zstd() -> None:
-    r = Response(id=10, ok=True, result=array("d", (1, 2, 3)))
+    r = Reply(id=10, ok=True, result=array("d", (1, 2, 3)))
     data = r.to_bytes(Flag.ZSTD)
     assert data == (
         b"\x08\x00"
@@ -218,7 +218,7 @@ def test_zstd() -> None:
         b"(\xb5/\xfd \x18\xad\x00\x00p\x00\x00\xf0?\x00@\x00\x00\x00\x00\x00\x00\x08@\x02\x00`F\x00\xb0"
     )
 
-    r2 = Response.from_bytes(data)
+    r2 = Reply.from_bytes(data)
     assert r2.id == r.id
     assert r2.ok is True
 
@@ -230,7 +230,7 @@ def test_zstd() -> None:
 def test_zstd_missing(temporarily_force_zstd_missing: None) -> None:
     assert temporarily_force_zstd_missing is None
     with pytest.raises(ModuleNotFoundError):
-        _ = Response(id=10, ok=True, result=b"hi").to_bytes(Flag.ZSTD)
+        _ = Reply(id=10, ok=True, result=b"hi").to_bytes(Flag.ZSTD)
 
     with pytest.raises(ModuleNotFoundError):
         _ = Request.from_bytes(Flag.ZSTD.to_bytes(2, "little") + b"foo")
@@ -249,10 +249,10 @@ def test_noop() -> None:
 
 
 @pytest.mark.parametrize("flag", BAD_FLAGS)
-def test_response_invalid_bitwise_flags(flag: Flag) -> None:
-    response = Response(id=1, ok=True, result=None)
+def test_reply_invalid_bitwise_flags(flag: Flag) -> None:
+    reply = Reply(id=1, ok=True, result=None)
     with pytest.raises(KeyError):
-        _ = response.to_bytes(flag)
+        _ = reply.to_bytes(flag)
 
 
 @pytest.mark.parametrize("flag", BAD_FLAGS)
@@ -314,7 +314,7 @@ def test_tuple_is_named_tuple() -> None:
 def test_orjson_missing(temporarily_force_orjson_missing: None) -> None:
     assert temporarily_force_orjson_missing is None
     with pytest.raises(ModuleNotFoundError):
-        _ = Response(id=10, ok=True, result=b"hi").to_bytes(Flag.ORJSON)
+        _ = Reply(id=10, ok=True, result=b"hi").to_bytes(Flag.ORJSON)
 
     with pytest.raises(ModuleNotFoundError):
         _ = Request.from_bytes(Flag.ORJSON.to_bytes(2, "little") + b"foo")

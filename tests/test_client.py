@@ -1,6 +1,7 @@
 # cSpell: ignore Unraisable
 from __future__ import annotations
 
+import inspect
 import logging
 import sys
 import time
@@ -12,7 +13,7 @@ from time import sleep
 import pytest
 import zmq
 
-from msl.network import AuthCurve, AuthPlain, Client, Flag, Worker
+from msl.network import AuthCurve, AuthPlain, Client, Flag, Service, connect
 
 if typing.TYPE_CHECKING:
     from conftest import Broker
@@ -60,6 +61,16 @@ def test_disconnect_multiple_times(capsys: pytest.CaptureFixture[str], caplog: p
     assert not err
 
 
+def test_connect_function() -> None:
+    s1 = inspect.signature(connect)
+    s2 = inspect.signature(Client)
+    assert s1.parameters == s2.parameters
+
+    c = connect(port=39710)
+    assert isinstance(c, Client)
+    c.disconnect()
+
+
 def test_link_string_representation() -> None:
     with Client(port=8715) as c:
         link = c.link("Missing")
@@ -71,6 +82,7 @@ def test_services_timeout() -> None:
     c = Client(port=14909)
     with pytest.raises((TimeoutError, futures.TimeoutError)):
         _ = c.services(timeout=0.05)
+    c.disconnect()
 
 
 def test_flag_at() -> None:
@@ -89,6 +101,25 @@ def test_flag_at() -> None:
     assert c.flag == Flag.PICKLE
     _ = link.do_something(sync=False)
 
+    c.disconnect()
+
+
+def test_timeout_at() -> None:
+    c = Client(port=52792)
+    link = c.link("Any")
+
+    assert link.timeout is None
+    with link.timeout_at(10):
+        assert link.timeout == 10
+    assert link.timeout is None  # type: ignore[unreachable]
+
+    link.timeout = 9.5
+    with link.timeout_at(None):
+        assert link.timeout is None
+    assert link.timeout == 9.5
+
+    c.disconnect()
+
 
 def test_request_after_disconnect() -> None:
     c = Client(port=26419)
@@ -105,6 +136,7 @@ def test_string_representation() -> None:
     _id = c._id  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert str(c) == f"Custom[{_id}]"
     assert repr(c) == f"Custom(host='127.0.0.1', port=17590, flag='LZMA|JSON', id='{_id}')"
+    c.disconnect()
 
 
 def test_result_ok_and_error(broker: Broker) -> None:
@@ -177,7 +209,7 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
 def test_link_echo(broker: Broker) -> None:
     port, xpub, xsub = broker.run()
 
-    class Echo(Worker):
+    class Echo(Service):
         def echo(self, *args: typing.Any, **kwargs: typing.Any) -> tuple[tuple[typing.Any, ...], dict[str, typing.Any]]:
             return args, kwargs
 

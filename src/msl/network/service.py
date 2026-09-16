@@ -1,4 +1,4 @@
-"""A Worker handles requests from a Client and publishes messages."""
+"""A Service handles requests from a Client and publishes messages."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from zmq.utils.monitor import recv_monitor_message
 from zmq.utils.win32 import allow_interrupt
 
 from .interrupter import Interrupter
-from .message import Flag, Request, Response
+from .message import Flag, Reply, Request
 from .utils import BROKER_PORT, logger, run_event_loop
 
 if TYPE_CHECKING:
@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     from .auth import AuthCurve, AuthPlain
 
 
-class Worker:
-    """Base class for a Worker."""
+class Service:
+    """Base class for a Service."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -41,15 +41,15 @@ class Worker:
         xsub_port: int | None = None,
         ignore_attributes: str | Iterable[str] | None = None,
     ) -> None:
-        """Base class for a Worker.
+        """Base class for a Service.
 
         Args:
             name: The name of the service that a [Client][msl.network.client.Client] would use
-                to [link][msl.network.client.Client.link] with the [Worker][msl.network.worker.Worker].
+                to [link][msl.network.client.Client.link] with the [Service][msl.network.service.Service].
                 If not specified, the class name is used.
             host: The hostname (or IP address) that the [Broker][] is running on.
             port: The network port that the [Broker][] is running on.
-            flag: The serialisation and compression algorithms to apply to a response before
+            flag: The serialisation and compression algorithms to apply to a reply before
                 sending the byte stream.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
@@ -60,9 +60,9 @@ class Worker:
                 for more details.
         """
         self.flag: Flag = flag
-        """The serialisation and compression algorithms to apply to a response before sending the byte stream."""
+        """The serialisation and compression algorithms to apply to a reply before sending the byte stream."""
 
-        self._worker_id: bytes = f"Worker[{os.urandom(8).hex()}]".encode()
+        self._service_id: bytes = f"Service[{os.urandom(8).hex()}]".encode()
         self._service_name: str = name or self.__class__.__name__
         self._host_port: tuple[str, int] = (host, port)
         self._context: Context = Context()
@@ -74,7 +74,7 @@ class Worker:
         self._plain: AuthPlain | None = plain
         self._tasks: list[Awaitable[None]] = []
         self._loop_thread_id: int = -1
-        self._xsub_port: int = xsub_port or port + 2  # Worker connects with PUBlish: PUB -> XSUB
+        self._xsub_port: int = xsub_port or port + 2  # Service connects with PUBlish: PUB -> XSUB
         self._pub_queue: asyncio.Queue[bytes] | None = None
 
         # Just define type annotations
@@ -82,7 +82,7 @@ class Worker:
 
         # Python 3.8 and 3.9 require an asyncio event loop to be running to create an asyncio.Event instance
         self.connected: asyncio.Event
-        """An [Event][asyncio.Event] object that represents whether the Worker is connected to the [Broker][]."""
+        """An [Event][asyncio.Event] object that represents whether the Service is connected to the [Broker][]."""
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
@@ -156,18 +156,18 @@ class Worker:
 
         !!! example
             ```python
-            from msl.network import Flag, Worker
+            from msl.network import Flag, Service
 
-            class Camera(Worker):
+            class Camera(Service):
 
                 def __init__(self) -> None:
-                    \"\"\"By default, use JSON to serialise all responses (no compression).\"\"\"
+                    \"\"\"By default, use JSON to serialise all replies (no compression).\"\"\"
                     super().__init__(flag=Flag.JSON)
 
                 def resolution(self) -> tuple[int, int]:
                     \"\"\"Returns the (width, height) of a captured image.
 
-                    The response is serialised using JSON without compression.
+                    The reply is serialised using JSON without compression.
                     \"\"\"
                     return 1600, 1200
 
@@ -193,12 +193,12 @@ class Worker:
             self.flag = original
 
     def ignore_attributes(self, *names: str) -> None:
-        """Ignore attributes from being added to the [signature][..signatures].
+        """Ignore attributes from being added to the [signatures][..signatures] map.
 
         There are a few reasons why you may want to call this method:
 
         * If you see warnings that the signature of an attribute cannot be found and you
-          prefer not to see the warnings (primarily results from multiple inheritance).
+          prefer not to see the warnings (could result from a service that has multiple inheritance).
         * If you do not want an attribute to be made publicly known that it exists; however,
           a [Client][msl.network.client.Client] can still access ignored attributes.
 
@@ -224,7 +224,7 @@ class Worker:
             msg = "Event loop not running, cannot publish result"
             raise RuntimeError(msg)
 
-        data = Response(id=0, ok=True, result=result).to_bytes(flag or self.flag)
+        data = Reply(id=0, ok=True, result=result).to_bytes(flag or self.flag)
         if get_ident() == self._loop_thread_id:
             self._pub_queue.put_nowait(data)
         else:
@@ -262,7 +262,7 @@ class Worker:
                 signature_map[name] = f"() -> {attrib.__class__.__name__}"
             except ValueError as e:
                 # Cannot get the signature of the callable object.
-                # This can happen if the Worker is also a subclass of
+                # This can happen if the Service is also a subclass of
                 # some other object, for example a Qt class.
                 logger.warning("%s [attribute=%r]", e, name)
 
@@ -273,11 +273,11 @@ class Worker:
         _ = await asyncio.gather(self._handle_publishing(), self._handle_requests(), *self._tasks)
 
     async def _handle_disconnect(self) -> None:
-        """Notify the Broker that this Worker is disconnecting."""
+        """Notify the Broker that this Service is disconnecting."""
         if self._dealer is None:
             return
 
-        r = Request(id=0, service=self._service_name, attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
+        r = Request(id=0, service=self._service_name, attribute="SERVICE_UNAVAILABLE", args=[], kwargs={})
         _ = await self._dealer.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
 
@@ -308,7 +308,7 @@ class Worker:
     async def _handle_requests(self) -> None:  # noqa: C901, PLR0912, PLR0915
         self._interrupter = Interrupter()
         self._dealer = self._context.socket(zmq.DEALER)
-        self._dealer.setsockopt(zmq.ROUTING_ID, self._worker_id)
+        self._dealer.setsockopt(zmq.ROUTING_ID, self._service_id)
 
         if self._curve is not None:
             self._dealer.setsockopt(zmq.CURVE_PUBLICKEY, self._curve.public_key)
@@ -340,33 +340,33 @@ class Worker:
                     request = Request.from_bytes(message)
                     if request.attribute.startswith("_"):
                         result = "PermissionError: Cannot request a private attribute"
-                        response = Response(id=request.id, ok=False, result=result)
-                        _ = await self._dealer.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+                        reply = Reply(id=request.id, ok=False, result=result)
+                        _ = await self._dealer.send_multipart([sender_id, reply.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                         continue
 
                     try:
                         attribute = getattr(self, request.attribute)
                     except AttributeError as e:
-                        response = Response(id=request.id, ok=False, result=str(e))
-                        _ = await self._dealer.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+                        reply = Reply(id=request.id, ok=False, result=str(e))
+                        _ = await self._dealer.send_multipart([sender_id, reply.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                         continue
 
                     if callable(attribute):
                         try:
                             result = attribute(*request.args, **request.kwargs)
                         except Exception:  # noqa: BLE001
-                            response = Response(id=request.id, ok=False, result=traceback.format_exc())
+                            reply = Reply(id=request.id, ok=False, result=traceback.format_exc())
                         else:
-                            response = Response(id=request.id, ok=True, result=result)
+                            reply = Reply(id=request.id, ok=True, result=result)
                     else:
-                        response = Response(id=request.id, ok=True, result=attribute)
+                        reply = Reply(id=request.id, ok=True, result=attribute)
 
-                    _ = await self._dealer.send_multipart([sender_id, response.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
+                    _ = await self._dealer.send_multipart([sender_id, reply.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
 
                 elif event.get(self._monitor):
                     m = await recv_monitor_message(self._monitor)
                     if m["event"] == zmq.EVENT_CONNECTED:
-                        r = Request(id=0, service=self._service_name, attribute="WORKER_READY", args=[], kwargs={})
+                        r = Request(id=0, service=self._service_name, attribute="SERVICE_READY", args=[], kwargs={})
                         _ = await self._dealer.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                         self.connected.set()
                         logger.debug("%s registered", self._service_name)

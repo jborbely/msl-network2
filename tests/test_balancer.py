@@ -1,10 +1,10 @@
 import pytest
 
-from msl.network.broker import WorkerBalancer
+from msl.network.broker import ServiceBalancer
 
 
-def test_worker_balancer() -> None:
-    wb = WorkerBalancer()
+def test_service_balancer() -> None:
+    wb = ServiceBalancer()
     assert not wb
     assert len(wb) == 0
 

@@ -5,10 +5,10 @@ This example also shows how to add a task to the event loop of the service.
 
 import asyncio
 
-from msl.network import Worker
+from msl.network import Service
 
 
-class Heartbeat(Worker):
+class Heartbeat(Service):
     """A service that publishes a counter value."""
 
     def __init__(self) -> None:

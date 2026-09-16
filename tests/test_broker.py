@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 import zmq
 
-from msl.network import AuthCurve, AuthPlain, Client, Worker
+from msl.network import AuthCurve, AuthPlain, Client, Service
 from msl.network.cli import main
 from msl.network.message import Flag, Request
 from msl.network.utils import Curve
@@ -24,7 +24,7 @@ TIMEOUT = 0.1
 def test_session(broker: Broker) -> None:
     port, *_ = broker.run()
 
-    class Foo(Worker):
+    class Foo(Service):
         def __init__(self) -> None:
             super().__init__(port=port)
             self.num_requests: int = 0
@@ -104,15 +104,15 @@ def test_session(broker: Broker) -> None:
     broker.stop()
 
 
-def test_worker_disconnects_without_notifying(broker: Broker) -> None:
+def test_service_disconnects_without_notifying(broker: Broker) -> None:
     port, *_ = broker.run()
 
-    class Foo(Worker):
+    class Foo(Service):
         def add(self, x: float, y: float) -> float:
             return x + y
 
         async def _handle_disconnect(self) -> None:  # pyright: ignore[reportImplicitOverride]
-            """Don't notify the Broker that this Worker is disconnecting."""
+            """Don't notify the Broker that this Service is disconnecting."""
             return
 
     foo = Foo(port=port)
@@ -141,27 +141,27 @@ def test_worker_disconnects_without_notifying(broker: Broker) -> None:
     broker.stop()
 
 
-def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
-    # Tests that an unsupported message gets logged from a Worker and when
-    # WORKER_UNAVAILABLE is sent with a service name that does not exist, the
+def test_service_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    # Tests that an unsupported message gets logged from a Service and when
+    # SERVICE_UNAVAILABLE is sent with a service name that does not exist, the
     # request get silently ignored by the "is None" check on the broker
     caplog.set_level("DEBUG")
 
     port, xpub, xsub = broker.run()
 
     context = zmq.Context()
-    worker = context.socket(zmq.DEALER)
-    worker.setsockopt(zmq.ROUTING_ID, b"Worker[1]")
-    _ = worker.connect(f"tcp://localhost:{port}")
+    service = context.socket(zmq.DEALER)
+    service.setsockopt(zmq.ROUTING_ID, b"Service[1]")
+    _ = service.connect(f"tcp://localhost:{port}")
 
     r = Request(id=0, service="ignored", attribute="gets_logged", args=[], kwargs={})
-    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
+    _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
 
-    r = Request(id=0, service="UnknownServiceName", attribute="WORKER_UNAVAILABLE", args=[], kwargs={})
-    _ = worker.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
+    r = Request(id=0, service="UnknownServiceName", attribute="SERVICE_UNAVAILABLE", args=[], kwargs={})
+    _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
     time.sleep(0.1)
 
-    worker.close()
+    service.close()
     context.destroy()
 
     broker.stop()
@@ -170,9 +170,9 @@ def test_worker_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFixt
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} created"),
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
-        ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
-        ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Worker[1]'"),
-        ("msl.network", logging.DEBUG, "b'Worker[1]' -> b'Broker'"),
+        ("msl.network", logging.DEBUG, "b'Service[1]' -> b'Broker'"),
+        ("msl.network", logging.ERROR, "Unsupported broker request 'gets_logged' from b'Service[1]'"),
+        ("msl.network", logging.DEBUG, "b'Service[1]' -> b'Broker'"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} triggered"),
         ("msl.network", logging.DEBUG, "XPUB/XSUB terminated"),
         ("msl.network", logging.DEBUG, f"{broker.interrupter_name} terminated"),

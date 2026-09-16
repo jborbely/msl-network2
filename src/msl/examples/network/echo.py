@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from msl.network import Worker
+from msl.network import Service
 
 
-class Echo(Worker):
-    """Example Worker that echos the arguments of the request."""
+class Echo(Service):
+    """Example Service that echos the arguments of the request."""
 
     @staticmethod
     def echo(*args: Any, **kwargs: Any) -> tuple[tuple[Any, ...], dict[str, Any]]:

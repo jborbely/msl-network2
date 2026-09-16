@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 import pytest
 import zmq
 
-from msl.network import AuthCurve, AuthPlain, Flag, Worker
-from msl.network.message import Request, Response
+from msl.network import AuthCurve, AuthPlain, Flag, Service
+from msl.network.message import Reply, Request
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 
 @pytest.mark.filterwarnings("error")
 def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture) -> None:
-    # If Worker.__del__ issues a pytest.PytestUnraisableExceptionWarning, this test fails
-    _ = Worker(port=30001)
+    # If Service.__del__ issues a pytest.PytestUnraisableExceptionWarning, this test fails
+    _ = Service(port=30001)
     assert not caplog.records
     out, err = capsys.readouterr()
     assert not out
@@ -30,7 +30,7 @@ def test_del_is_clean(capsys: pytest.CaptureFixture[str], caplog: pytest.LogCapt
 def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level("DEBUG")
 
-    w = Worker(port=32845)
+    w = Service(port=32845)
     thread = threading.Thread(target=w.connect, daemon=True)
     thread.start()
 
@@ -42,21 +42,21 @@ def test_connect_interrupt_disconnect(caplog: pytest.LogCaptureFixture) -> None:
 
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
-    assert r[0] == "Worker publisher ready"
+    assert r[0] == "Service publisher ready"
     assert r[1] == f"{interrupter.name} created"
-    assert r[2] == "Worker polling..."
+    assert r[2] == "Service polling..."
     assert r[3] == f"{interrupter.name} triggered"
-    assert r[4] == "Worker publisher done"
-    assert r[5] == "Worker unregistered"
+    assert r[4] == "Service publisher done"
+    assert r[5] == "Service unregistered"
     assert r[6] == f"{interrupter.name} terminated"
-    assert r[7] == "Worker disconnected"
-    assert r[8] == "Worker event loop closed"
+    assert r[7] == "Service disconnected"
+    assert r[8] == "Service event loop closed"
 
     thread.join()
 
 
 def test_flags_at() -> None:
-    w = Worker(flag=Flag.NONE, port=11008)
+    w = Service(flag=Flag.NONE, port=11008)
     assert w.flag == Flag.NONE
     with w.flag_at(Flag.JSON):
         assert w.flag == Flag.JSON  # type: ignore[comparison-overlap]
@@ -69,7 +69,7 @@ def test_session() -> None:  # noqa: PLR0915
     broker.setsockopt(zmq.ROUTING_ID, b"Broker")
     port = broker.bind_to_random_port("tcp://localhost")
 
-    class ServiceName(Worker):
+    class ServiceName(Service):
         def division(self, a: float, b: float) -> float:
             return a / b
 
@@ -78,56 +78,56 @@ def test_session() -> None:  # noqa: PLR0915
     thread.start()
 
     # The service name gets registered with the Broker
-    worker_id, destination_id, message = broker.recv_multipart()
+    service_id, destination_id, message = broker.recv_multipart()
     request = Request.from_bytes(message)
-    assert worker_id.startswith(b"Worker[")
+    assert service_id.startswith(b"Service[")
     assert destination_id == b"Broker"
-    assert request.attribute == "WORKER_READY"
+    assert request.attribute == "SERVICE_READY"
     assert request.service == "ServiceName"
 
     # Request private attribute
     request = Request(id=1, service="ServiceName", attribute="_socket", args=(), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
+    _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
-    response = Response.from_bytes(message)
-    assert response.result == "PermissionError: Cannot request a private attribute"
+    reply = Reply.from_bytes(message)
+    assert reply.result == "PermissionError: Cannot request a private attribute"
 
     # Request invalid attribute
     request = Request(id=2, service="ServiceName", attribute="missing", args=(), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
+    _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
-    response = Response.from_bytes(message)
-    assert response.id == 2
-    assert not response.ok
-    assert response.result == "'ServiceName' object has no attribute 'missing'"
+    reply = Reply.from_bytes(message)
+    assert reply.id == 2
+    assert not reply.ok
+    assert reply.result == "'ServiceName' object has no attribute 'missing'"
 
     # Request non-callable attribute
     request = Request(id=3, service="ServiceName", attribute="flag", args=(), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
+    _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
-    response = Response.from_bytes(message)
-    assert response.id == 3
-    assert response.ok
-    assert response.result == Flag.PICKLE
+    reply = Reply.from_bytes(message)
+    assert reply.id == 3
+    assert reply.ok
+    assert reply.result == Flag.PICKLE
 
     # Request valid callable attribute
     request = Request(id=4, service="ServiceName", attribute="division", args=(10, 2), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
+    _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
-    response = Response.from_bytes(message)
-    assert response.id == 4
-    assert response.ok
-    assert response.result == 5
+    reply = Reply.from_bytes(message)
+    assert reply.id == 4
+    assert reply.ok
+    assert reply.result == 5
 
     # Request valid callable attribute raises
     request = Request(id=5, service="ServiceName", attribute="division", args=(10, 0), kwargs={})
-    _ = broker.send_multipart((worker_id, b"Broker", request.to_bytes(Flag.PICKLE)))
+    _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
-    response = Response.from_bytes(message)
-    assert response.id == 5
-    assert not response.ok
-    assert response.result.startswith("Traceback (most recent call last):\n")
-    assert response.result.endswith("ZeroDivisionError: division by zero\n")
+    reply = Reply.from_bytes(message)
+    assert reply.id == 5
+    assert not reply.ok
+    assert reply.result.startswith("Traceback (most recent call last):\n")
+    assert reply.result.endswith("ZeroDivisionError: division by zero\n")
 
     assert sn._interrupter is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     sn._interrupter()  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
@@ -136,13 +136,13 @@ def test_session() -> None:  # noqa: PLR0915
     broker.close(linger=0)
     context.destroy(linger=0)
 
-    # Worker._handle_disconnect() can be called multiple times
+    # Service._handle_disconnect() can be called multiple times
     asyncio.run(sn._handle_disconnect())  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     asyncio.run(sn._handle_disconnect())  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
 
 
 def test_signatures() -> None:
-    class Foo(Worker):
+    class Foo(Service):
         def __init__(self, ignore_attributes: str | Iterable[str] | None = None) -> None:
             super().__init__(ignore_attributes=ignore_attributes)
             self.count: int = 0
@@ -200,7 +200,7 @@ def test_signatures() -> None:
 def test_signatures_warnings(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level("DEBUG")
 
-    class Warner(Worker):
+    class Warner(Service):
         def __init__(self) -> None:
             super().__init__()
             self._price: int = 0
@@ -228,13 +228,13 @@ def test_signatures_warnings(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_plain_and_curve() -> None:
     with pytest.raises(ValueError, match=r"Cannot use both PLAIN and CURVE"):
-        _ = Worker(curve=AuthCurve(b"a", b"b", b"c"), plain=AuthPlain("a", "b"))
+        _ = Service(curve=AuthCurve(b"a", b"b", b"c"), plain=AuthPlain("a", "b"))
 
 
 def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG)
 
-    w = Worker(port=29501, plain=AuthPlain("hi", "hello"))
+    w = Service(port=29501, plain=AuthPlain("hi", "hello"))
     thread = threading.Thread(target=w.connect, daemon=True)
     thread.start()
 
@@ -247,16 +247,16 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
 
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
-    assert r[0] == "Worker publisher ready"
+    assert r[0] == "Service publisher ready"
     assert r[1] == f"{interrupter.name} created"
     assert r[2] == "Using PLAIN authentication"
-    assert r[3] == "Worker polling..."
+    assert r[3] == "Service polling..."
     assert r[4] == f"{interrupter.name} triggered"
-    assert r[5] == "Worker publisher done"
-    assert r[6] == "Worker unregistered"
+    assert r[5] == "Service publisher done"
+    assert r[6] == "Service unregistered"
     assert r[7] == f"{interrupter.name} terminated"
-    assert r[8] == "Worker disconnected"
-    assert r[9] == "Worker event loop closed"
+    assert r[8] == "Service disconnected"
+    assert r[9] == "Service event loop closed"
 
 
 def test_curve(caplog: pytest.LogCaptureFixture) -> None:
@@ -265,7 +265,7 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     broker_public, _ = zmq.curve_keypair()
     client_public, client_secret = zmq.curve_keypair()
 
-    w = Worker(
+    w = Service(
         port=49162, curve=AuthCurve(public_key=client_public, secret_key=client_secret, broker_key=broker_public)
     )
     thread = threading.Thread(target=w.connect, daemon=True)
@@ -280,25 +280,25 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
 
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
-    assert r[0] == "Worker publisher ready"
+    assert r[0] == "Service publisher ready"
     assert r[1] == f"{interrupter.name} created"
     assert r[2] == "Using CURVE authentication"
-    assert r[3] == "Worker polling..."
+    assert r[3] == "Service polling..."
     assert r[4] == f"{interrupter.name} triggered"
-    assert r[5] == "Worker publisher done"
-    assert r[6] == "Worker unregistered"
+    assert r[5] == "Service publisher done"
+    assert r[6] == "Service unregistered"
     assert r[7] == f"{interrupter.name} terminated"
-    assert r[8] == "Worker disconnected"
-    assert r[9] == "Worker event loop closed"
+    assert r[8] == "Service disconnected"
+    assert r[9] == "Service event loop closed"
 
 
 def test_publish_no_event_loop() -> None:
-    w = Worker()
+    w = Service()
     with pytest.raises(RuntimeError, match=r"Event loop not running, cannot publish result"):
         w.publish("hi")
     w.disconnect()
 
 
 def test_create_destroy() -> None:
-    w = Worker()
+    w = Service()
     w.disconnect()

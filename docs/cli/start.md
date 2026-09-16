@@ -5,7 +5,7 @@ Start the [Broker][] as a message proxy.
 ## Usage
 
 ```console
-msl-network start [--auth-curve [KEYS_DIR]] [--auth-curve-allow-any] [--auth-domain DOMAIN] [--auth-device [DEVICE ...]] [--auth-plain [JSON_FILE]] [-H HOST] [-p PORT] [-m] [-h] [-q] [-v]
+msl-network start [--auth-curve [KEYS_DIR]] [--auth-curve-allow-any] [--auth-device [DEVICE ...]] [--auth-plain [JSON_FILE]] [-H HOST] [-p PORT] [-m] [-h] [-q] [-v]
 ```
 
 ## Options
@@ -28,8 +28,7 @@ See [msl-network curve][] for more details.
 ### --auth-curve-allow-any {: #start-auth-curve-allow-any .cli-header }
 Allow [CURVE] keys from any device. Enabled by default if no public key files are found.
 
-### --auth-domain DOMAIN {: #start-auth-domain .cli-header }
-The domain to use for [PLAIN] or [CURVE] authentication. Default is `*`.
+If you have public keys of devices stored in the `~/.curve` or `~/.msl/network/curves` directories, then only devices that send a valid key during authentication are allowed to connect. You can ignore the stored keys by specifying this flag so that a [Broker][] does not validate the key of a connecting device (the connecting device still validates the key of the [Broker][]).
 
 ### --auth-device [DEVICE ...] {: #start-auth-device .cli-header }
 Use authentication based on the IP address (or hostname) of devices that are allowed to connect.
@@ -41,7 +40,7 @@ msl-network start --auth-device
 
 Specifying this flag with one or more values will use the specified devices and ignore the list of devices stored in the default file.
 ```console
-msl-network start --auth-device 10.9.102.80 msl-lab-computer
+msl-network start --auth-device 10.9.102.80 lab-computer
 ```
 
 ### --auth-plain [JSON_FILE] {: #start-auth-plain .cli-header }
