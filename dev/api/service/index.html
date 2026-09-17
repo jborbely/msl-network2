@@ -1417,6 +1417,48 @@
 
 
 <h1 id="service">Service<a class="headerlink" href="#service" title="Permanent link">¤</a></h1>
+<p>To implement your own Service, just inherit from the <a class="autorefs autorefs-internal" title="            Service" href="#msl.network.service.Service">Service</a> class, create the methods/attributes that you want your Service to provide and then run your script.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Your subclass cannot have method/attribute names that are found in the <a class="autorefs autorefs-internal" href="../link/#link">Link</a> class, otherwise a request will not be sent to your Service.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Service</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">Service</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A service that allows for a camera to be available on the network."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># (1)!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">version</span>  <span class="c1"># (2)!</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get the image resolution."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">resolution</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set the image resolution."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""This coroutine is also run in the event loop."""</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">capture</span><span class="p">())</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Camera</span><span class="p">()</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">add_tasks</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">stream</span><span class="p">())</span>  <span class="c1"># (3)!</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>  <span class="c1"># (4)!</span>
+</code></pre></div>
+<ol>
+<li>Access the camera interface.</li>
+<li>A <a class="autorefs autorefs-internal" href="../client/#client">Client</a> can also send a request for an attribute value, not just callable methods.</li>
+<li>Add the <code>stream</code> method to the event loop of the <a class="autorefs autorefs-internal" title="            Service" href="#msl.network.service.Service">Service</a> to publish images every second.</li>
+<li>Connect to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>. Runs the event loop <em>forever</em>.</li>
+</ol>
 
 
 <div class="doc doc-object doc-class">
@@ -1520,7 +1562,7 @@ If not specified, the class name is used.</p>
             <td>
               <div class="doc-md-description">
                 <p>The serialisation and compression algorithms to apply to a reply before
-sending the byte stream.</p>
+sending the message.</p>
               </div>
             </td>
             <td>
@@ -1702,7 +1744,7 @@ for more details.</p>
 <span class="sd">        host: The hostname (or IP address) that the [Broker][] is running on.</span>
 <span class="sd">        port: The network port that the [Broker][] is running on.</span>
 <span class="sd">        flag: The serialisation and compression algorithms to apply to a reply before</span>
-<span class="sd">            sending the byte stream.</span>
+<span class="sd">            sending the message.</span>
 <span class="sd">        curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.</span>
 <span class="sd">        plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.</span>
 <span class="sd">        xsub_port: The port on the [Broker][] that is subscribed to publications.</span>
@@ -1712,7 +1754,7 @@ for more details.</p>
 <span class="sd">            for more details.</span>
 <span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">=</span> <span class="n">flag</span>
-<span class="w">    </span><span class="sd">"""The serialisation and compression algorithms to apply to a reply before sending the byte stream."""</span>
+<span class="w">    </span><span class="sd">"""The serialisation and compression algorithms to apply to a reply before sending the message."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_service_id</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Service[</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">]"</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
@@ -1812,7 +1854,7 @@ for more details.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The serialisation and compression algorithms to apply to a reply before sending the byte stream.</p>
+        <p>The serialisation and compression algorithms to apply to a reply before sending the message.</p>
 
     </div>
 
@@ -1903,6 +1945,7 @@ for more details.</p>
     <div class="doc doc-contents ">
 
         <p>Connect (or reconnect) to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>.</p>
+<p>Calling this method will run the <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio-event-loop">event loop</a> until all tasks have completed.</p>
 
 
             <details class="mkdocstrings-source">
@@ -1916,8 +1959,14 @@ for more details.</p>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Connect (or reconnect) to the [Broker][]."""</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Connect (or reconnect) to the [Broker][].</span>
+
+<span class="sd">    Calling this method will run the [event loop][asyncio-event-loop] until all tasks have completed.</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">run_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gather</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
@@ -1950,10 +1999,7 @@ for more details.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
@@ -1968,7 +2014,10 @@ for more details.</p>
 <span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
-<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Disconnect from the [Broker][]."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pub_queue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span><span class="p">()</span>
@@ -2021,23 +2070,26 @@ for more details.</p>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""By default, use JSON to serialise all replies (no compression)."""</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="n">Flag</span><span class="o">.</span><span class="n">JSON</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Access the camera interface</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Returns the (width, height) of a captured image.</span>
 
 <span class="sd">        The reply is serialised using JSON without compression.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="mi">1600</span><span class="p">,</span> <span class="mi">1200</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">resolution</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">capture</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Capture an image and return the image bytes.</span>
 
-<span class="sd">        In this method, compressed bytes without serialisation is returned.</span>
+<span class="sd">        For this method, compressed bytes without serialisation is returned.</span>
 <span class="sd">        """</span>
-        <span class="n">image</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># capture an image from the camera</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">ZLIB</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">image</span>
-</code></pre></div>
+<span class="hll">        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">ZLIB</span><span class="p">):</span>  <span class="c1"># (1)!</span>
+</span><span class="hll">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+</span></code></pre></div>
+<ol>
+<li>Temporarily change the serialisation and compression algorithms to send the reply.</li>
+</ol>
 </div>
 
 
@@ -2075,10 +2127,7 @@ context exits, the value is set to the original value.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
@@ -2115,12 +2164,17 @@ context exits, the value is set to the original value.</p>
 <span class="normal">190</span>
 <span class="normal">191</span>
 <span class="normal">192</span>
-<span class="normal">193</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">flag_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [flag][..flag] value.</span>
 
 <span class="sd">    !!! example</span>
-<span class="sd">        ```python</span>
+<span class="sd">        ```python hl_lines="22 23"</span>
 <span class="sd">        from msl.network import Flag, Service</span>
 
 <span class="sd">        class Camera(Service):</span>
@@ -2128,23 +2182,25 @@ context exits, the value is set to the original value.</p>
 <span class="sd">            def __init__(self) -&gt; None:</span>
 <span class="sd">                \"\"\"By default, use JSON to serialise all replies (no compression).\"\"\"</span>
 <span class="sd">                super().__init__(flag=Flag.JSON)</span>
+<span class="sd">                self._camera = ...  # Access the camera interface</span>
 
-<span class="sd">            def resolution(self) -&gt; tuple[int, int]:</span>
+<span class="sd">            def get_resolution(self) -&gt; tuple[int, int]:</span>
 <span class="sd">                \"\"\"Returns the (width, height) of a captured image.</span>
 
 <span class="sd">                The reply is serialised using JSON without compression.</span>
 <span class="sd">                \"\"\"</span>
-<span class="sd">                return 1600, 1200</span>
+<span class="sd">                return self._camera.resolution</span>
 
 <span class="sd">            def capture(self) -&gt; bytes:</span>
 <span class="sd">                \"\"\"Capture an image and return the image bytes.</span>
 
-<span class="sd">                In this method, compressed bytes without serialisation is returned.</span>
+<span class="sd">                For this method, compressed bytes without serialisation is returned.</span>
 <span class="sd">                \"\"\"</span>
-<span class="sd">                image: bytes = ...  # capture an image from the camera</span>
-<span class="sd">                with self.flag_at(Flag.ZLIB):</span>
-<span class="sd">                    return image</span>
+<span class="sd">                with self.flag_at(Flag.ZLIB):  # (1)!</span>
+<span class="sd">                    return self._camera.capture()</span>
 <span class="sd">        ```</span>
+
+<span class="sd">        1. Temporarily change the serialisation and compression algorithms to send the reply.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        flag: The temporary flag to use while within the context. Once the</span>
@@ -2221,12 +2277,7 @@ ignored and cannot be accessed from a <a class="autorefs autorefs-internal" titl
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
@@ -2239,7 +2290,12 @@ ignored and cannot be accessed from a <a class="autorefs autorefs-internal" titl
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
-<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">ignore_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">ignore_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Ignore attributes from being added to the [signatures][..signatures] map.</span>
 
 <span class="sd">    There are a few reasons why you may want to call this method:</span>
@@ -2335,12 +2391,7 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">220</span>
 <span class="normal">221</span>
 <span class="normal">222</span>
 <span class="normal">223</span>
@@ -2351,7 +2402,12 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
 <span class="normal">228</span>
 <span class="normal">229</span>
 <span class="normal">230</span>
-<span class="normal">231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Publish a message to all subscribers.</span>
 
 <span class="sd">    Args:</span>
@@ -2416,12 +2472,7 @@ function signature (attribute value).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">238</span>
 <span class="normal">239</span>
 <span class="normal">240</span>
 <span class="normal">241</span>
@@ -2452,7 +2503,12 @@ function signature (attribute value).</p>
 <span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
-<span class="normal">269</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Get the function signatures that the service provides.</span>
 
 <span class="sd">    Returns:</span>
@@ -2628,7 +2684,7 @@ function signature (attribute value).</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.annotate", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>

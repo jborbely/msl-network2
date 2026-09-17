@@ -1351,6 +1351,37 @@
 
 
 <h1 id="client">Client<a class="headerlink" href="#client" title="Permanent link">¤</a></h1>
+<p>A Client sends requests to a <a class="autorefs autorefs-internal" href="../service/#service">Service</a> and receives replies. It can also subscribe to messages that are published by the <a class="autorefs autorefs-internal" href="../service/#service">Service</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">captured</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Handle image data that is published by the Service."""</span>
+    <span class="o">...</span>
+
+
+<span class="k">with</span> <span class="n">Client</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s2">"192.168.1.25"</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>  <span class="c1"># (1)!</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">services</span><span class="p">())</span>  <span class="c1"># (2)!</span>
+
+    <span class="n">camera</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Camera"</span><span class="p">)</span>  <span class="c1"># (3)!</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">signatures</span><span class="p">())</span>  <span class="c1"># (4)!</span>
+
+    <span class="n">camera</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">captured</span><span class="p">)</span>  <span class="c1"># (5)!</span>
+
+    <span class="n">camera</span><span class="o">.</span><span class="n">set_resolution</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">1280</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">720</span><span class="p">)</span>  <span class="c1"># (6)!</span>
+    <span class="n">resolution</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">get_resolution</span><span class="p">()</span>  <span class="c1"># (7)!</span>
+
+    <span class="c1"># do more stuff...</span>
+</code></pre></div>
+<ol>
+<li>Connect to a Broker. By using a context manager (i.e., a <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/compound_stmts.html#with">with</a> statement), the connection is automatically closed after you are done using it. Otherwise, call <a class="autorefs autorefs-internal" title="            disconnect" href="#msl.network.client.Client.disconnect">disconnect</a>.</li>
+<li>Get the names of the <a class="autorefs autorefs-internal" href="../service/#service">Service</a>s that are available to <a class="autorefs autorefs-internal" href="../link/#link">Link</a> with.</li>
+<li>Establish a <a class="autorefs autorefs-internal" href="../link/#link">Link</a> with a <a class="autorefs autorefs-internal" href="../service/#service">Service</a>. <em>Tip: The <a class="autorefs autorefs-internal" href="../service/#service">Service</a> does not actually need to be running in order to establish a <a class="autorefs autorefs-internal" href="../link/#link">Link</a>. The <a class="autorefs autorefs-internal" href="../service/#service">Service</a> only needs to be running when a request is sent in order to get a reply.</em></li>
+<li>Request what functions are available from the linked <a class="autorefs autorefs-internal" href="../service/#service">Service</a>. This will return a mapping of the function name to the input/output parameters that the function requires/returns.</li>
+<li><a class="autorefs autorefs-internal" title="            subscribe" href="../link/#msl.network.client.Link.subscribe">Subscribe</a> to captured images that are published by the <a class="autorefs autorefs-internal" href="../service/#service">Service</a>.</li>
+<li>Send a request. No reply expected, but the <a class="autorefs autorefs-internal" href="../service/#service">Service</a> still sends <code>None</code> as a reply.</li>
+<li>Send a request. Wait for reply.</li>
+</ol>
 
 
 <div class="doc doc-object doc-class">
@@ -1434,7 +1465,7 @@
             <td>
               <div class="doc-md-description">
                 <p>The serialisation and compression algorithms to apply to a
-request before sending the byte stream.</p>
+request before sending the message.</p>
               </div>
             </td>
             <td>
@@ -1561,7 +1592,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="sd">        host: The hostname (or IP address) that the [Broker][] is running on.</span>
 <span class="sd">        port: The network port that the [Broker][] is running on.</span>
 <span class="sd">        flag: The serialisation and compression algorithms to apply to a</span>
-<span class="sd">            request before sending the byte stream.</span>
+<span class="sd">            request before sending the message.</span>
 <span class="sd">        curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.</span>
 <span class="sd">        plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.</span>
 <span class="sd">        xpub_port: The port on the [Broker][] that is publishing messages.</span>
@@ -1725,19 +1756,24 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <p class="admonition-title">Example</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">Flag</span>
 
-<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="n">Flag</span><span class="o">.</span><span class="n">PICKLE</span><span class="p">)</span>
-<span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Something"</span><span class="p">)</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="n">Flag</span><span class="o">.</span><span class="n">JSON</span><span class="p">)</span>  <span class="c1"># (1)!</span>
+<span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"MyService"</span><span class="p">)</span>
 
-<span class="c1"># uses PICKLE to serialise the request</span>
+<span class="c1"># uses JSON to serialise the request</span>
 <span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
 
-<span class="k">with</span> <span class="n">link</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">JSON</span><span class="p">):</span>
-    <span class="c1"># uses JSON to serialise the request</span>
-    <span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
+<span class="hll"><span class="k">with</span> <span class="n">link</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">ZSTD</span><span class="p">):</span>  <span class="c1"># (2)!</span>
+</span><span class="hll">    <span class="n">link</span><span class="o">.</span><span class="n">send_picture</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>  <span class="c1"># uses ZSTD to compress the data</span>
+</span>
+<span class="c1"># uses JSON to serialise the request</span>
+<span class="n">link</span><span class="o">.</span><span class="n">do_something_else</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 
-<span class="c1"># uses PICKLE to serialise the request</span>
-<span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
+<span class="n">client</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
 </code></pre></div>
+<ol>
+<li>Use JSON to serialised each request (no compression).</li>
+<li>Temporarily change the serialisation and compression algorithms to send the request.</li>
+</ol>
 </div>
 
 
@@ -1806,27 +1842,35 @@ context exits, the value is set to the original value.</p>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">flag_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [flag][..flag] value.</span>
 
 <span class="sd">    !!! example</span>
-<span class="sd">        ```python</span>
+<span class="sd">        ```python hl_lines="9 10"</span>
 <span class="sd">        from msl.network import Client, Flag</span>
 
-<span class="sd">        client = Client(flag=Flag.PICKLE)</span>
-<span class="sd">        link = client.link("Something")</span>
+<span class="sd">        client = Client(flag=Flag.JSON)  # (1)!</span>
+<span class="sd">        link = client.link("MyService")</span>
 
-<span class="sd">        # uses PICKLE to serialise the request</span>
+<span class="sd">        # uses JSON to serialise the request</span>
 <span class="sd">        link.do_something()</span>
 
-<span class="sd">        with link.flag_at(Flag.JSON):</span>
-<span class="sd">            # uses JSON to serialise the request</span>
-<span class="sd">            link.do_something()</span>
+<span class="sd">        with link.flag_at(Flag.ZSTD):  # (2)!</span>
+<span class="sd">            link.send_picture(open("image.jpg", "rb").read())  # uses ZSTD to compress the data</span>
 
-<span class="sd">        # uses PICKLE to serialise the request</span>
-<span class="sd">        link.do_something()</span>
+<span class="sd">        # uses JSON to serialise the request</span>
+<span class="sd">        link.do_something_else(n=100)</span>
+
+<span class="sd">        client.disconnect()</span>
 <span class="sd">        ```</span>
+
+<span class="sd">        1. Use JSON to serialised each request (no compression).</span>
+<span class="sd">        2. Temporarily change the serialisation and compression algorithms to send the request.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        flag: The temporary flag to use while within the context. Once the</span>
@@ -1916,18 +1960,18 @@ context exits, the value is set to the original value.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
 <span class="normal">185</span>
 <span class="normal">186</span>
 <span class="normal">187</span>
-<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Link</span><span class="p">:</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Link</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Link with a service.</span>
 
 <span class="sd">    Args:</span>
@@ -2018,17 +2062,17 @@ If <code>None</code>, there is no limit on the wait time.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
 <span class="normal">199</span>
-<span class="normal">200</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">services</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">services</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Request the names of the services that are available.</span>
 
 <span class="sd">    Args:</span>
@@ -2178,7 +2222,7 @@ If <code>None</code>, there is no limit on the wait time.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.annotate", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>

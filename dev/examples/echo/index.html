@@ -1251,17 +1251,17 @@
 
 
 <h1 id="echo">Echo<a class="headerlink" href="#echo" title="Permanent link">¤</a></h1>
-<p>Example of an echo Service.</p>
-<p>The echo Service returns the arguments and keyword arguments that were sent from a Client.</p>
+<p>Example of an Echo <a class="autorefs autorefs-internal" href="../../api/service/#service">Service</a>.</p>
+<p>The Echo <a class="autorefs autorefs-internal" href="../../api/service/#service">Service</a> returns the arguments and keyword arguments that were sent from a <a class="autorefs autorefs-internal" href="../../api/client/#client">Client</a>.</p>
 <h2 id="echo-broker">Start the <code>Broker</code><a class="headerlink" href="#echo-broker" title="Permanent link">¤</a></h2>
-<p>Start the Broker by running the following command.</p>
+<p>Start the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a> by running the following command.</p>
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start</span>
 </code></pre></div>
 <h2 id="echo-service">Start the <code>Echo</code> Service<a class="headerlink" href="#echo-service" title="Permanent link">¤</a></h2>
-<p>Open another terminal and start the service by running the following command.</p>
-<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import Echo; Echo().connect()"</span>
+<p>Open another terminal and start the Echo <a class="autorefs autorefs-internal" href="../../api/service/#service">Service</a> by running the following command.</p>
+<div class="highlight"><pre><span></span><code><span class="go">python -c "from msl.examples.network import run_echo; run_echo()"</span>
 </code></pre></div>
-<p>The source code is:</p>
+<p>The source code of the Echo <a class="autorefs autorefs-internal" href="../../api/service/#service">Service</a> is:</p>
 <!-- fmt: off -->
 <div class="highlight"><pre><span></span><code><span class="sd">"""Example echo service.</span>
 
@@ -1293,15 +1293,13 @@
 <!-- fmt: on -->
 
 <h2 id="echo-client">Run the <code>Client</code><a class="headerlink" href="#echo-client" title="Permanent link">¤</a></h2>
-<p>Connect to the Broker as a Client, link with the Echo service and then send requests.</p>
+<p>Connect to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a> as a <a class="autorefs autorefs-internal" href="../../api/client/#client">Client</a>, <a class="autorefs autorefs-internal" title="            link" href="../../api/client/#msl.network.client.Client.link">link</a> with the Echo <a class="autorefs autorefs-internal" href="../../api/service/#service">Service</a> and send requests.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 <span class="k">with</span> <span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
     <span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Echo"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">echo</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"hi"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">9.1</span><span class="p">))</span>
-
-    <span class="c1"># You can also request what functions are available from the linked Service</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">signatures</span><span class="p">())</span>
 </code></pre></div>
 
 
@@ -1429,7 +1427,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.annotate", "navigation.footer", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
