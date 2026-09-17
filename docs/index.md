@@ -1,37 +1,37 @@
 # Overview
-`msl-network` uses concurrency and asynchronous programming to transfer messages across a network and it is composed of three objects &mdash; a [Broker][], [Client][]s and [Service][]s.
+`msl-network` uses concurrency and asynchronous programming to transfer messages across a network and it is composed of a [Broker][], [Client][]s and [Service][]s with a [Link][] established between a [Client][] and a [Service][].
 
-* ***Broker***
+- ***Broker***
     - Central node in the network.
     - Clients and Services connect to it.
     - Routes messages to the appropriate recipient (Client or Service).
 
-* ***Client***
+- ***Client***
     - Connects to a Broker.
     - Creates a Link with a Service (a single Client can create multiple links).
-    - Sends requests to the Service and receives the reply.
+    - Sends a request to the Service and receives the reply.
     - Subscribes to messages that are published by the Service.
 
-* ***Service***
+- ***Service***
     - Connects to a Broker.
-    - Processes requests from a Client and sends the reply.
+    - Processes a request from a Client and sends the reply.
     - Publishes messages to all subscribed Clients.
 
-![links.png](assets/images/links.png)
+![network.svg](assets/images/network.svg)
 
-Messages are transferred using [ZeroMQ](https://zeromq.org/) sockets. As such, the order in which you run a Broker, Client or Service does not matter. A Service can connect to a Broker that has not started yet and when the Broker does start running it will register the Service as a service that is available for Clients to interact with. When a Service disconnects, the Broker unregisters it.
+Messages are transferred using [ZeroMQ](https://zeromq.org/) sockets. As such, the order in which you run a Broker, Client or Service does not matter. A Service can connect to a Broker that has not started yet and when the Broker does start running it will register the Service as being available for Clients to interact with. When a Service disconnects, the Broker unregisters it.
 
-Any programming language that has ZeroMQ [bindings](https://zeromq.org/get-started/) available can be used to implement a Client or a Service. So a Client written in Python could be requesting a Service written in C++ to process the request (or vice versa).
+Any programming language that has a ZeroMQ [binding](http://wiki.zeromq.org/bindings:_start) available can be used to implement a Client or a Service. So a Client written in Python could be requesting a Service written in C++ to process the request (or vice versa).
 
 ## Broker
-A Broker is the central node in the network. Running a single Broker instance can support many [Client][]s and [Service][]s connected to it simultaneously. The Broker routes a [Client][]'s request to the appropriate [Service][] and sends a [Service][]'s reply back to the [Client][] (ZeroMQ REQ-REP pattern). A Broker also broadcasts a message published by a [Service][] to all [Client][]'s that are subscribed (ZeroMQ PUB-SUB pattern).
+A Broker is the central node in the network. Running a single Broker instance can support many [Client][]s and [Service][]s connected to it simultaneously. The Broker routes a [Client][]'s request to the appropriate [Service][] and sends the [Service][]'s reply back to the [Client][] (ZeroMQ REQ-REP pattern). A Broker also distributes a message published by a [Service][] to all [Client][]'s that are subscribed (ZeroMQ PUB-SUB pattern).
 
 There are a few runnable [examples][] that are available when `msl-network` is installed. The [Echo][] example illustrates the ZeroMQ REQ-REP pattern and the [Heartbeat][] example illustrates the ZeroMQ PUB-SUB pattern.
 
 ## Message Format
-A message (a request, reply or publication) is transferred as bytes, but a [Client][] and [Service][] can control how data is serialised into bytes and whether compression is applied before the bytes are transferred. The serialisation/compression algorithm is controlled by the [Flag][] enumeration value. When a [Client][] receives a reply from a [Service][], the reply is automatically decompressed and deserialised.
+A message (a request, reply or publication) is transferred as bytes, but a [Client][] and [Service][] can control how data is serialised into bytes and whether compression is applied before the bytes are transferred. The serialisation/compression algorithm is controlled by the [Flag][] enumeration value. When a [Client][] or [Service][] receives a message, the message is automatically decompressed and deserialised.
 
-The default serialisation method uses the [pickle][] format with no compression. When using the [pickle][] module to serialise data, it is important that you trust the [Client][]s and [Service][]s that you are transferring messages to.
+The default serialisation method uses the [pickle][] format with no compression. When using the [pickle][] format to serialise data, it is important that you trust the [Client][]s and [Service][]s that you are transferring messages to.
 
 You can also temporarily change the flag value before sending a request (see [here][msl.network.client.Client.flag_at]) or a reply (see [here][msl.network.service.Service.flag_at]).
 

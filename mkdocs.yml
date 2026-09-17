@@ -10,6 +10,7 @@ theme:
   favicon: assets/images/favicon.ico
   features:
     - content.code.copy
+    - content.code.annotate
     - navigation.footer
     - navigation.indexes
     - navigation.top

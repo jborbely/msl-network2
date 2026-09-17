@@ -5,11 +5,11 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/msl-network?logo=pypi&logoColor=gold&label=PyPI&color=blue)](https://pypi.org/project/msl-network/)
 [![PyPI - Python Versions](https://img.shields.io/pypi/pyversions/msl-network.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/msl-network/)
 
-MSL-Network uses concurrency and asynchronous programming to transfer data across a network and it is composed of three objects &mdash; a [Broker], [Client]s and [Service]s.
+`msl-network` uses concurrency and asynchronous programming to transfer messages across a network and it is composed of a [Broker], [Client]s and [Service]s with a [Link] established between a [Client] and a [Service].
 
-The [Broker] allows for multiple [Client]s and [Service]s to connect to it and it links a [Client]'s request to the appropriate [Service] to execute the request and then the [Broker] sends the reply from the [Service] back to the [Client]. A [Broker] also distributes messages that are published by a [Service] to all [Client]s that have subscribed.
+A [Broker] uses concurrency to handle requests from multiple [Client]s such that multiple requests run in overlapping time periods and a reply is returned in no specific order. The [Broker] also distributes messages that are published by a [Service] to all [Client]s that are subscribed.
 
-The [Broker] uses concurrency to handle requests from multiple [Client]s such that multiple requests start, run and complete in overlapping time periods and in no specific order. A [Client] can send requests synchronously or asynchronously to the Network [Broker] for a [Service] to execute. See [Concurrency and Asynchronous Programming] for more details.
+A [Client] can send requests synchronously or asynchronously for a [Service] to execute.
 
 ## Install
 
@@ -22,14 +22,14 @@ pip install msl-network
 ### Dependencies
 
 * Python 3.8+
-* PyZMQ
+* [PyZMQ]
 
 ## Documentation
 
 The documentation for `msl-network` can be found [here](https://mslnz.github.io/msl-network/latest/).
 
-[Broker]:
-[Client]:
-[Service]:
-[Concurrency and Asynchronous Programming]:
+[Broker]: https://mslnz.github.io/msl-network/latest/#broker
+[Client]: https://mslnz.github.io/msl-network/latest/api/client/
+[Service]: https://mslnz.github.io/msl-network/latest/api/service/
+[Link]: https://mslnz.github.io/msl-network/latest/api/link/
 [PyZMQ]: https://pyzmq.readthedocs.io/en/latest/

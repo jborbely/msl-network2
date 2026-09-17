@@ -139,7 +139,7 @@ class Broker:
         balancer.remove(service_id)
         if len(balancer) == 0:
             del self.services[service_name]
-            logger.info("No Services are available for name %r", service_name)
+            logger.info("No Services are available with name %r", service_name)
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""

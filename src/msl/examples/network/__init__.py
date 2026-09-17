@@ -9,3 +9,14 @@ __all__: list[str] = [
     "Echo",
     "Heartbeat",
 ]
+
+
+def run_echo() -> None:
+    echo = Echo()
+    echo.connect()
+
+
+def run_heartbeat() -> None:
+    heartbeat = Heartbeat()
+    heartbeat.add_tasks(heartbeat.emit())
+    heartbeat.connect()

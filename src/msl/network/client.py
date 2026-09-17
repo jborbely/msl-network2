@@ -55,7 +55,7 @@ class Client:
             host: The hostname (or IP address) that the [Broker][] is running on.
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a
-                request before sending the byte stream.
+                request before sending the message.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xpub_port: The port on the [Broker][] that is publishing messages.
@@ -141,22 +141,26 @@ class Client:
         """Use as a context manager to temporarily change the [flag][..flag] value.
 
         !!! example
-            ```python
+            ```python hl_lines="9 10"
             from msl.network import Client, Flag
 
-            client = Client(flag=Flag.PICKLE)
-            link = client.link("Something")
+            client = Client(flag=Flag.JSON)  # (1)!
+            link = client.link("MyService")
 
-            # uses PICKLE to serialise the request
+            # uses JSON to serialise the request
             link.do_something()
 
-            with link.flag_at(Flag.JSON):
-                # uses JSON to serialise the request
-                link.do_something()
+            with link.flag_at(Flag.ZSTD):  # (2)!
+                link.send_picture(open("image.jpg", "rb").read())  # uses ZSTD to compress the data
 
-            # uses PICKLE to serialise the request
-            link.do_something()
+            # uses JSON to serialise the request
+            link.do_something_else(n=100)
+
+            client.disconnect()
             ```
+
+            1. Use JSON to serialised each request (no compression).
+            2. Temporarily change the serialisation and compression algorithms to send the request.
 
         Args:
             flag: The temporary flag to use while within the context. Once the
@@ -217,7 +221,7 @@ class Link:
         """[str][] &mdash; The name of the service that the link is with."""
 
         self.timeout: float | None = None
-        """[float][] or `None` &mdash; The number of seconds to wait for a response from a *synchronous* request.
+        """[float][] or `None` &mdash; The number of seconds to wait for a reply from a *synchronous* request.
 
         The value is initially `None` for new links, which means that there is no limit on the wait time.
         """
@@ -240,9 +244,9 @@ class Link:
         return f"Link[{self.service_name}]"
 
     def __getattr__(self, attr: str) -> FutureOrResult:
-        """All undefined attributes are sent to the linked service to process.
+        """All undefined attributes are sent to the linked [Service][] to process.
 
-        The internal wrapper function that is returned is essentially
+        The internal wrapper function that is returned is essentially:
 
         ```python
         def wrapper(*args: Any, sync: bool = True, **kwargs: Any) -> Any | Future[Any]:
@@ -282,22 +286,25 @@ class Link:
         """Use as a context manager to temporarily change the [timeout][..timeout] value.
 
         !!! example
-            ```python
+            ```python hl_lines="10 11"
             from msl.network import Client
 
             with Client() as c:
                 camera = c.link("Camera")
-                camera.timeout = 5  # use a timeout value of 5 seconds for most requests
+                camera.timeout = 5  # (1)!
 
                 # uses a timeout of 5 seconds
-                resolution = camera.resolution()
+                resolution = camera.get_resolution()
 
-                with camera.timeout_at(None):  # No timeout
-                    image = camera.capture()
+                with camera.timeout_at(None):  # (2)!
+                    images = camera.capture(n=100)
 
                 # uses a timeout of 5 seconds
-                shutter_speed = camera.shutter_speed()
+                shutter_speed = camera.get_shutter_speed()
             ```
+
+            1. Use a timeout value of 5 seconds for each request.
+            2. Temporarily disable the timeout to capture 100 images.
 
         Args:
             timeout: The temporary timeout value to use while within the context. Once the

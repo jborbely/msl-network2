@@ -20,10 +20,12 @@
         "cspell.json",
         "mkdocs.yml",
         "pyproject.toml",
-        "CHANGELOG.md"
+        "CHANGELOG.md",
+        "docs/assets/images/network.svg"
     ],
     "words": [
         "appendleft",
+        "asyncio",
         "bufferobjects",
         "caplog",
         "capsys",

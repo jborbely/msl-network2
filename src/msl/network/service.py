@@ -50,7 +50,7 @@ class Service:
             host: The hostname (or IP address) that the [Broker][] is running on.
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a reply before
-                sending the byte stream.
+                sending the message.
             curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xsub_port: The port on the [Broker][] that is subscribed to publications.
@@ -60,7 +60,7 @@ class Service:
                 for more details.
         """
         self.flag: Flag = flag
-        """The serialisation and compression algorithms to apply to a reply before sending the byte stream."""
+        """The serialisation and compression algorithms to apply to a reply before sending the message."""
 
         self._service_id: bytes = f"Service[{os.urandom(8).hex()}]".encode()
         self._service_name: str = name or self.__class__.__name__
@@ -120,7 +120,10 @@ class Service:
         self._tasks.extend(aws)
 
     def connect(self) -> None:
-        """Connect (or reconnect) to the [Broker][]."""
+        """Connect (or reconnect) to the [Broker][].
+
+        Calling this method will run the [event loop][asyncio-event-loop] until all tasks have completed.
+        """
         try:
             run_event_loop(self._gather())
         except KeyboardInterrupt:  # pragma: no cover
@@ -155,7 +158,7 @@ class Service:
         """Use as a context manager to temporarily change the [flag][..flag] value.
 
         !!! example
-            ```python
+            ```python hl_lines="22 23"
             from msl.network import Flag, Service
 
             class Camera(Service):
@@ -163,23 +166,25 @@ class Service:
                 def __init__(self) -> None:
                     \"\"\"By default, use JSON to serialise all replies (no compression).\"\"\"
                     super().__init__(flag=Flag.JSON)
+                    self._camera = ...  # Access the camera interface
 
-                def resolution(self) -> tuple[int, int]:
+                def get_resolution(self) -> tuple[int, int]:
                     \"\"\"Returns the (width, height) of a captured image.
 
                     The reply is serialised using JSON without compression.
                     \"\"\"
-                    return 1600, 1200
+                    return self._camera.resolution
 
                 def capture(self) -> bytes:
                     \"\"\"Capture an image and return the image bytes.
 
-                    In this method, compressed bytes without serialisation is returned.
+                    For this method, compressed bytes without serialisation is returned.
                     \"\"\"
-                    image: bytes = ...  # capture an image from the camera
-                    with self.flag_at(Flag.ZLIB):
-                        return image
+                    with self.flag_at(Flag.ZLIB):  # (1)!
+                        return self._camera.capture()
             ```
+
+            1. Temporarily change the serialisation and compression algorithms to send the reply.
 
         Args:
             flag: The temporary flag to use while within the context. Once the
