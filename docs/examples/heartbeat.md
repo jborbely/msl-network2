@@ -32,14 +32,14 @@ from msl.network import Client
 
 
 def heartbeat_handler(counter: int) -> None:
-    """Handles published data from the Heartbeat Service."""
+    """Receives published data from the Heartbeat Service."""
     print(f"Heartbeat {counter=} (Press ENTER to perform the next task)")
 
 
 with Client() as client:
     link = client.link("Heartbeat")
 
-    # Subscribe to publications with a function that will be called with the published data
+    # Subscribe to publications with a callback function to receive published data
     link.subscribe(heartbeat_handler)
 
     # Wait until ENTER is pressed to reset the counter

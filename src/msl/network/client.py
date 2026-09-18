@@ -56,7 +56,7 @@ class Client:
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a
                 request before sending the message.
-            curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
+            curve: The [CURVE](https://rfc.zeromq.org/spec/25/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xpub_port: The port on the [Broker][] that is publishing messages.
                 Typically, this value is `port + 1` and does not need to be specified.
@@ -123,7 +123,7 @@ class Client:
         return self._async_client.put_nowait(self._transaction, (service_name.encode(), request))
 
     def disconnect(self) -> None:
-        """Close the connection."""
+        """Close the connection to the [Broker][]."""
         if self._async_client is None:
             return
 
@@ -141,7 +141,7 @@ class Client:
         """Use as a context manager to temporarily change the [flag][..flag] value.
 
         !!! example
-            ```python hl_lines="9 10"
+            ```python hl_lines="9-11"
             from msl.network import Client, Flag
 
             client = Client(flag=Flag.JSON)  # (1)!
@@ -151,7 +151,8 @@ class Client:
             link.do_something()
 
             with link.flag_at(Flag.ZSTD):  # (2)!
-                link.send_picture(open("image.jpg", "rb").read())  # uses ZSTD to compress the data
+                # uses ZSTD to compress the image bytes in the request
+                link.send_picture(open("image.jpg", "rb").read())
 
             # uses JSON to serialise the request
             link.do_something_else(n=100)
@@ -164,7 +165,7 @@ class Client:
 
         Args:
             flag: The temporary flag to use while within the context. Once the
-                context exits, the value is set to the original value.
+                context exits, the value is reset to the original value.
         """
         original = self.flag
         self.flag = flag
@@ -179,10 +180,10 @@ class Client:
         return self._is_connected.is_set()
 
     def link(self, service_name: str) -> Link:
-        """Link with a service.
+        """Link with a [Service][].
 
         Args:
-            service_name: The name of a service to create a [Link][msl.network.client.Link] with.
+            service_name: The name of a [Service][] to create a [Link][msl.network.client.Link] with.
 
         Returns:
             The [Link][msl.network.client.Link] instance.
@@ -192,23 +193,23 @@ class Client:
         return link
 
     def services(self, timeout: float | None = None) -> list[str]:
-        """Request the names of the services that are available.
+        """Request the names of the [Service][]s that are available from the [Broker][].
 
         Args:
-            timeout: The maximum number of seconds to wait for the result.
+            timeout: The maximum number of seconds to wait for the reply.
                 If `None`, there is no limit on the wait time.
 
         Returns:
-            The names of the services that are available to be [link][..link]ed with.
+            The names of the [Service][]s that are available to be [link][..link]ed with.
         """
         return sorted(self._request("Broker", "SERVICES").result(timeout))
 
 
 class Link:
-    """A link with a service."""
+    """A link with a [Service][]."""
 
     def __init__(self, client: Client, service_name: str) -> None:
-        """A link with a service.
+        """A link with a [Service][].
 
         !!! warning
             Do not instantiate directly. Use the [link][Client.link] method
@@ -218,10 +219,10 @@ class Link:
         """Reference to [flag_at][Client.flag_at]."""
 
         self.service_name: str = service_name
-        """[str][] &mdash; The name of the service that the link is with."""
+        """[str][] &mdash; The name of the [Service][] that the link is with."""
 
         self.timeout: float | None = None
-        """[float][] or `None` &mdash; The number of seconds to wait for a reply from a *synchronous* request.
+        """[float][] | `None` &mdash; The number of seconds to wait for a reply from a *synchronous* request.
 
         The value is initially `None` for new links, which means that there is no limit on the wait time.
         """
@@ -256,6 +257,10 @@ class Link:
             return future
         return wrapper
         ```
+
+        !!! warning
+            Your [Service][] subclass cannot have method/attribute names that are the same as those
+            found in the [Link][] class, otherwise a request will not be sent to your [Service][].
         """
 
         def wrapper(*args: Any, sync: bool = True, **kwargs: Any) -> Any | Future[Any]:
@@ -268,10 +273,10 @@ class Link:
         return wrapper
 
     def subscribe(self, callback: Callable[[Any], None]) -> None:
-        """Subscribe to publications from the linked service.
+        """Subscribe to publications from the linked [Service][].
 
         Args:
-            callback: The callback function to receive the published *result*. The callback
+            callback: A callback function to receive the published *result*. The callback
                 receives a single argument, the published *result*, and the returned value is ignored.
         """
         if self._link_subscriber.sub_socket is None:
@@ -286,7 +291,7 @@ class Link:
         """Use as a context manager to temporarily change the [timeout][..timeout] value.
 
         !!! example
-            ```python hl_lines="10 11"
+            ```python hl_lines="10-12"
             from msl.network import Client
 
             with Client() as c:
@@ -297,18 +302,19 @@ class Link:
                 resolution = camera.get_resolution()
 
                 with camera.timeout_at(None):  # (2)!
+                    # no timeout
                     images = camera.capture(n=100)
 
                 # uses a timeout of 5 seconds
                 shutter_speed = camera.get_shutter_speed()
             ```
 
-            1. Use a timeout value of 5 seconds for each request.
+            1. Use a timeout value of 5 seconds for each synchronous request.
             2. Temporarily disable the timeout to capture 100 images.
 
         Args:
-            timeout: The temporary timeout value to use while within the context. Once the
-                context exits, the value is set to the original value.
+            timeout: The temporary timeout value to use for synchronous requests while within
+                the context. Once the context exits, the value is reset to the original value.
         """
         original = self.timeout
         self.timeout = timeout
@@ -317,20 +323,20 @@ class Link:
         finally:
             self.timeout = original
 
-    def unsubscribe(self) -> None:
-        """Unsubscribe from receiving publications from the linked service."""
-        self._link_subscriber.callback = None
-        if self._link_subscriber.sub_socket is not None:
-            self._link_subscriber.sub_socket.setsockopt(zmq.UNSUBSCRIBE, self.service_name.encode())
-
     def unlink(self) -> None:
-        """Unlink from the service."""
+        """Unlink from the [Service][]."""
         if self._link_subscriber.interrupter is not None:
             self.unsubscribe()
             self._link_subscriber.interrupter()
             self._client._links.remove(self)  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
             self._thread.join()
             logger.debug("%s unlinked", self)
+
+    def unsubscribe(self) -> None:
+        """Unsubscribe from receiving publications from the linked [Service][]."""
+        self._link_subscriber.callback = None
+        if self._link_subscriber.sub_socket is not None:
+            self._link_subscriber.sub_socket.setsockopt(zmq.UNSUBSCRIBE, self.service_name.encode())
 
 
 class _AsyncClient:

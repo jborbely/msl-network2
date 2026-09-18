@@ -8,7 +8,7 @@ from typing import Any, Literal, Protocol, Union, overload  # pyright: ignore[re
 
 
 class FutureOrResult(Protocol):
-    """The *reply* from a *request*."""
+    """The *reply* to a *request*."""
 
     @overload
     def __call__(self, *args: Any, sync: Literal[True] = True, **kwargs: Any) -> Any: ...

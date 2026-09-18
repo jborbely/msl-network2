@@ -36,12 +36,12 @@ class Request(NamedTuple):
     id: int
     """The message ID.
 
-    Used by a client to keep track of which reply corresponds to which
+    Used by a Client to keep track of which reply corresponds to which
     request when sending asynchronous requests to multiple Services.
     """
 
     service: str
-    """The name of the service to send the request to."""
+    """The name of the Service to send the request to."""
 
     attribute: str
     """The name of the attribute (method) on the Service to call."""
@@ -109,16 +109,16 @@ class Flag(IntFlag):
     You may use a single flag or take a bitwise union of one serialisation
     flag with one compression flag, e.g.,
 
-    * `Flag.JSON` &mdash; JSON serialisation, no compression
-    * `Flag.ZLIB` &mdash; No serialisation, ZLIB compression
-    * `Flag.PICKLE | Flag.ZSTD` &mdash; Pickle serialisation, ZSTD compression
+    * `Flag.JSON` &mdash; JSON serialisation. No compression.
+    * `Flag.ZLIB` &mdash; No serialisation. ZLIB compression.
+    * `Flag.PICKLE | Flag.ZSTD` &mdash; Pickle serialisation. ZSTD compression.
 
-    A [KeyError][] will be raised when you use a flag that is a union of more than
+    A [KeyError][] will be raised if you use a flag that is a union of more than
     one serialisation flag or more than one compression flag when a *request* or a
     *reply* is sent.
 
     Attributes:
-        NONE (int): Do not apply (de)serialisation nor (de)compression. This flag
+        NONE (int): Do not apply (de)serialisation or (de)compression. This flag
             is only useful if a method of a [Service][msl.network.service.Service]
             returns an object that supports the [buffer protocol][bufferobjects].
             As such, this flag is only applicable for a *reply* and cannot be

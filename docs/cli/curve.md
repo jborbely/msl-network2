@@ -1,6 +1,6 @@
 # msl-network curve
 
-Create [CURVE](https://rfc.zeromq.org/spec/26/) certificates.
+Create [CURVE](https://rfc.zeromq.org/spec/25/) certificates.
 
 ## Usage
 

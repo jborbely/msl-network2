@@ -1,7 +1,7 @@
 # Echo
 Example of an Echo [Service][].
 
-The Echo [Service][] returns the arguments and keyword arguments that were sent from a [Client][].
+The Echo [Service][] returns the arguments and keyword arguments that were sent from a [Client][] in a request.
 
 ## Start the `Broker` {: #echo-broker }
 Start the [Broker][] by running the following command.
@@ -25,7 +25,7 @@ The source code of the Echo [Service][] is:
 <!-- fmt: on -->
 
 ## Run the `Client` {: #echo-client }
-Connect to the [Broker][] as a [Client][], [link][msl.network.client.Client.link] with the Echo [Service][] and send requests.
+Connect to the [Broker][] as a [Client][], [link][msl.network.client.Client.link] with the Echo [Service][] then send requests.
 
 ```python
 from msl.network import Client

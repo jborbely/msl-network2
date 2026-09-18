@@ -97,10 +97,10 @@ class AuthPlain:
 
 
 class AuthCurve:
-    """[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][]."""
+    """[CURVE](https://rfc.zeromq.org/spec/25/) authentication credentials to connect to a [Broker][]."""
 
     def __init__(self, public_key: bytes, secret_key: bytes, broker_key: bytes) -> None:
-        """[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].
+        """[CURVE](https://rfc.zeromq.org/spec/25/) authentication credentials to connect to a [Broker][].
 
         Args:
             public_key: The public key of the [Client][] or [Service][].
@@ -113,7 +113,7 @@ class AuthCurve:
 
     @staticmethod
     def load(broker: PathLike, own: PathLike | None = None) -> AuthCurve:
-        """Load [CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials from files.
+        """Load [CURVE](https://rfc.zeromq.org/spec/25/) authentication credentials from files.
 
         Args:
             broker: The path to the file that contains the [Broker][]'s public key.
@@ -124,7 +124,7 @@ class AuthCurve:
                 Can include `~` in the path, which will expand the user's home directory.
 
         Returns:
-            The [CURVE](https://rfc.zeromq.org/spec/26/) credentials.
+            The [CURVE](https://rfc.zeromq.org/spec/25/) credentials.
         """
         broker_public, _ = load_certificate(broker)
 

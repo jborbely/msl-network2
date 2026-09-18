@@ -1,4 +1,4 @@
-"""ZeroMQ broker to forward requests, replies and publications."""
+"""ZeroMQ broker to route requests, replies and publications."""
 
 from __future__ import annotations
 
@@ -139,7 +139,7 @@ class Broker:
         balancer.remove(service_id)
         if len(balancer) == 0:
             del self.services[service_name]
-            logger.info("No Services are available with name %r", service_name)
+            logger.info("All Services with name %r have been unregistered", service_name)
 
     def destroy(self) -> None:
         """Close all sockets and destroy the context."""
@@ -229,7 +229,7 @@ class Broker:
         Args:
             addresses: A hostname/address to IPv4 address mapping of devices that are allowed to connect to the broker.
                 If not specified, all devices can connect to proceed to PLAIN or CURVE authentication (if used).
-            curve: The information required for [CURVE](https://rfc.zeromq.org/spec/26/) authentication.
+            curve: The information required for [CURVE](https://rfc.zeromq.org/spec/25/) authentication.
             monitor: Whether to allow ZeroMQ event monitoring (as INFO log messages).
             host: The network interface to run the Broker on.
             plain: A username to password mapping to use for [PLAIN](https://rfc.zeromq.org/spec/24/) authentication.

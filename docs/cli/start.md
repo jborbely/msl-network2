@@ -81,6 +81,6 @@ For example,
 Give more output (DEBUG logging level).
 
 
-[CURVE]: https://rfc.zeromq.org/spec/26/
+[CURVE]: https://rfc.zeromq.org/spec/25/
 [PLAIN]: https://rfc.zeromq.org/spec/24/
 [ZeroMQ event monitoring]: http://api.zeromq.org/4-2:zmq-socket-monitor

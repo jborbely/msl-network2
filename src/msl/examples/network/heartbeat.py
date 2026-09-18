@@ -1,6 +1,6 @@
-"""Example service that publishes data to all subscribed Clients.
+"""Example Service that publishes data to all subscribed Clients.
 
-This example also shows how to add a task to the event loop of the service.
+This example also shows how to add a task to the event loop of the Service.
 """
 
 import asyncio
@@ -9,13 +9,10 @@ from msl.network import Service
 
 
 class Heartbeat(Service):
-    """A service that publishes a counter value."""
+    """A Service that publishes a counter value."""
 
-    def __init__(self) -> None:
-        """A service that publishes a counter value."""
-        super().__init__()
-        self._sleep: float = 1.0
-        self._counter: int = 0
+    _sleep: float = 1.0
+    _counter: int = 0
 
     def reset(self) -> None:
         """Reset the heartbeat counter."""
@@ -40,8 +37,8 @@ class Heartbeat(Service):
 if __name__ == "__main__":
     heartbeat = Heartbeat()
 
-    # Add a task to the event loop of the service
+    # Add a task to the event loop of the Service
     heartbeat.add_tasks(heartbeat.emit())
 
-    # Connect the service to the Broker
+    # Connect the Service to the Broker (runs the event loop "forever")
     heartbeat.connect()

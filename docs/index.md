@@ -19,27 +19,29 @@
 
 ![network.svg](assets/images/network.svg)
 
-Messages are transferred using [ZeroMQ](https://zeromq.org/) sockets. As such, the order in which you run a Broker, Client or Service does not matter. A Service can connect to a Broker that has not started yet and when the Broker does start running it will register the Service as being available for Clients to interact with. When a Service disconnects, the Broker unregisters it.
+Messages are transferred using [ZeroMQ](https://zeromq.org/) sockets. As such, the order in which you run a Broker, Client or Service does not matter. A Service can connect to a Broker that has not started yet and when the Broker does start running it will register the Service as being available for Clients to interact with. When a Service disconnects, the Broker unregisters it. A Client can connect to a Broker that has not started yet and it can link with a Service that is not available yet, but it cannot get a reply from the Service until the Service is running to process the request.
 
 Any programming language that has a ZeroMQ [binding](http://wiki.zeromq.org/bindings:_start) available can be used to implement a Client or a Service. So a Client written in Python could be requesting a Service written in C++ to process the request (or vice versa).
 
 ## Broker
-A Broker is the central node in the network. Running a single Broker instance can support many [Client][]s and [Service][]s connected to it simultaneously. The Broker routes a [Client][]'s request to the appropriate [Service][] and sends the [Service][]'s reply back to the [Client][] (ZeroMQ REQ-REP pattern). A Broker also distributes a message published by a [Service][] to all [Client][]'s that are subscribed (ZeroMQ PUB-SUB pattern).
+A Broker is the central node in the network and acts as a message proxy. Running a single Broker instance can support many [Client][]s and [Service][]s connected to it simultaneously. The Broker routes a [Client][]'s request to the appropriate [Service][] and sends the [Service][]'s reply back to the [Client][] (ZeroMQ REQ-REP pattern). A Broker also distributes a message published by a [Service][] to all [Client][]'s that are subscribed (ZeroMQ PUB-SUB pattern). A message is routed as soon as possible once it is received, a queue is not used. A Broker only checks who the recipient is for a message it receives, it does not do any processing with the content of the message.
 
 There are a few runnable [examples][] that are available when `msl-network` is installed. The [Echo][] example illustrates the ZeroMQ REQ-REP pattern and the [Heartbeat][] example illustrates the ZeroMQ PUB-SUB pattern.
 
 ## Message Format
 A message (a request, reply or publication) is transferred as bytes, but a [Client][] and [Service][] can control how data is serialised into bytes and whether compression is applied before the bytes are transferred. The serialisation/compression algorithm is controlled by the [Flag][] enumeration value. When a [Client][] or [Service][] receives a message, the message is automatically decompressed and deserialised.
 
-The default serialisation method uses the [pickle][] format with no compression. When using the [pickle][] format to serialise data, it is important that you trust the [Client][]s and [Service][]s that you are transferring messages to.
+The default serialisation method uses the [pickle][] format with no compression. When using the [pickle][] format to serialise data, it is important that you trust the [Client][]s and [Service][]s that you are transferring messages between.
 
 You can also temporarily change the flag value before sending a request (see [here][msl.network.client.Client.flag_at]) or a reply (see [here][msl.network.service.Service.flag_at]).
 
 ## (A)synchronous Requests
-A [Client][] can send requests either asynchronously or synchronously (the default). When an asynchronous request is sent a [Future][concurrent.futures.Future] instance is returned that will eventually contain the reply to the request as the [result][concurrent.futures.Future.result]. When a synchronous request is sent, the reply is returned.
+A [Client][] can send requests either asynchronously or synchronously (the default). When an asynchronous request is sent, a [Future][concurrent.futures.Future] instance is returned which will eventually contain the reply to the request as the [result][concurrent.futures.Future.result]. When a synchronous request is sent, the reply from the [Service][] is returned.
 
 !!! example
     See the [Echo][] example to [start the Broker][echo-broker] and [start the Service][echo-service] so that you can run the following example script.
+
+    See [here][msl.network.client.Link.__getattr__] for more information about the `sync` keyword argument in the following example script.
 
 ```python
 from msl.network import Client
@@ -71,7 +73,7 @@ with Client() as client:
 While a [Service][] is processing a request, it cannot receive another request. If a [Service][] is continuously busy processing requests you can run multiple instances of the [Service][] and the [Broker][] will evenly distribute requests amongst the [Service][]s. You could run an instance of the [Service][] multiple times on the same computer or you could run the [Service][] on multiple computers (a Broker cannot tell the difference and does not care where a [Service][] is connecting from).
 
 ## Security
-There are five ways in which you can control the security of a device connecting to a [Broker][]. Since security is handled by ZeroMQ sockets, we use the same [mnemonic names](http://hintjens.com/blog:49) commonly used by the ZeroMQ community to illustrate the different ways you can use security in your application. You may also want to read [background information](https://rfc.zeromq.org/spec/27/) about the ZeroMQ Authentication Protocol.
+There are five ways in which you can control the security of a device connecting to a [Broker][]. Since security is handled by ZeroMQ sockets, we use the same [mnemonic names](http://hintjens.com/blog:49) commonly used by the ZeroMQ community to illustrate the different ways you can use security in your application. You may also want to read some background information about the [ZeroMQ Authentication Protocol](https://rfc.zeromq.org/spec/27/).
 
 | | Restrict IP addresses | Username/Password Authentication | CURVE Encryption | [Broker][] Verified | [Client][]/[Service][] Verified |
 | -------------- | :------: | :------: | :------: | :------: | :------: |
@@ -105,7 +107,7 @@ On the computer that you want to run the [Broker][] on, you can save the devices
 msl-network device add 192.168.1.10 lab-computer
 ```
 
-and start a [Broker][] by reading the devices from the file.
+and start a [Broker][] with the devices read from the file.
 ```console
 msl-network start --auth-device
 ```
@@ -126,7 +128,7 @@ client = Client()
 Run `msl-network device --help` for more details about managing authorised devices.
 
 ### Woodhouse
-No encryption. The [Broker][] requires a username and password for a device to connect. In addition, a [Broker][] may also allow connections from only specific devices (see [Strawhouse][]). This security layer is known as the [PLAIN](https://rfc.zeromq.org/spec/27/#the-plain-mechanism) mechanism.
+No encryption. The [Broker][] requires a valid username and password for a device to connect. In addition, a [Broker][] may also allow connections from only specific devices (see [Strawhouse][]). This security layer is known as the [PLAIN](https://rfc.zeromq.org/spec/27/#the-plain-mechanism) mechanism.
 
 !!! warning
     A username and password is sent in *plain* text through the network. Use this security mechanism only on trusted networks.
@@ -137,7 +139,7 @@ msl-network plain add --username me --password secret
 msl-network plain add --username you --password danger
 ```
 
-and start a [Broker][] by reading the usernames and passwords from a file.
+and start a [Broker][] with the usernames and passwords read from a file.
 ```console
 msl-network start --auth-plain
 ```
@@ -166,7 +168,7 @@ Create CURVE certificates on the computer running the [Broker][],
 msl-network curve
 ```
 
-and start a [Broker][] by reading the certificates.
+and start a [Broker][] with the certificates loaded.
 ```console
 msl-network start --auth-curve
 ```
@@ -185,14 +187,14 @@ client = Client(curve=auth)
 Run `msl-network curve --help` for more details about creating CURVE certificates.
 
 ### Ironhouse
-Messages are encrypted with [elliptic-curve](https://rfc.zeromq.org/spec/26/) cryptography. The [Broker][] verifies the public certificate of a [Client][]/[Service][] and a [Client][]/[Service][] verifies the public certificate of the [Broker][] (two-way verification). In addition, a [Broker][] may also allow connections from only specific devices (see [Strawhouse][]). This security layer is known as the [CURVE](https://rfc.zeromq.org/spec/27/#the-curve-mechanism) mechanism.
+Messages are encrypted with [elliptic-curve](https://rfc.zeromq.org/spec/26/) cryptography. The [Broker][] verifies the public certificate of a [Client][]/[Service][] and a [Client][]/[Service][] verifies the public certificate of the [Broker][] (two-way verification). In addition, a [Broker][] may also allow connections from only specific devices (see [Strawhouse][]). This security layer is (also) known as the [CURVE](https://rfc.zeromq.org/spec/27/#the-curve-mechanism) mechanism.
 
 Create CURVE certificates on the computer running the [Broker][] and also on the computer connecting as a [Client][]/[Service][].
 ```console
 msl-network curve
 ```
 
-Copy a [Client][]/[Service][]'s public certificate to the `$HOME/.curve` directory on the computer running the [Broker][] and start a [Broker][] by reading the certificates.
+Copy a [Client][]/[Service][]'s public certificate to the `~/.curve` directory on the computer running the [Broker][] and start a [Broker][] with the certificates loaded.
 ```console
 msl-network start --auth-curve
 ```

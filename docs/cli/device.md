@@ -22,7 +22,7 @@ msl-network device add 10.9.102.17
 
 Add multiple devices.
 ```console
-msl-network device add 10.9.102.50 msl-lab
+msl-network device add 10.9.102.50 lab-computer
 ```
 
 ### remove {: #device-remove .cli-header }
@@ -35,7 +35,7 @@ msl-network device remove 10.9.102.17
 
 Remove multiple devices.
 ```console
-msl-network device remove 10.9.102.50 msl-lab
+msl-network device remove 10.9.102.50 lab-computer
 ```
 
 ### reset {: #device-reset .cli-header }
@@ -48,7 +48,7 @@ msl-network device reset
 
 Otherwise, you can reset to the specified devices.
 ```console
-msl-network device reset localhost 10.9.102.17 msl-lab
+msl-network device reset localhost 10.9.102.17 lab-computer
 ```
 
 ### list {: #device-list .cli-header }

@@ -1,4 +1,4 @@
-"""Example echo service.
+"""Example echo Service.
 
 Returns the arguments and keyword arguments that were sent from a Client.
 """
@@ -22,5 +22,5 @@ class Echo(Service):
 if __name__ == "__main__":
     echo = Echo()
 
-    # Connect the service to the Broker
+    # Connect the Service to the Broker (runs the event loop "forever")
     echo.connect()

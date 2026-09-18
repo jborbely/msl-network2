@@ -44,23 +44,24 @@ class Service:
         """Base class for a Service.
 
         Args:
-            name: The name of the service that a [Client][msl.network.client.Client] would use
-                to [link][msl.network.client.Client.link] with the [Service][msl.network.service.Service].
-                If not specified, the class name is used.
+            name: The name of the Service that a [Client][msl.network.client.Client] would
+                use to [link][msl.network.client.Client.link] with. If not specified,
+                the class name is used.
             host: The hostname (or IP address) that the [Broker][] is running on.
             port: The network port that the [Broker][] is running on.
             flag: The serialisation and compression algorithms to apply to a reply before
                 sending the message.
-            curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.
+            curve: The [CURVE](https://rfc.zeromq.org/spec/25/) authentication to use.
             plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xsub_port: The port on the [Broker][] that is subscribed to publications.
                 Typically, this value is `port + 2` and does not need to be specified.
             ignore_attributes: The names of the attributes to not include in the
-                [signatures][..signatures]. See [ignore_attributes][..ignore_attributes]
+                [signatures][..signatures] map. See [ignore_attributes][..ignore_attributes]
                 for more details.
         """
         self.flag: Flag = flag
-        """The serialisation and compression algorithms to apply to a reply before sending the message."""
+        """The serialisation and compression algorithms to apply to a reply or publication
+        before sending the message."""
 
         self._service_id: bytes = f"Service[{os.urandom(8).hex()}]".encode()
         self._service_name: str = name or self.__class__.__name__
@@ -188,7 +189,7 @@ class Service:
 
         Args:
             flag: The temporary flag to use while within the context. Once the
-                context exits, the value is set to the original value.
+                context exits, the value is reset to the original value.
         """
         original = self.flag
         self.flag = flag
@@ -202,13 +203,13 @@ class Service:
 
         There are a few reasons why you may want to call this method:
 
-        * If you see warnings that the signature of an attribute cannot be found and you
-          prefer not to see the warnings (could result from a service that has multiple inheritance).
         * If you do not want an attribute to be made publicly known that it exists; however,
           a [Client][msl.network.client.Client] can still access ignored attributes.
+        * If warnings are logged indicating that the signature of an attribute cannot be found and you
+          prefer not to see the warnings (this could result from a Service using multiple inheritance).
 
         Private attributes (i.e., attributes that start with an underscore) are automatically
-        ignored and cannot be accessed from a [Client][msl.network.client.Client] on the network.
+        ignored and cannot be accessed from a [Client][msl.network.client.Client].
 
         If you want to ignore attributes, you must call this method before calling [connect][..connect].
 
@@ -236,11 +237,22 @@ class Service:
             _ = self._loop.call_soon_threadsafe(self._pub_queue.put_nowait, data)
 
     def signatures(self) -> dict[str, str]:
-        """Get the function signatures that the service provides.
+        """Get the function signatures that the Service provides.
+
+        For example,
+
+        ```json
+        {
+            "get_resolution": "() -> tuple[int, int]",
+            "set_resolution": "(width: int, height: int) -> None",
+            "stream": "() -> None",
+            "version": "() -> str"
+        }
+        ```
 
         Returns:
             A mapping between the function (attribute) name and the
-                function signature (attribute value).
+                function signature (attribute type).
         """
         signature_map: dict[str, str] = {}
         for name in dir(self):
