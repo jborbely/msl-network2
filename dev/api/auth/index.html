@@ -1458,7 +1458,7 @@ user's home directory.</p>
 
 
 
-        <p><a href="https://rfc.zeromq.org/spec/26/">CURVE</a> authentication credentials to connect to a <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>.</p>
+        <p><a href="https://rfc.zeromq.org/spec/25/">CURVE</a> authentication credentials to connect to a <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>.</p>
 
 
 
@@ -1544,7 +1544,7 @@ user's home directory.</p>
 <span class="normal">110</span>
 <span class="normal">111</span>
 <span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">public_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">broker_key</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""[CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials to connect to a [Broker][].</span>
+<span class="w">    </span><span class="sd">"""[CURVE](https://rfc.zeromq.org/spec/25/) authentication credentials to connect to a [Broker][].</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        public_key: The public key of the [Client][] or [Service][].</span>
@@ -1597,7 +1597,7 @@ user's home directory.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Load <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> authentication credentials from files.</p>
+        <p>Load <a href="https://rfc.zeromq.org/spec/25/">CURVE</a> authentication credentials from files.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1676,7 +1676,7 @@ Can include <code>~</code> in the path, which will expand the user's home direct
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> credentials.</p>
+                <p>The <a href="https://rfc.zeromq.org/spec/25/">CURVE</a> credentials.</p>
               </div>
             </td>
           </tr>
@@ -1712,7 +1712,7 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 <span class="normal">137</span>
 <span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">broker</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">own</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthCurve</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Load [CURVE](https://rfc.zeromq.org/spec/26/) authentication credentials from files.</span>
+<span class="w">    </span><span class="sd">"""Load [CURVE](https://rfc.zeromq.org/spec/25/) authentication credentials from files.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        broker: The path to the file that contains the [Broker][]'s public key.</span>
@@ -1723,7 +1723,7 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 <span class="sd">            Can include `~` in the path, which will expand the user's home directory.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        The [CURVE](https://rfc.zeromq.org/spec/26/) credentials.</span>
+<span class="sd">        The [CURVE](https://rfc.zeromq.org/spec/25/) credentials.</span>
 <span class="sd">    """</span>
     <span class="n">broker_public</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_certificate</span><span class="p">(</span><span class="n">broker</span><span class="p">)</span>
 

@@ -1375,7 +1375,7 @@
 </code></pre></div>
 <ol>
 <li>Connect to a Broker. By using a context manager (i.e., a <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/compound_stmts.html#with">with</a> statement), the connection is automatically closed after you are done using it. Otherwise, call <a class="autorefs autorefs-internal" title="            disconnect" href="#msl.network.client.Client.disconnect">disconnect</a>.</li>
-<li>Get the names of the <a class="autorefs autorefs-internal" href="../service/#service">Service</a>s that are available to <a class="autorefs autorefs-internal" href="../link/#link">Link</a> with.</li>
+<li>Get the names of the <a class="autorefs autorefs-internal" href="../service/#service">Service</a>s that are available to <a class="autorefs autorefs-internal" title="            link" href="#msl.network.client.Client.link">link</a> with.</li>
 <li>Establish a <a class="autorefs autorefs-internal" href="../link/#link">Link</a> with a <a class="autorefs autorefs-internal" href="../service/#service">Service</a>. <em>Tip: The <a class="autorefs autorefs-internal" href="../service/#service">Service</a> does not actually need to be running in order to establish a <a class="autorefs autorefs-internal" href="../link/#link">Link</a>. The <a class="autorefs autorefs-internal" href="../service/#service">Service</a> only needs to be running when a request is sent in order to get a reply.</em></li>
 <li>Request what functions are available from the linked <a class="autorefs autorefs-internal" href="../service/#service">Service</a>. This will return a mapping of the function name to the input/output parameters that the function requires/returns.</li>
 <li><a class="autorefs autorefs-internal" title="            subscribe" href="../link/#msl.network.client.Link.subscribe">Subscribe</a> to captured images that are published by the <a class="autorefs autorefs-internal" href="../service/#service">Service</a>.</li>
@@ -1481,7 +1481,7 @@ request before sending the message.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> authentication to use.</p>
+                <p>The <a href="https://rfc.zeromq.org/spec/25/">CURVE</a> authentication to use.</p>
               </div>
             </td>
             <td>
@@ -1593,7 +1593,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="sd">        port: The network port that the [Broker][] is running on.</span>
 <span class="sd">        flag: The serialisation and compression algorithms to apply to a</span>
 <span class="sd">            request before sending the message.</span>
-<span class="sd">        curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.</span>
+<span class="sd">        curve: The [CURVE](https://rfc.zeromq.org/spec/25/) authentication to use.</span>
 <span class="sd">        plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.</span>
 <span class="sd">        xpub_port: The port on the [Broker][] that is publishing messages.</span>
 <span class="sd">            Typically, this value is `port + 1` and does not need to be specified.</span>
@@ -1697,7 +1697,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 
     <div class="doc doc-contents ">
 
-        <p>Close the connection.</p>
+        <p>Close the connection to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>.</p>
 
 
             <details class="mkdocstrings-source">
@@ -1715,7 +1715,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Close the connection."""</span>
+<span class="w">    </span><span class="sd">"""Close the connection to the [Broker][]."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_async_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -1763,7 +1763,8 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
 <span class="n">link</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
 
 <span class="hll"><span class="k">with</span> <span class="n">link</span><span class="o">.</span><span class="n">flag_at</span><span class="p">(</span><span class="n">Flag</span><span class="o">.</span><span class="n">ZSTD</span><span class="p">):</span>  <span class="c1"># (2)!</span>
-</span><span class="hll">    <span class="n">link</span><span class="o">.</span><span class="n">send_picture</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>  <span class="c1"># uses ZSTD to compress the data</span>
+</span><span class="hll">    <span class="c1"># uses ZSTD to compress the image bytes in the request</span>
+</span><span class="hll">    <span class="n">link</span><span class="o">.</span><span class="n">send_picture</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </span>
 <span class="c1"># uses JSON to serialise the request</span>
 <span class="n">link</span><span class="o">.</span><span class="n">do_something_else</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
@@ -1798,7 +1799,7 @@ Typically, this value is <code>port + 1</code> and does not need to be specified
             <td>
               <div class="doc-md-description">
                 <p>The temporary flag to use while within the context. Once the
-context exits, the value is set to the original value.</p>
+context exits, the value is reset to the original value.</p>
               </div>
             </td>
             <td>
@@ -1846,12 +1847,13 @@ context exits, the value is set to the original value.</p>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
-<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="normal">174</span>
+<span class="normal">175</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">flag_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [flag][..flag] value.</span>
 
 <span class="sd">    !!! example</span>
-<span class="sd">        ```python hl_lines="9 10"</span>
+<span class="sd">        ```python hl_lines="9-11"</span>
 <span class="sd">        from msl.network import Client, Flag</span>
 
 <span class="sd">        client = Client(flag=Flag.JSON)  # (1)!</span>
@@ -1861,7 +1863,8 @@ context exits, the value is set to the original value.</p>
 <span class="sd">        link.do_something()</span>
 
 <span class="sd">        with link.flag_at(Flag.ZSTD):  # (2)!</span>
-<span class="sd">            link.send_picture(open("image.jpg", "rb").read())  # uses ZSTD to compress the data</span>
+<span class="sd">            # uses ZSTD to compress the image bytes in the request</span>
+<span class="sd">            link.send_picture(open("image.jpg", "rb").read())</span>
 
 <span class="sd">        # uses JSON to serialise the request</span>
 <span class="sd">        link.do_something_else(n=100)</span>
@@ -1874,7 +1877,7 @@ context exits, the value is set to the original value.</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        flag: The temporary flag to use while within the context. Once the</span>
-<span class="sd">            context exits, the value is set to the original value.</span>
+<span class="sd">            context exits, the value is reset to the original value.</span>
 <span class="sd">    """</span>
     <span class="n">original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span>
@@ -1901,7 +1904,7 @@ context exits, the value is set to the original value.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Link with a service.</p>
+        <p>Link with a <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1924,7 +1927,7 @@ context exits, the value is set to the original value.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The name of a service to create a <a class="autorefs autorefs-internal" title="            Link" href="../link/#msl.network.client.Link">Link</a> with.</p>
+                <p>The name of a <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> to create a <a class="autorefs autorefs-internal" title="            Link" href="../link/#msl.network.client.Link">Link</a> with.</p>
               </div>
             </td>
             <td>
@@ -1960,8 +1963,7 @@ context exits, the value is set to the original value.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
-<span class="normal">182</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
 <span class="normal">185</span>
@@ -1971,11 +1973,12 @@ context exits, the value is set to the original value.</p>
 <span class="normal">189</span>
 <span class="normal">190</span>
 <span class="normal">191</span>
-<span class="normal">192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Link</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Link with a service.</span>
+<span class="normal">192</span>
+<span class="normal">193</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Link</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Link with a [Service][].</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        service_name: The name of a service to create a [Link][msl.network.client.Link] with.</span>
+<span class="sd">        service_name: The name of a [Service][] to create a [Link][msl.network.client.Link] with.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The [Link][msl.network.client.Link] instance.</span>
@@ -2002,7 +2005,7 @@ context exits, the value is set to the original value.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Request the names of the services that are available.</p>
+        <p>Request the names of the <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>s that are available from the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2025,7 +2028,7 @@ context exits, the value is set to the original value.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The maximum number of seconds to wait for the result.
+                <p>The maximum number of seconds to wait for the reply.
 If <code>None</code>, there is no limit on the wait time.</p>
               </div>
             </td>
@@ -2052,7 +2055,7 @@ If <code>None</code>, there is no limit on the wait time.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The names of the services that are available to be <a class="autorefs autorefs-internal" title="            link" href="#msl.network.client.Client.link">link</a>ed with.</p>
+                <p>The names of the <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>s that are available to be <a class="autorefs autorefs-internal" title="            link" href="#msl.network.client.Client.link">link</a>ed with.</p>
               </div>
             </td>
           </tr>
@@ -2062,8 +2065,7 @@ If <code>None</code>, there is no limit on the wait time.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
-<span class="normal">195</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
@@ -2072,15 +2074,16 @@ If <code>None</code>, there is no limit on the wait time.</p>
 <span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
-<span class="normal">204</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">services</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Request the names of the services that are available.</span>
+<span class="normal">204</span>
+<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">services</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Request the names of the [Service][]s that are available from the [Broker][].</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        timeout: The maximum number of seconds to wait for the result.</span>
+<span class="sd">        timeout: The maximum number of seconds to wait for the reply.</span>
 <span class="sd">            If `None`, there is no limit on the wait time.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        The names of the services that are available to be [link][..link]ed with.</span>
+<span class="sd">        The names of the [Service][]s that are available to be [link][..link]ed with.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s2">"Broker"</span><span class="p">,</span> <span class="s2">"SERVICES"</span><span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">(</span><span class="n">timeout</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>

@@ -1263,9 +1263,9 @@
 </code></pre></div>
 <p>The source code of the Heartbeat <a class="autorefs autorefs-internal" href="../../api/service/#service">Service</a> is:</p>
 <!-- fmt: off -->
-<div class="highlight"><pre><span></span><code><span class="sd">"""Example service that publishes data to all subscribed Clients.</span>
+<div class="highlight"><pre><span></span><code><span class="sd">"""Example Service that publishes data to all subscribed Clients.</span>
 
-<span class="sd">This example also shows how to add a task to the event loop of the service.</span>
+<span class="sd">This example also shows how to add a task to the event loop of the Service.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
@@ -1274,13 +1274,10 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Heartbeat</span><span class="p">(</span><span class="n">Service</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""A service that publishes a counter value."""</span>
+<span class="w">    </span><span class="sd">"""A Service that publishes a counter value."""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""A service that publishes a counter value."""</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sleep</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_sleep</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">_counter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Reset the heartbeat counter."""</span>
@@ -1305,10 +1302,10 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">heartbeat</span> <span class="o">=</span> <span class="n">Heartbeat</span><span class="p">()</span>
 
-    <span class="c1"># Add a task to the event loop of the service</span>
+    <span class="c1"># Add a task to the event loop of the Service</span>
     <span class="n">heartbeat</span><span class="o">.</span><span class="n">add_tasks</span><span class="p">(</span><span class="n">heartbeat</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
 
-    <span class="c1"># Connect the service to the Broker</span>
+    <span class="c1"># Connect the Service to the Broker (runs the event loop "forever")</span>
     <span class="n">heartbeat</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 </code></pre></div>
 <!-- fmt: on -->
@@ -1319,14 +1316,14 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">heartbeat_handler</span><span class="p">(</span><span class="n">counter</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Handles published data from the Heartbeat Service."""</span>
+<span class="w">    </span><span class="sd">"""Receives published data from the Heartbeat Service."""</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Heartbeat </span><span class="si">{</span><span class="n">counter</span><span class="si">=}</span><span class="s2"> (Press ENTER to perform the next task)"</span><span class="p">)</span>
 
 
 <span class="k">with</span> <span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
     <span class="n">link</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="s2">"Heartbeat"</span><span class="p">)</span>
 
-    <span class="c1"># Subscribe to publications with a function that will be called with the published data</span>
+    <span class="c1"># Subscribe to publications with a callback function to receive published data</span>
     <span class="n">link</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">heartbeat_handler</span><span class="p">)</span>
 
     <span class="c1"># Wait until ENTER is pressed to reset the counter</span>

@@ -1418,9 +1418,9 @@
 
 <h1 id="service">Service<a class="headerlink" href="#service" title="Permanent link">¤</a></h1>
 <p>To implement your own Service, just inherit from the <a class="autorefs autorefs-internal" title="            Service" href="#msl.network.service.Service">Service</a> class, create the methods/attributes that you want your Service to provide and then run your script.</p>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>Your subclass cannot have method/attribute names that are found in the <a class="autorefs autorefs-internal" href="../link/#link">Link</a> class, otherwise a request will not be sent to your Service.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Your subclass cannot have method/attribute names that are the same as those found in the <a class="autorefs autorefs-internal" href="../link/#link">Link</a> class, otherwise a request will not be sent to your Service.</p>
 </div>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">msl.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Service</span>
@@ -1428,10 +1428,10 @@
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">Service</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""A service that allows for a camera to be available on the network."""</span>
+<span class="w">        </span><span class="sd">"""A Service that allows for a camera to be controllable via the network."""</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># (1)!</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">version</span>  <span class="c1"># (2)!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"1.3"</span>  <span class="c1"># (2)!</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Get the image resolution."""</span>
@@ -1511,9 +1511,9 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The name of the service that a <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> would use
-to <a class="autorefs autorefs-internal" title="            link" href="../client/#msl.network.client.Client.link">link</a> with the <a class="autorefs autorefs-internal" title="            Service" href="#msl.network.service.Service">Service</a>.
-If not specified, the class name is used.</p>
+                <p>The name of the Service that a <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> would
+use to <a class="autorefs autorefs-internal" title="            link" href="../client/#msl.network.client.Client.link">link</a> with. If not specified,
+the class name is used.</p>
               </div>
             </td>
             <td>
@@ -1578,7 +1578,7 @@ sending the message.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> authentication to use.</p>
+                <p>The <a href="https://rfc.zeromq.org/spec/25/">CURVE</a> authentication to use.</p>
               </div>
             </td>
             <td>
@@ -1628,7 +1628,7 @@ Typically, this value is <code>port + 2</code> and does not need to be specified
             <td>
               <div class="doc-md-description">
                 <p>The names of the attributes to not include in the
-<a class="autorefs autorefs-internal" title="            signatures" href="#msl.network.service.Service.signatures">signatures</a>. See <a class="autorefs autorefs-internal" title="            ignore_attributes" href="#msl.network.service.Service.ignore_attributes">ignore_attributes</a>
+<a class="autorefs autorefs-internal" title="            signatures" href="#msl.network.service.Service.signatures">signatures</a> map. See <a class="autorefs autorefs-internal" title="            ignore_attributes" href="#msl.network.service.Service.ignore_attributes">ignore_attributes</a>
 for more details.</p>
               </div>
             </td>
@@ -1723,7 +1723,8 @@ for more details.</p>
 <span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
-<span class="normal">107</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+<span class="normal">107</span>
+<span class="normal">108</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1738,23 +1739,24 @@ for more details.</p>
 <span class="w">    </span><span class="sd">"""Base class for a Service.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        name: The name of the service that a [Client][msl.network.client.Client] would use</span>
-<span class="sd">            to [link][msl.network.client.Client.link] with the [Service][msl.network.service.Service].</span>
-<span class="sd">            If not specified, the class name is used.</span>
+<span class="sd">        name: The name of the Service that a [Client][msl.network.client.Client] would</span>
+<span class="sd">            use to [link][msl.network.client.Client.link] with. If not specified,</span>
+<span class="sd">            the class name is used.</span>
 <span class="sd">        host: The hostname (or IP address) that the [Broker][] is running on.</span>
 <span class="sd">        port: The network port that the [Broker][] is running on.</span>
 <span class="sd">        flag: The serialisation and compression algorithms to apply to a reply before</span>
 <span class="sd">            sending the message.</span>
-<span class="sd">        curve: The [CURVE](https://rfc.zeromq.org/spec/26/) authentication to use.</span>
+<span class="sd">        curve: The [CURVE](https://rfc.zeromq.org/spec/25/) authentication to use.</span>
 <span class="sd">        plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.</span>
 <span class="sd">        xsub_port: The port on the [Broker][] that is subscribed to publications.</span>
 <span class="sd">            Typically, this value is `port + 2` and does not need to be specified.</span>
 <span class="sd">        ignore_attributes: The names of the attributes to not include in the</span>
-<span class="sd">            [signatures][..signatures]. See [ignore_attributes][..ignore_attributes]</span>
+<span class="sd">            [signatures][..signatures] map. See [ignore_attributes][..ignore_attributes]</span>
 <span class="sd">            for more details.</span>
 <span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">=</span> <span class="n">flag</span>
-<span class="w">    </span><span class="sd">"""The serialisation and compression algorithms to apply to a reply before sending the message."""</span>
+<span class="w">    </span><span class="sd">"""The serialisation and compression algorithms to apply to a reply or publication</span>
+<span class="sd">    before sending the message."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_service_id</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Service[</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">]"</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_service_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
@@ -1854,7 +1856,8 @@ for more details.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The serialisation and compression algorithms to apply to a reply before sending the message.</p>
+        <p>The serialisation and compression algorithms to apply to a reply or publication
+before sending the message.</p>
 
     </div>
 
@@ -1912,13 +1915,13 @@ for more details.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">114</span>
-<span class="normal">115</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">115</span>
 <span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
-<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">aws</span><span class="p">:</span> <span class="n">Awaitable</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">120</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">aws</span><span class="p">:</span> <span class="n">Awaitable</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Add tasks to run in the [event loop][asyncio-event-loop].</span>
 
 <span class="sd">    Args:</span>
@@ -1950,8 +1953,7 @@ for more details.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
-<span class="normal">123</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
 <span class="normal">126</span>
@@ -1962,7 +1964,8 @@ for more details.</p>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
-<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">134</span>
+<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Connect (or reconnect) to the [Broker][].</span>
 
 <span class="sd">    Calling this method will run the [event loop][asyncio-event-loop] until all tasks have completed.</span>
@@ -1999,8 +2002,7 @@ for more details.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
-<span class="normal">137</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
@@ -2017,7 +2019,8 @@ for more details.</p>
 <span class="normal">151</span>
 <span class="normal">152</span>
 <span class="normal">153</span>
-<span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">154</span>
+<span class="normal">155</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Disconnect from the [Broker][]."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pub_queue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interrupter</span><span class="p">()</span>
@@ -2114,7 +2117,7 @@ for more details.</p>
             <td>
               <div class="doc-md-description">
                 <p>The temporary flag to use while within the context. Once the
-context exits, the value is set to the original value.</p>
+context exits, the value is reset to the original value.</p>
               </div>
             </td>
             <td>
@@ -2127,8 +2130,7 @@ context exits, the value is set to the original value.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
-<span class="normal">157</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
@@ -2169,7 +2171,8 @@ context exits, the value is set to the original value.</p>
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="normal">198</span>
+<span class="normal">199</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">flag_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [flag][..flag] value.</span>
 
@@ -2204,7 +2207,7 @@ context exits, the value is set to the original value.</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        flag: The temporary flag to use while within the context. Once the</span>
-<span class="sd">            context exits, the value is set to the original value.</span>
+<span class="sd">            context exits, the value is reset to the original value.</span>
 <span class="sd">    """</span>
     <span class="n">original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span>
@@ -2234,13 +2237,13 @@ context exits, the value is set to the original value.</p>
         <p>Ignore attributes from being added to the <a class="autorefs autorefs-internal" title="            signatures" href="#msl.network.service.Service.signatures">signatures</a> map.</p>
 <p>There are a few reasons why you may want to call this method:</p>
 <ul>
-<li>If you see warnings that the signature of an attribute cannot be found and you
-  prefer not to see the warnings (could result from a service that has multiple inheritance).</li>
 <li>If you do not want an attribute to be made publicly known that it exists; however,
   a <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> can still access ignored attributes.</li>
+<li>If warnings are logged indicating that the signature of an attribute cannot be found and you
+  prefer not to see the warnings (this could result from a Service using multiple inheritance).</li>
 </ul>
 <p>Private attributes (i.e., attributes that start with an underscore) are automatically
-ignored and cannot be accessed from a <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> on the network.</p>
+ignored and cannot be accessed from a <a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a>.</p>
 <p>If you want to ignore attributes, you must call this method before calling <a class="autorefs autorefs-internal" title="            connect" href="#msl.network.service.Service.connect">connect</a>.</p>
 
 
@@ -2277,8 +2280,7 @@ ignored and cannot be accessed from a <a class="autorefs autorefs-internal" titl
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
-<span class="normal">201</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
 <span class="normal">204</span>
@@ -2295,18 +2297,19 @@ ignored and cannot be accessed from a <a class="autorefs autorefs-internal" titl
 <span class="normal">215</span>
 <span class="normal">216</span>
 <span class="normal">217</span>
-<span class="normal">218</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">ignore_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">218</span>
+<span class="normal">219</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">ignore_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Ignore attributes from being added to the [signatures][..signatures] map.</span>
 
 <span class="sd">    There are a few reasons why you may want to call this method:</span>
 
-<span class="sd">    * If you see warnings that the signature of an attribute cannot be found and you</span>
-<span class="sd">      prefer not to see the warnings (could result from a service that has multiple inheritance).</span>
 <span class="sd">    * If you do not want an attribute to be made publicly known that it exists; however,</span>
 <span class="sd">      a [Client][msl.network.client.Client] can still access ignored attributes.</span>
+<span class="sd">    * If warnings are logged indicating that the signature of an attribute cannot be found and you</span>
+<span class="sd">      prefer not to see the warnings (this could result from a Service using multiple inheritance).</span>
 
 <span class="sd">    Private attributes (i.e., attributes that start with an underscore) are automatically</span>
-<span class="sd">    ignored and cannot be accessed from a [Client][msl.network.client.Client] on the network.</span>
+<span class="sd">    ignored and cannot be accessed from a [Client][msl.network.client.Client].</span>
 
 <span class="sd">    If you want to ignore attributes, you must call this method before calling [connect][..connect].</span>
 
@@ -2391,8 +2394,7 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">220</span>
-<span class="normal">221</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">221</span>
 <span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
@@ -2407,7 +2409,8 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
 <span class="normal">233</span>
 <span class="normal">234</span>
 <span class="normal">235</span>
-<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">236</span>
+<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">Flag</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Publish a message to all subscribers.</span>
 
 <span class="sd">    Args:</span>
@@ -2443,7 +2446,15 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
 
     <div class="doc doc-contents ">
 
-        <p>Get the function signatures that the service provides.</p>
+        <p>Get the function signatures that the Service provides.</p>
+<p>For example,</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nt">"get_resolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"() -&gt; tuple[int, int]"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"set_resolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"(width: int, height: int) -&gt; None"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"stream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"() -&gt; None"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"() -&gt; str"</span>
+<span class="p">}</span>
+</code></pre></div>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -2462,7 +2473,7 @@ the flag defined by <a class="autorefs autorefs-internal" title="            fla
             <td>
               <div class="doc-md-description">
                 <p>A mapping between the function (attribute) name and the
-function signature (attribute value).</p>
+function signature (attribute type).</p>
               </div>
             </td>
           </tr>
@@ -2472,8 +2483,7 @@ function signature (attribute value).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/service.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">238</span>
-<span class="normal">239</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">239</span>
 <span class="normal">240</span>
 <span class="normal">241</span>
 <span class="normal">242</span>
@@ -2508,12 +2518,35 @@ function signature (attribute value).</p>
 <span class="normal">271</span>
 <span class="normal">272</span>
 <span class="normal">273</span>
-<span class="normal">274</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Get the function signatures that the service provides.</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Get the function signatures that the Service provides.</span>
+
+<span class="sd">    For example,</span>
+
+<span class="sd">    ```json</span>
+<span class="sd">    {</span>
+<span class="sd">        "get_resolution": "() -&gt; tuple[int, int]",</span>
+<span class="sd">        "set_resolution": "(width: int, height: int) -&gt; None",</span>
+<span class="sd">        "stream": "() -&gt; None",</span>
+<span class="sd">        "version": "() -&gt; str"</span>
+<span class="sd">    }</span>
+<span class="sd">    ```</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A mapping between the function (attribute) name and the</span>
-<span class="sd">            function signature (attribute value).</span>
+<span class="sd">            function signature (attribute type).</span>
 <span class="sd">    """</span>
     <span class="n">signature_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

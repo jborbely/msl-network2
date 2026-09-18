@@ -1413,7 +1413,7 @@
 
 
 
-        <p>A link with a service.</p>
+        <p>A link with a <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
 
         <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1430,8 +1430,7 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/msl/network/client.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">210</span>
-<span class="normal">211</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">211</span>
 <span class="normal">212</span>
 <span class="normal">213</span>
 <span class="normal">214</span>
@@ -1460,8 +1459,9 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="normal">237</span>
 <span class="normal">238</span>
 <span class="normal">239</span>
-<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">Client</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""A link with a service.</span>
+<span class="normal">240</span>
+<span class="normal">241</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">Client</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A link with a [Service][].</span>
 
 <span class="sd">    !!! warning</span>
 <span class="sd">        Do not instantiate directly. Use the [link][Client.link] method</span>
@@ -1471,10 +1471,10 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="w">    </span><span class="sd">"""Reference to [flag_at][Client.flag_at]."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">service_name</span>
-<span class="w">    </span><span class="sd">"""[str][] &amp;mdash; The name of the service that the link is with."""</span>
+<span class="w">    </span><span class="sd">"""[str][] &amp;mdash; The name of the [Service][] that the link is with."""</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">"""[float][] or `None` &amp;mdash; The number of seconds to wait for a reply from a *synchronous* request.</span>
+<span class="w">    </span><span class="sd">"""[float][] | `None` &amp;mdash; The number of seconds to wait for a reply from a *synchronous* request.</span>
 
 <span class="sd">    The value is initially `None` for new links, which means that there is no limit on the wait time.</span>
 <span class="sd">    """</span>
@@ -1546,7 +1546,7 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 
     <div class="doc doc-contents ">
 
-        <p><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a> &mdash; The name of the service that the link is with.</p>
+        <p><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a> &mdash; The name of the <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> that the link is with.</p>
 
     </div>
 
@@ -1570,7 +1570,7 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 
     <div class="doc doc-contents ">
 
-        <p><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#float">float</a> or <code>None</code> &mdash; The number of seconds to wait for a reply from a <em>synchronous</em> request.</p>
+        <p><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#float">float</a> | <code>None</code> &mdash; The number of seconds to wait for a reply from a <em>synchronous</em> request.</p>
 <p>The value is initially <code>None</code> for new links, which means that there is no limit on the wait time.</p>
 
     </div>
@@ -1602,12 +1602,16 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
     <span class="k">return</span> <span class="n">future</span>
 <span class="k">return</span> <span class="n">wrapper</span>
 </code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Your <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> subclass cannot have method/attribute names that are the same as those
+found in the <a class="autorefs autorefs-internal" title="            Link" href="#msl.network.client.Link">Link</a> class, otherwise a request will not be sent to your <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
+</div>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">246</span>
-<span class="normal">247</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">247</span>
 <span class="normal">248</span>
 <span class="normal">249</span>
 <span class="normal">250</span>
@@ -1628,7 +1632,12 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="normal">265</span>
 <span class="normal">266</span>
 <span class="normal">267</span>
-<span class="normal">268</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FutureOrResult</span><span class="p">:</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FutureOrResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""All undefined attributes are sent to the linked [Service][] to process.</span>
 
 <span class="sd">    The internal wrapper function that is returned is essentially:</span>
@@ -1641,6 +1650,10 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 <span class="sd">        return future</span>
 <span class="sd">    return wrapper</span>
 <span class="sd">    ```</span>
+
+<span class="sd">    !!! warning</span>
+<span class="sd">        Your [Service][] subclass cannot have method/attribute names that are the same as those</span>
+<span class="sd">        found in the [Link][] class, otherwise a request will not be sent to your [Service][].</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sync</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span> <span class="o">|</span> <span class="n">Future</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -1670,7 +1683,7 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
 
     <div class="doc doc-contents ">
 
-        <p>Subscribe to publications from the linked service.</p>
+        <p>Subscribe to publications from the linked <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1693,7 +1706,7 @@ to create a <a class="autorefs autorefs-internal" title="            Link" href=
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The callback function to receive the published <em>result</em>. The callback
+                <p>A callback function to receive the published <em>result</em>. The callback
 receives a single argument, the published <em>result</em>, and the returned value is ignored.</p>
               </div>
             </td>
@@ -1707,23 +1720,23 @@ receives a single argument, the published <em>result</em>, and the returned valu
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">275</span>
 <span class="normal">276</span>
 <span class="normal">277</span>
 <span class="normal">278</span>
 <span class="normal">279</span>
 <span class="normal">280</span>
 <span class="normal">281</span>
-<span class="normal">282</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Subscribe to publications from the linked service.</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Subscribe to publications from the linked [Service][].</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        callback: The callback function to receive the published *result*. The callback</span>
+<span class="sd">        callback: A callback function to receive the published *result*. The callback</span>
 <span class="sd">            receives a single argument, the published *result*, and the returned value is ignored.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1769,13 +1782,14 @@ receives a single argument, the published <em>result</em>, and the returned valu
     <span class="n">resolution</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">get_resolution</span><span class="p">()</span>
 
 <span class="hll">    <span class="k">with</span> <span class="n">camera</span><span class="o">.</span><span class="n">timeout_at</span><span class="p">(</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># (2)!</span>
+</span><span class="hll">        <span class="c1"># no timeout</span>
 </span><span class="hll">        <span class="n">images</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 </span>
     <span class="c1"># uses a timeout of 5 seconds</span>
     <span class="n">shutter_speed</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">get_shutter_speed</span><span class="p">()</span>
 </code></pre></div>
 <ol>
-<li>Use a timeout value of 5 seconds for each request.</li>
+<li>Use a timeout value of 5 seconds for each synchronous request.</li>
 <li>Temporarily disable the timeout to capture 100 images.</li>
 </ol>
 </div>
@@ -1801,8 +1815,8 @@ receives a single argument, the published <em>result</em>, and the returned valu
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The temporary timeout value to use while within the context. Once the
-context exits, the value is set to the original value.</p>
+                <p>The temporary timeout value to use for synchronous requests while within
+the context. Once the context exits, the value is reset to the original value.</p>
               </div>
             </td>
             <td>
@@ -1815,12 +1829,7 @@ context exits, the value is set to the original value.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">289</span>
 <span class="normal">290</span>
 <span class="normal">291</span>
 <span class="normal">292</span>
@@ -1849,12 +1858,18 @@ context exits, the value is set to the original value.</p>
 <span class="normal">315</span>
 <span class="normal">316</span>
 <span class="normal">317</span>
-<span class="normal">318</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">timeout_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Use as a context manager to temporarily change the [timeout][..timeout] value.</span>
 
 <span class="sd">    !!! example</span>
-<span class="sd">        ```python hl_lines="10 11"</span>
+<span class="sd">        ```python hl_lines="10-12"</span>
 <span class="sd">        from msl.network import Client</span>
 
 <span class="sd">        with Client() as c:</span>
@@ -1865,18 +1880,19 @@ context exits, the value is set to the original value.</p>
 <span class="sd">            resolution = camera.get_resolution()</span>
 
 <span class="sd">            with camera.timeout_at(None):  # (2)!</span>
+<span class="sd">                # no timeout</span>
 <span class="sd">                images = camera.capture(n=100)</span>
 
 <span class="sd">            # uses a timeout of 5 seconds</span>
 <span class="sd">            shutter_speed = camera.get_shutter_speed()</span>
 <span class="sd">        ```</span>
 
-<span class="sd">        1. Use a timeout value of 5 seconds for each request.</span>
+<span class="sd">        1. Use a timeout value of 5 seconds for each synchronous request.</span>
 <span class="sd">        2. Temporarily disable the timeout to capture 100 images.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        timeout: The temporary timeout value to use while within the context. Once the</span>
-<span class="sd">            context exits, the value is set to the original value.</span>
+<span class="sd">        timeout: The temporary timeout value to use for synchronous requests while within</span>
+<span class="sd">            the context. Once the context exits, the value is reset to the original value.</span>
 <span class="sd">    """</span>
     <span class="n">original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
@@ -1903,7 +1919,7 @@ context exits, the value is set to the original value.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Unlink from the service.</p>
+        <p>Unlink from the <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
 
 
             <details class="mkdocstrings-source">
@@ -1916,7 +1932,7 @@ context exits, the value is set to the original value.</p>
 <span class="normal">331</span>
 <span class="normal">332</span>
 <span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unlink</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Unlink from the service."""</span>
+<span class="w">    </span><span class="sd">"""Unlink from the [Service][]."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">interrupter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">interrupter</span><span class="p">()</span>
@@ -1942,17 +1958,17 @@ context exits, the value is set to the original value.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Unsubscribe from receiving publications from the linked service.</p>
+        <p>Unsubscribe from receiving publications from the linked <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a>.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msl/network/client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Unsubscribe from receiving publications from the linked service."""</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Unsubscribe from receiving publications from the linked [Service][]."""</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_link_subscriber</span><span class="o">.</span><span class="n">sub_socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">UNSUBSCRIBE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>

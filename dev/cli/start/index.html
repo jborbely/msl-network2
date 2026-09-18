@@ -1465,7 +1465,7 @@
 </code></pre></div>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">¤</a></h2>
 <h3 class="cli-header" id="start-auth-curve">--auth-curve [KEYS_DIR]<a class="headerlink" href="#start-auth-curve" title="Permanent link">¤</a></h3>
-<p>Use authentication based on public and private <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> keys.</p>
+<p>Use authentication based on public and private <a href="https://rfc.zeromq.org/spec/25/">CURVE</a> keys.</p>
 <p>Specifying a value after this flag will use the specified directory to load the key files.
 <div class="highlight"><pre><span></span><code><span class="go">msl-network start --auth-curve path/to/curve/keys</span>
 </code></pre></div></p>
@@ -1474,7 +1474,7 @@
 </code></pre></div></p>
 <p>See <a class="autorefs autorefs-internal" href="../curve/#msl-network-curve">msl-network curve</a> for more details.</p>
 <h3 class="cli-header" id="start-auth-curve-allow-any">--auth-curve-allow-any<a class="headerlink" href="#start-auth-curve-allow-any" title="Permanent link">¤</a></h3>
-<p>Allow <a href="https://rfc.zeromq.org/spec/26/">CURVE</a> keys from any device. Enabled by default if no public key files are found.</p>
+<p>Allow <a href="https://rfc.zeromq.org/spec/25/">CURVE</a> keys from any device. Enabled by default if no public key files are found.</p>
 <p>If you have public keys of devices stored in the <code>~/.curve</code> or <code>~/.msl/network/curves</code> directories, then only devices that send a valid key during authentication are allowed to connect. You can ignore the stored keys by specifying this flag so that a <a class="autorefs autorefs-internal" href="../../#broker">Broker</a> does not validate the key of a connecting device (the connecting device still validates the key of the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>).</p>
 <h3 class="cli-header" id="start-auth-device">--auth-device [DEVICE ...]<a class="headerlink" href="#start-auth-device" title="Permanent link">¤</a></h3>
 <p>Use authentication based on the IP address (or hostname) of devices that are allowed to connect.</p>
