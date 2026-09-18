@@ -57,7 +57,7 @@ class Request(NamedTuple):
 
         !!! note
             It does not make sense to use Flag.NONE for a request since serialisation must occur.
-            Neither int, str, tuple, nor dict can be converted to a memoryview, which would then be converted to bytes.
+            Neither int, str, tuple, or dict can be converted to a memoryview, which would then be converted to bytes.
         """
         return flag.to_bytes(2, "little") + compress[flag & COMPRESS](serialize[flag & SERIALIZE](tuple(self)))
 
@@ -73,12 +73,12 @@ class Reply(NamedTuple):
     """A reply."""
 
     id: int
-    """The message ID from the client (return unaltered)."""
+    """The message ID from the Client (return unaltered)."""
 
     ok: bool
     """Whether the result of a Service processing the request was successful.
 
-    If `False`, the `result` is the exception traceback (as bytes).
+    If `False`, the `result` value must be an error message (as a string).
     """
 
     result: Any
@@ -88,8 +88,8 @@ class Reply(NamedTuple):
         """Convert the reply to bytes.
 
         Only the `result` is used during serialisation and compression. The packed
-        size of (id, ok) is only 9 bytes anyway, and flag cannot be compressed
-        (otherwise we would not know how to decompress the bytes).
+        size of (id, ok) is only 9 bytes anyway, and flag cannot be compressed/serialised
+        (otherwise we would not know how to decompress/deserialise the bytes).
         """
         return pack("<HQ?", flag, self.id, self.ok) + compress[flag & COMPRESS](
             serialize[flag & SERIALIZE](self.result)
