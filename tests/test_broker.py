@@ -300,7 +300,7 @@ def test_monitor_tcp_socket(broker: Broker, caplog: pytest.LogCaptureFixture) ->
     assert records[4].message.startswith("Monitor <Event.DISCONNECTED: 512>")
 
 
-def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+def test_req_socket_type(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
     port, xpub, xsub = broker.run()
 
@@ -319,6 +319,34 @@ def test_bad_client_request(broker: Broker, caplog: pytest.LogCaptureFixture) ->
         ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
         ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
         ("msl.network", logging.ERROR, "Bad client request b'invalid'"),
+    ]
+
+
+def test_router_message_length(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+    port, xpub, xsub = broker.run()
+
+    ctx = zmq.Context()
+    socket = ctx.socket(zmq.DEALER)
+    socket.setsockopt(zmq.ROUTING_ID, b"Client[abc]")
+    _ = socket.connect(f"tcp://127.0.0.1:{port}")
+    socket.send(b"invalid")
+    _ = socket.send_multipart([b"a", b"b", b"c"])
+    time.sleep(0.05)
+    socket.close(linger=0)
+    ctx.destroy(linger=0)
+
+    broker.stop()
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.ERROR, "Expect [sender_id, destination_id, message], got [b'Client[abc]', b'invalid']"),
+        (
+            "msl.network",
+            logging.ERROR,
+            "Expect [sender_id, destination_id, message], got [b'Client[abc]', b'a', b'b', b'c']",
+        ),
     ]
 
 

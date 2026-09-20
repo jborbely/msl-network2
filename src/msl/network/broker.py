@@ -206,7 +206,7 @@ class Broker:
         service_id = next(balancer)
         try:
             _ = await self.router.send_multipart((service_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
-        except zmq.error.ZMQError as e:
+        except zmq.ZMQError as e:
             if e.errno == zmq.EHOSTUNREACH:
                 self.remove_service(service_id, service_name.decode(), balancer)
                 await self.send_service_unavailable(sender_id, service_name, message)
@@ -309,7 +309,11 @@ class Broker:
             while True:
                 event = dict(await self.poller.poll())
                 if event.get(self.router):
-                    sender_id, destination_id, message = await self.router.recv_multipart()
+                    recv = await self.router.recv_multipart()
+                    if len(recv) != 3:  # noqa: PLR2004
+                        logger.error("Expect [sender_id, destination_id, message], got %s", recv)
+                        continue
+                    sender_id, destination_id, message = recv
                     logger.debug("%s -> %s", sender_id, destination_id)
                     if destination_id == b"Broker":
                         await self.request_for_broker(sender_id, message)
@@ -323,7 +327,7 @@ class Broker:
                     else:
                         # A reply from a Service to be sent to a Client
                         # Silently ignore all errors if the Client is no longer available
-                        with suppress(zmq.error.ZMQError):
+                        with suppress(zmq.ZMQError):
                             _ = await self.router.send_multipart((destination_id, sender_id, message))  # pyright: ignore[reportUnknownMemberType]
                 elif event.get(proxy_capture):
                     # The multipart message length can be 1 or 2
