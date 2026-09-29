@@ -40,9 +40,6 @@ class Request(NamedTuple):
     request when sending asynchronous requests to multiple Services.
     """
 
-    service: str
-    """The name of the Service to send the request to."""
-
     attribute: str
     """The name of the attribute (method) on the Service to call."""
 

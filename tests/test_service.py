@@ -83,17 +83,18 @@ def test_session() -> None:  # noqa: PLR0915
     assert service_id.startswith(b"Service[")
     assert destination_id == b"Broker"
     assert request.attribute == "SERVICE_READY"
-    assert request.service == "ServiceName"
+    assert request.args == ["ServiceName"]
+    assert request.kwargs == {}
 
     # Request private attribute
-    request = Request(id=1, service="ServiceName", attribute="_socket", args=(), kwargs={})
+    request = Request(id=1, attribute="_socket", args=(), kwargs={})
     _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     reply = Reply.from_bytes(message)
     assert reply.result == "PermissionError: Cannot request a private attribute"
 
     # Request invalid attribute
-    request = Request(id=2, service="ServiceName", attribute="missing", args=(), kwargs={})
+    request = Request(id=2, attribute="missing", args=(), kwargs={})
     _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     reply = Reply.from_bytes(message)
@@ -102,7 +103,7 @@ def test_session() -> None:  # noqa: PLR0915
     assert reply.result == "'ServiceName' object has no attribute 'missing'"
 
     # Request non-callable attribute
-    request = Request(id=3, service="ServiceName", attribute="flag", args=(), kwargs={})
+    request = Request(id=3, attribute="flag", args=(), kwargs={})
     _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     reply = Reply.from_bytes(message)
@@ -111,7 +112,7 @@ def test_session() -> None:  # noqa: PLR0915
     assert reply.result == Flag.PICKLE
 
     # Request valid callable attribute
-    request = Request(id=4, service="ServiceName", attribute="division", args=(10, 2), kwargs={})
+    request = Request(id=4, attribute="division", args=(10, 2), kwargs={})
     _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     reply = Reply.from_bytes(message)
@@ -120,7 +121,7 @@ def test_session() -> None:  # noqa: PLR0915
     assert reply.result == 5
 
     # Request valid callable attribute raises
-    request = Request(id=5, service="ServiceName", attribute="division", args=(10, 0), kwargs={})
+    request = Request(id=5, attribute="division", args=(10, 0), kwargs={})
     _ = broker.send_multipart((service_id, b"Broker", request.to_bytes(Flag.PICKLE)))
     _, _, message = broker.recv_multipart()
     reply = Reply.from_bytes(message)

@@ -294,7 +294,7 @@ class Service:
         if self._dealer is None:
             return
 
-        r = Request(id=0, service=self._service_name, attribute="SERVICE_UNAVAILABLE", args=[], kwargs={})
+        r = Request(id=0, attribute="SERVICE_UNAVAILABLE", args=[self._service_name], kwargs={})
         _ = await self._dealer.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
         logger.debug("%s unregistered", self._service_name)
 
@@ -383,7 +383,7 @@ class Service:
                 elif event.get(self._monitor):
                     m = await recv_monitor_message(self._monitor)
                     if m["event"] == zmq.EVENT_CONNECTED:
-                        r = Request(id=0, service=self._service_name, attribute="SERVICE_READY", args=[], kwargs={})
+                        r = Request(id=0, attribute="SERVICE_READY", args=[self._service_name], kwargs={})
                         _ = await self._dealer.send_multipart([b"Broker", r.to_bytes(self.flag)])  # pyright: ignore[reportUnknownMemberType]
                         self.connected.set()
                         logger.debug("%s registered", self._service_name)

@@ -52,7 +52,6 @@ def test_request_raw() -> None:
     # can be converted to a memoryview, which is then be converted to bytes
     r = Request(
         id=1,
-        service="foo",
         attribute="bar",
         args=(1, 2),
         kwargs={"a": 0},
@@ -64,21 +63,19 @@ def test_request_raw() -> None:
 def test_request_json() -> None:
     r = Request(
         id=1,
-        service="a",
         attribute="b",
         args=[1, 2.3, None, True, "foo"],
         kwargs={"a": 0, "b": True},
     )
 
     serialised = r.to_bytes(Flag.JSON)
-    assert serialised == b"\x00\x02" + b'[1,"a","b",[1,2.3,null,true,"foo"],{"a":0,"b":true}]'
+    assert serialised == b"\x00\x02" + b'[1,"b",[1,2.3,null,true,"foo"],{"a":0,"b":true}]'
     assert r == Request.from_bytes(serialised)
 
 
 def test_request_orjson() -> None:
     r = Request(
         id=1,
-        service="a",
         attribute="b",
         args=(1, 2.3, None, True, "foo", datetime(2020, 10, 25)),  # noqa: DTZ001
         kwargs={"a": 0, "b": True, "nd": np.array([[1.1, 2.2], [3.3, 4.4]])},
@@ -86,11 +83,10 @@ def test_request_orjson() -> None:
 
     serialised = r.to_bytes(Flag.ORJSON)
     assert serialised == (
-        b'\x00\x04[1,"a","b",[1,2.3,null,true,"foo","2020-10-25T00:00:00"],{"a":0,"b":true,"nd":[[1.1,2.2],[3.3,4.4]]}]'
+        b'\x00\x04[1,"b",[1,2.3,null,true,"foo","2020-10-25T00:00:00"],{"a":0,"b":true,"nd":[[1.1,2.2],[3.3,4.4]]}]'
     )
     r2 = Request.from_bytes(serialised)
     assert r2.id == r.id
-    assert r2.service == r.service
     assert r2.attribute == r.attribute
     assert r2.args == [1, 2.3, None, True, "foo", "2020-10-25T00:00:00"]
     assert r2.kwargs == {"a": 0, "b": True, "nd": [[1.1, 2.2], [3.3, 4.4]]}
@@ -99,7 +95,6 @@ def test_request_orjson() -> None:
 def test_request_pickle() -> None:
     r = Request(
         id=1,
-        service="broker",
         attribute="something",
         args=(1, 2.3, None, True, "foo", b"bar", [], {1, 2, 3}),
         kwargs={"a": array("b", b"A"), "b": np.arange(10_000, dtype=float).reshape(100, 100)},
@@ -110,7 +105,6 @@ def test_request_pickle() -> None:
     r2 = Request.from_bytes(serialised)
 
     assert r.id == r2.id
-    assert r.service == r2.service
     assert r.attribute == r2.attribute
     assert r.args == r2.args
     assert r.kwargs["a"] == r2.kwargs["a"]
@@ -187,23 +181,23 @@ def test_reply_json_lzma() -> None:
 
 
 def test_request_json_bz2() -> None:
-    r = Request(id=4, service="a", attribute="b", args=[2], kwargs={"foo": "bar"})
+    r = Request(id=4, attribute="b", args=[2], kwargs={"foo": "bar"})
     data = r.to_bytes(Flag.JSON | Flag.BZ2)
     assert data == (
         b"\x01\x02"
-        b"BZh91AY&SY5\x98\tR\x00\x00\x08\x1b\x80\x10\x04\x14\x10\x00\n1\x00\x90\n \x001\x00\x00"
-        b"\x08\x83\xd2yG\xa2\x15\xe1\x06\xab\xaa\x1b\x8d\x1d\xbb\x0f8wh|]\xc9\x14\xe1B@\xd6`%H"
+        b"BZh91AY&SYBw\xb8\xcd\x00\x00\x06\x9b\x80\x10\x04\x14\x10\x00\n1\x00\x90\n \x001\x00"
+        b"\x00\n\x1ai\xb4\xd1\xa0-\xfb\xb1\x04\xeb\xb0\xc5S\xee\x92\x1e\xc1w$S\x85\t\x04'{\x8c\xd0"
     )
     assert r == Request.from_bytes(data)
 
 
 def test_request_pickle_zlib() -> None:
-    r = Request(id=4, service="a", attribute="b", args=(2,), kwargs={"foo": "bar"})
+    r = Request(id=4, attribute="b", args=(2,), kwargs={"foo": "bar"})
     data = r.to_bytes(Flag.PICKLE | Flag.ZLIB)
 
     # ZLIB compression output can very depending on the default settings of the zlib version
     # bundled with the Python version, so just check some of the beginning bytes
-    assert data.startswith(b"\x04\x01" + b"x\x9ck`\x9d\xaa\xc8\x00\x01\x1a\xde")
+    assert data.startswith(b"\x04\x01" + b"x\x9ck`\x9d*\xcb\x00\x01\x1a\xde,=")
     assert r == Request.from_bytes(data)
 
 
@@ -257,7 +251,7 @@ def test_reply_invalid_bitwise_flags(flag: Flag) -> None:
 
 @pytest.mark.parametrize("flag", BAD_FLAGS)
 def test_request_invalid_bitwise_flags(flag: Flag) -> None:
-    request = Request(id=1, service="", attribute="", args=(), kwargs={})
+    request = Request(id=1, attribute="", args=(), kwargs={})
     with pytest.raises(KeyError):
         _ = request.to_bytes(flag)
 
@@ -270,7 +264,7 @@ def test_json_orjson_default(flag: Flag) -> None:
             self.a: int = 1
             self.b: bool = True
 
-    request = Request(1, "a", "b", (Nope(),), {})
+    request = Request(1, "b", (Nope(),), {})
     with pytest.raises(TypeError, match=r"not JSON serializable"):
         _ = request.to_bytes(flag)
 
@@ -282,9 +276,9 @@ def test_json_orjson_default(flag: Flag) -> None:
         def to_json(self) -> dict[str, int | bool]:
             return {"a": self.a, "b": self.b}
 
-    request = Request(1, "a", "b", (JSONable(),), {})
+    request = Request(1, "b", (JSONable(),), {})
     serialised = request.to_bytes(flag)
-    assert serialised == flag.to_bytes(2, "little") + b'[1,"a","b",[{"a":1,"b":true}],{}]'
+    assert serialised == flag.to_bytes(2, "little") + b'[1,"b",[{"a":1,"b":true}],{}]'
 
 
 def test_tuple_is_named_tuple() -> None:
@@ -292,7 +286,6 @@ def test_tuple_is_named_tuple() -> None:
 
     r = Request(
         id=1,
-        service="hello",
         attribute="world",
         args=(1, 2.3, None, True, "foo", b"bar", [9, 8, 7], {1, 2, 3}),
         kwargs={"a": array("b", b"A"), "b": np.arange(1000, dtype=float)},
@@ -301,14 +294,12 @@ def test_tuple_is_named_tuple() -> None:
     tr = tuple(r)
     assert tr[0] is r.id
     assert tr[0] is r[0]
-    assert tr[1] is r.service
+    assert tr[1] is r.attribute
     assert tr[1] is r[1]
-    assert tr[2] is r.attribute
+    assert tr[2] is r.args
     assert tr[2] is r[2]
-    assert tr[3] is r.args
+    assert tr[3] is r.kwargs
     assert tr[3] is r[3]
-    assert tr[4] is r.kwargs
-    assert tr[4] is r[4]
 
 
 def test_orjson_missing(temporarily_force_orjson_missing: None) -> None:

@@ -154,10 +154,10 @@ def test_service_sends_bad_messages(broker: Broker, caplog: pytest.LogCaptureFix
     service.setsockopt(zmq.ROUTING_ID, b"Service[1]")
     _ = service.connect(f"tcp://localhost:{port}")
 
-    r = Request(id=0, service="ignored", attribute="gets_logged", args=[], kwargs={})
+    r = Request(id=0, attribute="gets_logged", args=[], kwargs={})
     _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
 
-    r = Request(id=0, service="UnknownServiceName", attribute="SERVICE_UNAVAILABLE", args=[], kwargs={})
+    r = Request(id=0, attribute="SERVICE_UNAVAILABLE", args=["UnknownServiceName"], kwargs={})
     _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
     time.sleep(0.1)
 

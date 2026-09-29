@@ -114,7 +114,6 @@ class Client:
         self._transaction += 1
         request = Request(
             id=self._transaction,
-            service=service_name,
             attribute=attr,
             args=args,
             kwargs=kwargs,

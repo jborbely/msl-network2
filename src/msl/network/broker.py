@@ -167,16 +167,18 @@ class Broker:
             message: The message for the Broker.
         """
         request = Request.from_bytes(message)
-        service_name, attribute = request.service, request.attribute
+        attribute = request.attribute
         if attribute == "SERVICES":
             reply = Reply(id=request.id, ok=True, result=list(self.services)).to_bytes(Flag.JSON)
             _ = await self.router.send_multipart((sender_id, b"Broker", reply))  # pyright: ignore[reportUnknownMemberType]
         elif attribute == "SERVICE_READY":
+            service_name = request.args[0]
             logger.info("Registered %r with name %r", sender_id, service_name)
             if service_name not in self.services:
                 self.services[service_name] = ServiceBalancer()
             self.services[service_name].append(sender_id)
         elif attribute == "SERVICE_UNAVAILABLE":
+            service_name = request.args[0]
             balancer = self.services.get(service_name)
             if balancer is not None:
                 self.remove_service(sender_id, service_name, balancer)
@@ -376,6 +378,6 @@ class Broker:
         reply = Reply(
             id=request.id,
             ok=False,
-            result=f"Service {request.service!r} is not available",
+            result=f"Service {service_name.decode()!r} is not available",
         ).to_bytes(Flag.JSON)
         _ = await self.router.send_multipart([sender_id, service_name, reply])  # pyright: ignore[reportUnknownMemberType]
