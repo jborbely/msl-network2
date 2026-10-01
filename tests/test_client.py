@@ -94,7 +94,7 @@ def test_flag_at() -> None:
         assert c.flag == Flag.JSON  # type: ignore[comparison-overlap]
         _ = link.do_something(sync=False)  # type: ignore[unreachable]
 
-    with link.flag_at(Flag.BZ2 | Flag.JSON):  # type: ignore[unreachable]
+    with link.flag_at(Flag.BZ2 | Flag.JSON):
         assert c.flag == Flag.BZ2 | Flag.JSON
         _ = link.do_something(sync=False)
 
