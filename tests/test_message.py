@@ -118,6 +118,13 @@ def test_reply_raw() -> None:
     assert r == Reply.from_bytes(raw)
 
 
+def test_reply_raw_empty() -> None:
+    r = Reply(id=0, ok=False, result=b"")
+    raw = r.to_bytes(Flag.NONE)
+    assert raw == b"\x00" * 11
+    assert r == Reply.from_bytes(raw)
+
+
 def test_reply_raw_invalid() -> None:
     r = Reply(id=1, ok=False, result="data")
     with pytest.raises(TypeError, match=r"memoryview"):
