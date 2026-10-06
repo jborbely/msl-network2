@@ -424,8 +424,10 @@ class _AsyncClient:
                 service_id, reply = await self.dealer.recv_multipart()
                 logger.debug("%s received reply from %r", self, service_id)
                 r = Reply.from_bytes(reply)
-                future = self.futures.pop(r.id)
-                if r.ok:
+                future = self.futures.pop(r.id, None)
+                if future is None:
+                    logger.error("Received a reply with an unknown message ID %r", r)
+                elif r.ok:
                     future.set_result(r.result)
                 else:
                     future.set_exception(RuntimeError(r.result))

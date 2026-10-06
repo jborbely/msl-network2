@@ -14,6 +14,7 @@ import pytest
 import zmq
 
 from msl.network import AuthCurve, AuthPlain, Client, Flag, Service, connect
+from msl.network.message import Reply, Request
 
 if typing.TYPE_CHECKING:
     from conftest import Broker
@@ -259,3 +260,49 @@ def test_link_echo(broker: Broker) -> None:
     e.disconnect()
     broker.stop()
     thread.join()
+
+
+def test_reply_unknown_message_id(broker: Broker, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+
+    port, xpub, xsub = broker.run()
+
+    context = zmq.Context()
+    service = context.socket(zmq.DEALER)
+    service.setsockopt(zmq.ROUTING_ID, b"Service[1]")
+    _ = service.connect(f"tcp://localhost:{port}")
+
+    r = Request(id=0, attribute="SERVICE_READY", args=["ABC"], kwargs={})
+    _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
+
+    c = Client(port=port)
+    assert c.services() == ["ABC"]
+
+    abc = c.link("ABC")
+    fut = abc.anything(sync=False)
+
+    sender_id, message = service.recv_multipart()
+    assert Request.from_bytes(message) == Request(id=2, attribute="anything", args=(), kwargs={})
+
+    reply = Reply(id=0, ok=True, result=b"").to_bytes(Flag.NONE)
+    _ = service.send_multipart([sender_id, reply])
+
+    with pytest.raises(TimeoutError):
+        _ = fut.result(timeout=0.1)
+
+    r = Request(id=0, attribute="SERVICE_UNAVAILABLE", args=["ABC"], kwargs={})
+    _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
+    time.sleep(0.1)
+    service.close()
+    context.destroy()
+    c.disconnect()
+    broker.stop()
+
+    assert caplog.record_tuples == [
+        ("msl.network", logging.INFO, f"Broker running on 0.0.0.0:{port}"),
+        ("msl.network", logging.INFO, broker.proxy_init_message(port, xpub, xsub)),
+        ("msl.network", logging.INFO, "Registered b'Service[1]' with name 'ABC'"),
+        ("msl.network", logging.ERROR, "Received a reply with an unknown message ID Reply(id=0, ok=True, result=b'')"),
+        ("msl.network", logging.INFO, "Unregistered b'Service[1]' with name 'ABC'"),
+        ("msl.network", logging.INFO, "All Services with name 'ABC' have been unregistered"),
+    ]
