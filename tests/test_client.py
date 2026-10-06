@@ -287,7 +287,7 @@ def test_reply_unknown_message_id(broker: Broker, caplog: pytest.LogCaptureFixtu
     reply = Reply(id=0, ok=True, result=b"").to_bytes(Flag.NONE)
     _ = service.send_multipart([sender_id, reply])
 
-    with pytest.raises(TimeoutError):
+    with pytest.raises((TimeoutError, futures.TimeoutError)):
         _ = fut.result(timeout=0.1)
 
     r = Request(id=0, attribute="SERVICE_UNAVAILABLE", args=["ABC"], kwargs={})
