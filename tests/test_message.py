@@ -18,11 +18,11 @@ BAD_FLAGS = [
     Flag.JSON | Flag.PICKLE,
     Flag.JSON | Flag.ORJSON,
     Flag.PICKLE | Flag.ORJSON,
-    Flag.BZ2 | Flag.LZMA,
-    Flag.BZ2 | Flag.ZLIB,
-    Flag.BZ2 | Flag.ZSTD,
-    Flag.LZMA | Flag.ZLIB,
-    Flag.LZMA | Flag.ZSTD,
+    Flag.BZIP2 | Flag.XZ,
+    Flag.BZIP2 | Flag.ZLIB,
+    Flag.BZIP2 | Flag.ZSTD,
+    Flag.XZ | Flag.ZLIB,
+    Flag.XZ | Flag.ZSTD,
     Flag.ZLIB | Flag.ZSTD,
 ]
 
@@ -161,9 +161,9 @@ def test_reply_pickle() -> None:
     assert r == Reply.from_bytes(serialised)
 
 
-def test_reply_json_bz2() -> None:
+def test_reply_json_bzip2() -> None:
     r = Reply(id=1, ok=False, result="X" * 50)
-    data = r.to_bytes(Flag.JSON | Flag.BZ2)
+    data = r.to_bytes(Flag.JSON | Flag.BZIP2)
     assert data == (
         b"\x01\x02"
         b"\x01\x00\x00\x00\x00\x00\x00\x00"
@@ -173,9 +173,9 @@ def test_reply_json_bz2() -> None:
     assert r == Reply.from_bytes(data)
 
 
-def test_reply_json_lzma() -> None:
+def test_reply_json_xz() -> None:
     r = Reply(id=10, ok=True, result="X" * 50)
-    data = r.to_bytes(Flag.JSON | Flag.LZMA)
+    data = r.to_bytes(Flag.JSON | Flag.XZ)
     assert data == (
         b"\x02\x02"
         b"\x0a\x00\x00\x00\x00\x00\x00\x00"
@@ -187,9 +187,9 @@ def test_reply_json_lzma() -> None:
     assert r == Reply.from_bytes(data)
 
 
-def test_request_json_bz2() -> None:
+def test_request_json_bzip2() -> None:
     r = Request(id=4, attribute="b", args=[2], kwargs={"foo": "bar"})
-    data = r.to_bytes(Flag.JSON | Flag.BZ2)
+    data = r.to_bytes(Flag.JSON | Flag.BZIP2)
     assert data == (
         b"\x01\x02"
         b"BZh91AY&SYBw\xb8\xcd\x00\x00\x06\x9b\x80\x10\x04\x14\x10\x00\n1\x00\x90\n \x001\x00"

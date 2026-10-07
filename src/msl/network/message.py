@@ -120,21 +120,22 @@ class Flag(IntFlag):
             returns an object that supports the [buffer protocol][bufferobjects].
             As such, this flag is only applicable for a *reply* and cannot be
             used for a *request*.
-        BZ2 (int): (De)compression using the [bz2][] module.
-        LZMA (int): (De)compression using the [lzma][] module.
-        ZLIB (int): (De)compression using the [zlib][] module.
-        ZSTD (int): (De)compression using the [zstd][compression.zstd] module.
+        BZIP2 (int): (De)compression using the [bzip2](https://sourceware.org/bzip2/) format.
+        XZ (int): (De)compression using the [xz](https://tukaani.org/xz/) format.
+        ZLIB (int): (De)compression using the [zlib](https://www.zlib.net/) library.
+        ZSTD (int): (De)compression using the [Zstandard](https://facebook.github.io/zstd/doc/api_manual_latest.html)
+            algorithm.
         PICKLE (int): (De)serialisation using the [pickle][] module.
         JSON (int): (De)serialisation using the builtin [json][] module.
-        ORJSON (int): (De)serialisation using the [orjson](https://pypi.org/project/orjson/)
+        ORJSON (int): (De)serialisation into JSON using the [orjson](https://pypi.org/project/orjson/)
             package. Includes the option `OPT_SERIALIZE_NUMPY` when serialising.
     """
 
     NONE = 0
 
     # (De)Compression
-    BZ2 = 1 << 0
-    LZMA = 1 << 1
+    BZIP2 = 1 << 0
+    XZ = 1 << 1
     ZLIB = 1 << 2
     ZSTD = 1 << 3
 
@@ -144,7 +145,7 @@ class Flag(IntFlag):
     ORJSON = 1 << 10
 
 
-COMPRESS = Flag.BZ2 | Flag.LZMA | Flag.ZLIB | Flag.ZSTD
+COMPRESS = Flag.BZIP2 | Flag.XZ | Flag.ZLIB | Flag.ZSTD
 DECOMPRESS = COMPRESS
 SERIALIZE = Flag.PICKLE | Flag.JSON | Flag.ORJSON
 DESERIALIZE = SERIALIZE
@@ -231,16 +232,16 @@ deserialize: dict[Flag, Callable[[bytes], Any]] = {
 
 compress: dict[Flag, Callable[[bytes], bytes]] = {
     Flag.NONE: _noop,
-    Flag.BZ2: bz2.compress,
-    Flag.LZMA: lzma.compress,
+    Flag.BZIP2: bz2.compress,
+    Flag.XZ: lzma.compress,  # uses FORMAT_XZ by default
     Flag.ZLIB: zlib.compress,
     Flag.ZSTD: _zstd_compress,
 }
 
 decompress: dict[Flag, Callable[[bytes], bytes]] = {
     Flag.NONE: _noop,
-    Flag.BZ2: bz2.decompress,
-    Flag.LZMA: lzma.decompress,
+    Flag.BZIP2: bz2.decompress,
+    Flag.XZ: lzma.decompress,  # uses FORMAT_XZ by default
     Flag.ZLIB: zlib.decompress,
     Flag.ZSTD: _zstd_decompress,
 }

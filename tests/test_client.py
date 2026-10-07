@@ -95,8 +95,8 @@ def test_flag_at() -> None:
         assert c.flag == Flag.JSON  # type: ignore[comparison-overlap]
         _ = link.do_something(sync=False)  # type: ignore[unreachable]
 
-    with link.flag_at(Flag.BZ2 | Flag.JSON):
-        assert c.flag == Flag.BZ2 | Flag.JSON
+    with link.flag_at(Flag.BZIP2 | Flag.JSON):
+        assert c.flag == Flag.BZIP2 | Flag.JSON
         _ = link.do_something(sync=False)
 
     assert c.flag == Flag.PICKLE
@@ -133,10 +133,10 @@ def test_string_representation() -> None:
     class Custom(Client):
         pass
 
-    c = Custom(port=17590, flag=Flag.JSON | Flag.LZMA)
+    c = Custom(port=17590, flag=Flag.JSON | Flag.XZ)
     _id = c._id  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     assert str(c) == f"Custom[{_id}]"
-    assert repr(c) == f"Custom(host='127.0.0.1', port=17590, flag='LZMA|JSON', id='{_id}')"
+    assert repr(c) == f"Custom(host='127.0.0.1', port=17590, flag='XZ|JSON', id='{_id}')"
     c.disconnect()
 
 
