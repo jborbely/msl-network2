@@ -171,7 +171,7 @@ class Broker:
         if attribute == "SERVICES":
             reply = Reply(id=request.id, ok=True, result=list(self.services)).to_bytes(Flag.JSON)
             _ = await self.router.send_multipart((sender_id, b"Broker", reply))  # pyright: ignore[reportUnknownMemberType]
-        elif attribute == "SERVICE_READY":
+        elif attribute == "SERVICE_AVAILABLE":
             service_name = request.args[0]
             logger.info("Registered %r with name %r", sender_id, service_name)
             if service_name not in self.services:

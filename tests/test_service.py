@@ -82,7 +82,7 @@ def test_session() -> None:  # noqa: PLR0915
     request = Request.from_bytes(message)
     assert service_id.startswith(b"Service[")
     assert destination_id == b"Broker"
-    assert request.attribute == "SERVICE_READY"
+    assert request.attribute == "SERVICE_AVAILABLE"
     assert request.args == ["ServiceName"]
     assert request.kwargs == {}
 

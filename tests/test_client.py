@@ -272,7 +272,7 @@ def test_reply_unknown_message_id(broker: Broker, caplog: pytest.LogCaptureFixtu
     service.setsockopt(zmq.ROUTING_ID, b"Service[1]")
     _ = service.connect(f"tcp://localhost:{port}")
 
-    r = Request(id=0, attribute="SERVICE_READY", args=["ABC"], kwargs={})
+    r = Request(id=0, attribute="SERVICE_AVAILABLE", args=["ABC"], kwargs={})
     _ = service.send_multipart([b"Broker", r.to_bytes(Flag.JSON)])
 
     c = Client(port=port)
