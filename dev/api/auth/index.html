@@ -1432,7 +1432,7 @@ user's home directory.</p>
 <span class="sd">    """</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">fsdecode</span><span class="p">(</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"File not found: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># prefer FileNotFoundError instead of pyzmq exception</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Cannot load certificate at </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># prefer FileNotFoundError instead of pyzmq exception</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">certs</span><span class="o">.</span><span class="n">load_certificate</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportUnknownMemberType]</span>
@@ -1648,9 +1648,10 @@ Can include <code>~</code> in the path, which will expand the user's home direct
             <td>
               <div class="doc-md-description">
                 <p>The path to the file that contains the public and secret keys of the
-<a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> that connects to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>. If <code>None</code>, loads the
-credentials that were created by running the <code>msl-network curve</code> command.
-Can include <code>~</code> in the path, which will expand the user's home directory.</p>
+<a class="autorefs autorefs-internal" title="            Client" href="../client/#msl.network.client.Client">Client</a> or <a class="autorefs autorefs-internal" title="            Service" href="../service/#msl.network.service.Service">Service</a> that connects to the <a class="autorefs autorefs-internal" href="../../#broker">Broker</a>. If <code>None</code>,
+loads the default credentials that were created by running the
+<code>msl-network curve</code> command. Can include <code>~</code> in the path, which will
+expand the user's home directory.</p>
               </div>
             </td>
             <td>
@@ -1710,7 +1711,8 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
-<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">broker</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">own</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Load [CURVE](https://rfc.zeromq.org/spec/25/) authentication credentials from files.</span>
 
@@ -1718,9 +1720,10 @@ Can include <code>~</code> in the path, which will expand the user's home direct
 <span class="sd">        broker: The path to the file that contains the [Broker][]'s public key.</span>
 <span class="sd">            Can include `~` in the path, which will expand the user's home directory.</span>
 <span class="sd">        own: The path to the file that contains the public and secret keys of the</span>
-<span class="sd">            [Client][] or [Service][] that connects to the [Broker][]. If `None`, loads the</span>
-<span class="sd">            credentials that were created by running the `msl-network curve` command.</span>
-<span class="sd">            Can include `~` in the path, which will expand the user's home directory.</span>
+<span class="sd">            [Client][] or [Service][] that connects to the [Broker][]. If `None`,</span>
+<span class="sd">            loads the default credentials that were created by running the</span>
+<span class="sd">            `msl-network curve` command. Can include `~` in the path, which will</span>
+<span class="sd">            expand the user's home directory.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The [CURVE](https://rfc.zeromq.org/spec/25/) credentials.</span>
