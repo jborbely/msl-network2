@@ -97,7 +97,9 @@ class Broker:
         control = self.context.socket(zmq.REP)  # using PAIR caused tests to hang on macos GHA
 
         xpub.setsockopt(zmq.ZAP_DOMAIN, DOMAIN.encode())
+        xpub.setsockopt(zmq.ROUTING_ID, b"XPUB")
         xsub.setsockopt(zmq.ZAP_DOMAIN, DOMAIN.encode())
+        xsub.setsockopt(zmq.ROUTING_ID, b"XSUB")
 
         if curve is not None:
             xpub.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
