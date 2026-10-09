@@ -50,11 +50,24 @@ class Broker:
         port = int(self.broker.endpoint.rsplit(":", 1)[1])
         return port, self.broker.xpub_port, self.broker.xsub_port
 
-    def run_proxy(self, mocked_broker_port: int) -> tuple[int, int]:
+    def run_proxy(
+        self,
+        mocked_broker_port: int,
+        *,
+        curve: utils.Curve | None = None,
+        plain: bool = False,
+    ) -> tuple[int, int]:
         """Only run the XPUB/XSUB proxy."""
-        endpoint = f"tcp://127.0.0.1:{mocked_broker_port}"
         self.broker.context = zmq.asyncio.Context()
-        self.thread = threading.Thread(target=self.broker.xpub_xsub_proxy, daemon=True, args=(endpoint,))
+        self.thread = threading.Thread(
+            target=self.broker.xpub_xsub_proxy,
+            kwargs={
+                "endpoint": f"tcp://127.0.0.1:{mocked_broker_port}",
+                "curve": curve,
+                "plain": plain,
+            },
+            daemon=True,
+        )
         self.thread.start()
         while not self.broker.proxy_running:
             continue

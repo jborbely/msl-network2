@@ -83,16 +83,34 @@ class Broker:
         self.router: Socket
         self.poller: Poller
 
-    def xpub_xsub_proxy(self, endpoint: str) -> None:
+    def xpub_xsub_proxy(self, *, endpoint: str, curve: Curve | None, plain: bool) -> None:  # noqa: PLR0915
         """Proxy to forward all published messages to subscribers.
 
         Args:
             endpoint: The ZMQ address that the Broker is using.
+            curve: The information required for [CURVE](https://rfc.zeromq.org/spec/25/) authentication.
+            plain: Whether the xpub/xsub socket uses PLAIN authentication.
         """
         xpub = self.context.socket(zmq.XPUB)
         xsub = self.context.socket(zmq.XSUB)
         capture = self.context.socket(zmq.PAIR)
         control = self.context.socket(zmq.REP)  # using PAIR caused tests to hang on macos GHA
+
+        xpub.setsockopt(zmq.ZAP_DOMAIN, DOMAIN.encode())
+        xsub.setsockopt(zmq.ZAP_DOMAIN, DOMAIN.encode())
+
+        if curve is not None:
+            xpub.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
+            xpub.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
+            xpub.setsockopt(zmq.CURVE_SERVER, 1)
+            xsub.setsockopt(zmq.CURVE_PUBLICKEY, curve.public_key)
+            xsub.setsockopt(zmq.CURVE_SECRETKEY, curve.secret_key)
+            xsub.setsockopt(zmq.CURVE_SERVER, 1)
+            logger.debug("Using CURVE authentication for XPUB/XSUB")
+        elif plain:
+            xpub.setsockopt(zmq.PLAIN_SERVER, 1)
+            xsub.setsockopt(zmq.PLAIN_SERVER, 1)
+            logger.debug("Using PLAIN authentication for XPUB/XSUB")
 
         addr, port = endpoint.rsplit(":", maxsplit=1)
         xpub_port = int(port) + 1  # Link connects via SUBscribe: SUB -> XPUB
@@ -303,7 +321,11 @@ class Broker:
 
         logger.info("Broker running on %s", self.endpoint[6:])
 
-        proxy_thread = Thread(target=self.xpub_xsub_proxy, args=(self.endpoint,), daemon=True)
+        proxy_thread = Thread(
+            target=self.xpub_xsub_proxy,
+            kwargs={"endpoint": self.endpoint, "curve": curve, "plain": plain is not None},
+            daemon=True,
+        )
         proxy_thread.start()
 
         with allow_interrupt(self.interrupter):

@@ -306,6 +306,16 @@ class Service:
 
         host, _ = self._host_port
         pub_socket = self._context.socket(zmq.PUB)
+        if self._curve is not None:
+            pub_socket.setsockopt(zmq.CURVE_PUBLICKEY, self._curve.public_key)
+            pub_socket.setsockopt(zmq.CURVE_SECRETKEY, self._curve.secret_key)
+            pub_socket.setsockopt(zmq.CURVE_SERVERKEY, self._curve.broker_key)
+            logger.debug("Using CURVE authentication for publisher")
+        elif self._plain is not None:
+            pub_socket.setsockopt(zmq.PLAIN_USERNAME, self._plain.username)
+            pub_socket.setsockopt(zmq.PLAIN_PASSWORD, self._plain.password)
+            logger.debug("Using PLAIN authentication for publisher")
+
         _ = pub_socket.connect(f"tcp://{host}:{self._xsub_port}")
 
         name = self._service_name.encode()

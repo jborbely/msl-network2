@@ -27,7 +27,7 @@ def load_certificate(path: PathLike) -> tuple[bytes, bytes | None]:
     """
     path = Path(os.fsdecode(path)).expanduser()
     if not path.is_file():
-        msg = f"File not found: {path}"  # prefer FileNotFoundError instead of pyzmq exception
+        msg = f"Cannot load certificate at {path}"  # prefer FileNotFoundError instead of pyzmq exception
         raise FileNotFoundError(msg)
 
     return certs.load_certificate(path)  # pyright: ignore[reportUnknownMemberType]
@@ -119,9 +119,10 @@ class AuthCurve:
             broker: The path to the file that contains the [Broker][]'s public key.
                 Can include `~` in the path, which will expand the user's home directory.
             own: The path to the file that contains the public and secret keys of the
-                [Client][] or [Service][] that connects to the [Broker][]. If `None`, loads the
-                credentials that were created by running the `msl-network curve` command.
-                Can include `~` in the path, which will expand the user's home directory.
+                [Client][] or [Service][] that connects to the [Broker][]. If `None`,
+                loads the default credentials that were created by running the
+                `msl-network curve` command. Can include `~` in the path, which will
+                expand the user's home directory.
 
         Returns:
             The [CURVE](https://rfc.zeromq.org/spec/25/) credentials.

@@ -248,16 +248,17 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
 
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
-    assert r[0] == "Service publisher ready"
-    assert r[1] == f"{interrupter.name} created"
-    assert r[2] == "Using PLAIN authentication"
-    assert r[3] == "Service polling..."
-    assert r[4] == f"{interrupter.name} triggered"
-    assert r[5] == "Service publisher done"
-    assert r[6] == "Service unregistered"
-    assert r[7] == f"{interrupter.name} terminated"
-    assert r[8] == "Service disconnected"
-    assert r[9] == "Service event loop closed"
+    assert r[0] == "Using PLAIN authentication for publisher"
+    assert r[1] == "Service publisher ready"
+    assert r[2] == f"{interrupter.name} created"
+    assert r[3] == "Using PLAIN authentication"
+    assert r[4] == "Service polling..."
+    assert r[5] == f"{interrupter.name} triggered"
+    assert r[6] == "Service publisher done"
+    assert r[7] == "Service unregistered"
+    assert r[8] == f"{interrupter.name} terminated"
+    assert r[9] == "Service disconnected"
+    assert r[10] == "Service event loop closed"
 
 
 def test_curve(caplog: pytest.LogCaptureFixture) -> None:
@@ -281,16 +282,17 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
 
     # the order of ZMQ event-monitoring messages are unpredictable so ignore them
     r = [r.message for r in caplog.records if not r.message.startswith("Monitor")]
-    assert r[0] == "Service publisher ready"
-    assert r[1] == f"{interrupter.name} created"
-    assert r[2] == "Using CURVE authentication"
-    assert r[3] == "Service polling..."
-    assert r[4] == f"{interrupter.name} triggered"
-    assert r[5] == "Service publisher done"
-    assert r[6] == "Service unregistered"
-    assert r[7] == f"{interrupter.name} terminated"
-    assert r[8] == "Service disconnected"
-    assert r[9] == "Service event loop closed"
+    assert r[0] == "Using CURVE authentication for publisher"
+    assert r[1] == "Service publisher ready"
+    assert r[2] == f"{interrupter.name} created"
+    assert r[3] == "Using CURVE authentication"
+    assert r[4] == "Service polling..."
+    assert r[5] == f"{interrupter.name} triggered"
+    assert r[6] == "Service publisher done"
+    assert r[7] == "Service unregistered"
+    assert r[8] == f"{interrupter.name} terminated"
+    assert r[9] == "Service disconnected"
+    assert r[10] == "Service event loop closed"
 
 
 def test_publish_no_event_loop() -> None:

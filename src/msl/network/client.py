@@ -71,6 +71,8 @@ class Client:
         self._async_client: _AsyncClient | None = None
         self._is_connected: Event = Event()
         self._links: list[Link] = []
+        self._curve: AuthCurve | None = curve
+        self._plain: AuthPlain | None = plain
 
         if curve is not None and plain is not None:
             msg = "Cannot use both PLAIN and CURVE authentication, select only one authentication mechanism"
@@ -187,7 +189,14 @@ class Client:
         Returns:
             The [Link][msl.network.client.Link] instance.
         """
-        link = Link(self, service_name)
+        link = Link(
+            client=self,
+            curve=self._curve,
+            host=self._host_port[0],
+            plain=self._plain,
+            service_name=service_name,
+            xpub_port=self._xpub_port,
+        )
         self._links.append(link)
         return link
 
@@ -207,7 +216,16 @@ class Client:
 class Link:
     """A link with a [Service][]."""
 
-    def __init__(self, client: Client, service_name: str) -> None:
+    def __init__(  # noqa: PLR0913
+        self,
+        *,
+        client: Client,
+        curve: AuthCurve | None,
+        host: str,
+        plain: AuthPlain | None,
+        service_name: str,
+        xpub_port: int,
+    ) -> None:
         """A link with a [Service][].
 
         !!! warning
@@ -227,8 +245,13 @@ class Link:
         """
 
         self._request: Callable[[str, str, Any, Any], Future[Any]] = client._request  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-        host, _ = client._host_port  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-        self._link_subscriber: _LinkSubscriber = _LinkSubscriber(service_name, host, client._xpub_port)  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        self._link_subscriber: _LinkSubscriber = _LinkSubscriber(
+            service_name=service_name,
+            host=host,
+            curve=curve,
+            plain=plain,
+            xpub_port=xpub_port,
+        )
         self._client: Client = client
 
         self._thread: Thread = Thread(
@@ -464,12 +487,22 @@ class _AsyncClient:
 class _LinkSubscriber:
     """Handle publications from a Service."""
 
-    def __init__(self, service_name: str, host: str, xpub_port: int) -> None:
+    def __init__(
+        self,
+        *,
+        service_name: str,
+        host: str,
+        curve: AuthCurve | None,
+        plain: AuthPlain | None,
+        xpub_port: int,
+    ) -> None:
         """Handle publications from a Service.
 
         Args:
             service_name: The name of the service that publishes messages.
             host: The hostname (or IP address) that the Broker is running on.
+            curve: The [CURVE](https://rfc.zeromq.org/spec/25/) authentication to use.
+            plain: The [PLAIN](https://rfc.zeromq.org/spec/24/) authentication to use.
             xpub_port: The XPUB port that is running on the Broker.
         """
         self.callback: Callable[[Any], None] | None = None
@@ -477,6 +510,8 @@ class _LinkSubscriber:
         self.endpoint: str = f"tcp://{host}:{xpub_port}"
         self.interrupter: Interrupter | None = None
         self.sub_socket: Socket | None = None
+        self.curve: AuthCurve | None = curve
+        self.plain: AuthPlain | None = plain
 
     async def handle_publications(self) -> None:
         """Poll for publications from a Service."""
@@ -486,6 +521,16 @@ class _LinkSubscriber:
         self.interrupter = Interrupter()
 
         self.sub_socket = context.socket(zmq.SUB)
+        if self.curve is not None:
+            self.sub_socket.setsockopt(zmq.CURVE_PUBLICKEY, self.curve.public_key)
+            self.sub_socket.setsockopt(zmq.CURVE_SECRETKEY, self.curve.secret_key)
+            self.sub_socket.setsockopt(zmq.CURVE_SERVERKEY, self.curve.broker_key)
+            logger.debug("Using CURVE authentication for subscriber")
+        elif self.plain is not None:
+            self.sub_socket.setsockopt(zmq.PLAIN_USERNAME, self.plain.username)
+            self.sub_socket.setsockopt(zmq.PLAIN_PASSWORD, self.plain.password)
+            logger.debug("Using PLAIN authentication for subscriber")
+
         _ = self.sub_socket.connect(self.endpoint)
 
         # Polls for events on the asyncio event loop

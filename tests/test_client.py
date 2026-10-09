@@ -170,6 +170,10 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     c = Client(port=29501, plain=AuthPlain("hi", "hello"))
     assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    link = c.link("Foo")
+    assert link.service_name == "Foo"
+    sub_interrupter = link._link_subscriber.interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert sub_interrupter is not None
     time.sleep(0.1)
     c.disconnect()
 
@@ -178,9 +182,16 @@ def test_plain(caplog: pytest.LogCaptureFixture) -> None:
     assert r[0] == f"{interrupter_name} created"
     assert r[1] == "Using PLAIN authentication"
     assert r[2] == f"{c} connecting..."
-    assert r[3] == f"{interrupter_name} triggered"
-    assert r[4] == f"{interrupter_name} terminated"
-    assert r[5] == f"{c} disconnected"
+    assert r[3] == f"{sub_interrupter.name} created"
+    assert r[4] == "Using PLAIN authentication for subscriber"
+    assert r[5] == "Link[Foo] publication polling..."
+    assert r[6] == f"{sub_interrupter.name} triggered"
+    assert r[7] == f"{sub_interrupter.name} terminated"
+    assert r[8] == "Link[Foo] stopped publication polling"
+    assert r[9] == "Link[Foo] unlinked"
+    assert r[10] == f"{interrupter_name} triggered"
+    assert r[11] == f"{interrupter_name} terminated"
+    assert r[12] == f"{c} disconnected"
 
 
 def test_curve(caplog: pytest.LogCaptureFixture) -> None:
@@ -194,6 +205,10 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     )
     assert c._async_client is not None  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
     interrupter_name = c._async_client.interrupter.name  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    link = c.link("Any")
+    assert link.service_name == "Any"
+    sub_interrupter = link._link_subscriber.interrupter  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    assert sub_interrupter is not None
     time.sleep(0.1)
     c.disconnect()
 
@@ -202,9 +217,16 @@ def test_curve(caplog: pytest.LogCaptureFixture) -> None:
     assert r[0] == f"{interrupter_name} created"
     assert r[1] == "Using CURVE authentication"
     assert r[2] == f"{c} connecting..."
-    assert r[3] == f"{interrupter_name} triggered"
-    assert r[4] == f"{interrupter_name} terminated"
-    assert r[5] == f"{c} disconnected"
+    assert r[3] == f"{sub_interrupter.name} created"
+    assert r[4] == "Using CURVE authentication for subscriber"
+    assert r[5] == "Link[Any] publication polling..."
+    assert r[6] == f"{sub_interrupter.name} triggered"
+    assert r[7] == f"{sub_interrupter.name} terminated"
+    assert r[8] == "Link[Any] stopped publication polling"
+    assert r[9] == "Link[Any] unlinked"
+    assert r[10] == f"{interrupter_name} triggered"
+    assert r[11] == f"{interrupter_name} terminated"
+    assert r[12] == f"{c} disconnected"
 
 
 def test_link_echo(broker: Broker) -> None:
